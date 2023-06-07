@@ -1,0 +1,21 @@
+﻿namespace HitoBit.Net.Objects.Models.Spot.Blvt
+{
+    /// <summary>
+    /// Leveraged tokens user limits
+    /// </summary>
+    public class HitoBitBlvtUserLimit
+    {
+        /// <summary>
+        /// Token name
+        /// </summary>
+        public string TokenName { get; set; } = string.Empty;
+        /// <summary>
+        /// Daily purchase limit
+        /// </summary>
+        public decimal UserDailyTotalPurchaseLimit { get; set; }
+        /// <summary>
+        /// Daily redeem limit
+        /// </summary>
+        public decimal UserDailyTotalRedeemLimit { get; set; }
+    }
+}

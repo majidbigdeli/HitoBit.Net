@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net7.0</TargetFrameworks>
+		<LangVersion>8.0</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PackageId>HitoBit.Net</PackageId>
+		<Authors>JKorf, Nikkozp, CaptHolley</Authors>
+		<PackageVersion>8.5.0</PackageVersion>
+		<AssemblyVersion>8.5.0</AssemblyVersion>
+		<FileVersion>8.5.0</FileVersion>
+		<Description>HitoBit.Net is a .Net wrapper for the HitoBit API, including HitoBit Futures. It includes all features the API provides, REST API and Websocket, using clear and readable objects including but not limited to Reading market info, Placing and managing orders and Reading balances and funds</Description>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageTags>HitoBit HitoBit.Net C# .Net CryptoCurrency Exchange API wrapper</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/JKorf/HitoBit.Net.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/JKorf/Hitobit.Net</PackageProjectUrl>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<NeutralLanguage>en</NeutralLanguage>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageReleaseNotes>8.5.0 - Added futures individual trade streams, Added coin futures all mark prices stream, Added Spot AutoConvertStableCoin endpoints, Added GetCrossMarginCollateralRatio endpoint, Added missing parameters to spot place order parameters, Added self trade prevention support, Fixed and updated various models</PackageReleaseNotes>
+	</PropertyGroup>
+	<PropertyGroup Label="Deterministic Build" Condition="'$(Configuration)' == 'Release'">
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+	<ItemGroup Label="Deterministic Build" Condition="'$(Configuration)' == 'Release'">
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<PropertyGroup>
+		<DocumentationFile>HitoBit.Net.xml</DocumentationFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="Icon\icon.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\CryptoExchange.Net.Ex\CryptoExchange.Net.Ex.csproj" />
+		<ProjectReference Include="..\..\..\CryptoExchange.Net\CryptoExchange.Net\CryptoExchange.Net.csproj" />
+	</ItemGroup>
+</Project>
