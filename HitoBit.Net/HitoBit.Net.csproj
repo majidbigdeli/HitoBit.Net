@@ -53,6 +53,5 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\CryptoExchange.Net.Ex\CryptoExchange.Net.Ex.csproj" />
-		<ProjectReference Include="..\..\..\CryptoExchange.Net\CryptoExchange.Net\CryptoExchange.Net.csproj" />
 	</ItemGroup>
 </Project>
