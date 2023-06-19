@@ -476,7 +476,17 @@ namespace HitoBit.Net.Clients.SpotApi
 
             if (result != null && message.Count() > 0)
             {
+                if (message.Value<bool>("hasError"))
+                {
+
+                    callResult = new CallResult<object>(new ServerError("Unknown error: " + message.Value<string>("data")));
+                    return true;
+                }
+
                 _log.Write(LogLevel.Trace, $"Socket {s.SocketId} Subscription completed");
+
+
+
                 callResult = new CallResult<object>(new object());
                 return true;
             }
