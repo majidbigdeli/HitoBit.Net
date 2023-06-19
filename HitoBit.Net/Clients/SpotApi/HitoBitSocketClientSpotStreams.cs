@@ -473,6 +473,7 @@ namespace HitoBit.Net.Clients.SpotApi
         protected override bool HandleSubscriptionResponse(SocketConnection s, SocketSubscription subscription, object request, JToken message, out CallResult<object>? callResult)
         {
             var result = message;
+
             if (result != null && message.Count() > 0)
             {
                 _log.Write(LogLevel.Trace, $"Socket {s.SocketId} Subscription completed");
