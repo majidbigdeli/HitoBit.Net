@@ -10,6 +10,7 @@ using HitoBit.Net.Objects.Models;
 using HitoBit.Net.Objects.Models.Spot.Socket;
 using Microsoft.Extensions.Logging;
 using HitoBit.Net.Objects.Models.Futures.Socket;
+using HitoBit.Net.Objects.Options;
 
 namespace HitoBit.Net.UnitTests
 {
@@ -24,7 +25,7 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitStreamKlineData result = null;
-            client.SpotStreams.SubscribeToKlineUpdatesAsync("ETHBTC", KlineInterval.OneMinute, (test) => result = test.Data);
+            client.SpotApi.ExchangeData.SubscribeToKlineUpdatesAsync("ETHBTC", KlineInterval.OneMinute, (test) => result = test.Data);
 
             var data = new HitoBitCombinedStream<HitoBitStreamKlineData>()
             {
@@ -73,7 +74,7 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitStreamKlineData result = null;
-            client.UsdFuturesStreams.SubscribeToContinuousContractKlineUpdatesAsync("ETHBTC", ContractType.Perpetual, KlineInterval.OneMinute, (test) => result = test.Data);
+            client.UsdFuturesApi.SubscribeToContinuousContractKlineUpdatesAsync("ETHBTC", ContractType.Perpetual, KlineInterval.OneMinute, (test) => result = test.Data);
 
             var data = new HitoBitCombinedStream<HitoBitStreamContinuousKlineData>()
             {
@@ -120,13 +121,10 @@ namespace HitoBit.Net.UnitTests
         {
             // arrange
             var socket = new TestSocket();
-            var client = TestHelpers.CreateSocketClient(socket, new HitoBitSocketClientOptions()
-            {
-                LogLevel = LogLevel.Debug
-            });
+            var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitTick result = null;
-            await client.SpotStreams.SubscribeToTickerUpdatesAsync("ETHBTC", (test) => result = test.Data);
+            await client.SpotApi.ExchangeData.SubscribeToTickerUpdatesAsync("ETHBTC", (test) => result = test.Data);
 
             var data = new HitoBitCombinedStream<HitoBitStreamTick>()
             {
@@ -162,7 +160,7 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitTick[] result = null;
-            await client.SpotStreams.SubscribeToAllTickerUpdatesAsync((test) => result = test.Data.ToArray());
+            await client.SpotApi.ExchangeData.SubscribeToAllTickerUpdatesAsync((test) => result = test.Data.ToArray());
 
             var data = new HitoBitCombinedStream<HitoBitStreamTick[]>
             {
@@ -202,7 +200,7 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamTrade result = null;
-            await client.SpotStreams.SubscribeToTradeUpdatesAsync("ETHBTC", (test) => result = test.Data);
+            await client.SpotApi.ExchangeData.SubscribeToTradeUpdatesAsync("ETHBTC", (test) => result = test.Data);
 
             var data = new HitoBitCombinedStream<HitoBitStreamTrade>()
             {
@@ -237,7 +235,7 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamBalanceUpdate result = null;
-            await client.SpotStreams.SubscribeToUserDataUpdatesAsync("test", null, null, null, (test) => result = test.Data);
+            await client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", null, null, null, (test) => result = test.Data);
 
             var data = new HitoBitCombinedStream<HitoBitStreamBalanceUpdate>
             {
@@ -265,10 +263,10 @@ namespace HitoBit.Net.UnitTests
         {
             // arrange
             var socket = new TestSocket();
-            var client = TestHelpers.CreateSocketClient(socket, new HitoBitSocketClientOptions(){ LogLevel = LogLevel.Debug });
+            var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamOrderList result = null;
-            client.SpotStreams.SubscribeToUserDataUpdatesAsync("test", null, (test) => result = test.Data, null, null);
+            client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", null, (test) => result = test.Data, null, null);
 
             var data = new HitoBitCombinedStream<HitoBitStreamOrderList>
             {
@@ -320,7 +318,7 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamOrderUpdate result = null;
-            client.SpotStreams.SubscribeToUserDataUpdatesAsync("test", (test) => result = test.Data, null, null, null);
+            client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", (test) => result = test.Data, null, null, null);
 
             var data = new HitoBitCombinedStream<HitoBitStreamOrderUpdate>
             {

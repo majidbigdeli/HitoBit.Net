@@ -6,7 +6,11 @@ using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using HitoBit.Net.Objects;
+using HitoBit.Net.Objects.Options;
 using CryptoExchange.Net;
+using CryptoExchange.Net.Authentication;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace HitoBit.Net.Clients
 {
@@ -19,50 +23,67 @@ namespace HitoBit.Net.Clients
         #region Api clients
 
         /// <inheritdoc />
-        public IHitoBitSocketClientSpotStreams SpotStreams { get; set; }
+        public IHitoBitSocketClientSpotApi SpotApi { get; set; }
+
         /// <inheritdoc />
-        public IHitoBitSocketClientUsdFuturesStreams UsdFuturesStreams { get; set; }
+        public IHitoBitSocketClientUsdFuturesApi UsdFuturesApi { get; set; }
+
         /// <inheritdoc />
-        public IHitoBitSocketClientCoinFuturesStreams CoinFuturesStreams { get; set; }
+        public IHitoBitSocketClientCoinFuturesApi CoinFuturesApi { get; set; }
 
         #endregion
 
         #region constructor/destructor
-
         /// <summary>
-        /// Create a new instance of HitoBitSocketClientSpot with default options
+        /// Create a new instance of HitoBitSocketClient
         /// </summary>
-        public HitoBitSocketClient() : this(HitoBitSocketClientOptions.Default)
+        /// <param name="loggerFactory">The logger factory</param>
+        public HitoBitSocketClient(ILoggerFactory? loggerFactory = null) : this((x) => { }, loggerFactory)
         {
         }
 
         /// <summary>
-        /// Create a new instance of HitoBitSocketClientSpot using provided options
+        /// Create a new instance of HitoBitSocketClient
         /// </summary>
-        /// <param name="options">The options to use for this client</param>
-        public HitoBitSocketClient(HitoBitSocketClientOptions options) : base("HitoBit", options)
+        /// <param name="optionsDelegate">Option configuration delegate</param>
+        public HitoBitSocketClient(Action<HitoBitSocketOptions> optionsDelegate) : this(optionsDelegate, null)
         {
-            SpotStreams = AddApiClient(new HitoBitSocketClientSpotStreams(log, options));
-            UsdFuturesStreams = AddApiClient(new HitoBitSocketClientUsdFuturesStreams(log, options));
-            CoinFuturesStreams = AddApiClient(new HitoBitSocketClientCoinFuturesStreams(log, options));
         }
-        #endregion 
+
+        /// <summary>
+        /// Create a new instance of HitoBitSocketClient
+        /// </summary>
+        /// <param name="loggerFactory">The logger factory</param>
+        /// <param name="optionsDelegate">Option configuration delegate</param>
+        public HitoBitSocketClient(Action<HitoBitSocketOptions> optionsDelegate, ILoggerFactory? loggerFactory = null) : base(loggerFactory, "HitoBit")
+        {
+            var options = HitoBitSocketOptions.Default.Copy();
+            optionsDelegate(options);
+            Initialize(options);
+
+            SpotApi = AddApiClient(new HitoBitSocketClientSpotApi(_logger, options));
+            UsdFuturesApi = AddApiClient(new HitoBitSocketClientUsdFuturesApi(_logger, options));
+            CoinFuturesApi = AddApiClient(new HitoBitSocketClientCoinFuturesApi(_logger, options));
+        }
+        #endregion
 
         /// <summary>
         /// Set the default options to be used when creating new clients
         /// </summary>
-        /// <param name="options">Options to use as default</param>
-        public static void SetDefaultOptions(HitoBitSocketClientOptions options)
+        /// <param name="optionsDelegate">Option configuration delegate</param>
+        public static void SetDefaultOptions(Action<HitoBitSocketOptions> optionsDelegate)
         {
-            HitoBitSocketClientOptions.Default = options;
+            var options = HitoBitSocketOptions.Default.Copy();
+            optionsDelegate(options);
+            HitoBitSocketOptions.Default = options;
         }
 
         /// <inheritdoc />
-        public void SetApiCredentials(HitoBitApiCredentials credentials)
+        public void SetApiCredentials(ApiCredentials credentials)
         {
-            SpotStreams.SetApiCredentials(credentials);
-            UsdFuturesStreams.SetApiCredentials(credentials);
-            CoinFuturesStreams.SetApiCredentials(credentials);
+            SpotApi.SetApiCredentials(credentials);
+            UsdFuturesApi.SetApiCredentials(credentials);
+            CoinFuturesApi.SetApiCredentials(credentials);
         }
     }
 }

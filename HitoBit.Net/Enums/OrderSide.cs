@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// The side of an order
@@ -8,10 +10,12 @@
         /// <summary>
         /// Buy
         /// </summary>
+        [Map("BUY")]
         Buy,
         /// <summary>
         /// Sell
         /// </summary>
+        [Map("SELL")]
         Sell
     }
 }

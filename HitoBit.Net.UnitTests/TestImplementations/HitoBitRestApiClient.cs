@@ -1,18 +1,15 @@
-﻿using CryptoExchange.Net;
+﻿using HitoBit.Net.Objects.Options;
+using CryptoExchange.Net;
 using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Logging;
 using CryptoExchange.Net.Objects;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HitoBit.Net.UnitTests.TestImplementations
 {
     public class HitoBitRestApiClient : RestApiClient
     {
-        public HitoBitRestApiClient(Log log, ClientOptions options, RestApiClientOptions apiOptions) : base(log, options, apiOptions)
+        public HitoBitRestApiClient(ILogger logger, HitoBitRestOptions options, HitoBitRestApiOptions apiOptions) : base(logger, null, "https://test.com", options, apiOptions)
         {
         }
 

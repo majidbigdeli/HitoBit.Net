@@ -202,5 +202,11 @@ namespace HitoBit.Net.Objects.Models.Spot.Socket
         /// </summary>
         [JsonProperty("B")]
         public decimal? LastPreventedQuantity { get; set; }
+        /// <summary>
+        /// Prevented match id
+        /// </summary>
+        [JsonProperty("V")]
+        [JsonConverter(typeof(EnumConverter))]
+        public SelfTradePreventionMode? SelfTradePreventionMode { get; set; }
     }
 }

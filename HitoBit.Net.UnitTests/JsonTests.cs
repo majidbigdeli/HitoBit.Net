@@ -5,30 +5,24 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CryptoExchange.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients;
+using CryptoExchange.Net.Authentication;
 
 namespace HitoBit.Net.UnitTests
 {
     [TestFixture]
     public class JsonTests
     {
-        private JsonToObjectComparer<IHitoBitClient> _comparer = new JsonToObjectComparer<IHitoBitClient>((json) => TestHelpers.CreateResponseClient(json, new HitoBitClientOptions()
-        { 
-            ApiCredentials = new HitoBitApiCredentials("123", "123"), 
-            SpotApiOptions = new HitoBitApiClientOptions
-            {
-                RateLimiters = new List<IRateLimiter>(),
-                AutoTimestamp = false,
-            },
-            UsdFuturesApiOptions = new HitoBitApiClientOptions
-            {
-                RateLimiters = new List<IRateLimiter>(),
-                AutoTimestamp = false,
-            },
-            CoinFuturesApiOptions = new HitoBitApiClientOptions
-            {
-                RateLimiters = new List<IRateLimiter>(),
-                AutoTimestamp = false,
-            }
+        private JsonToObjectComparer<IHitoBitRestClient> _comparer = new JsonToObjectComparer<IHitoBitRestClient>((json) => TestHelpers.CreateResponseClient(json, options =>
+        {
+            options.ApiCredentials = new ApiCredentials("123", "123");
+            options.SpotOptions.RateLimiters = new List<IRateLimiter>();
+            options.SpotOptions.AutoTimestamp = false;
+
+            options.UsdFuturesOptions.RateLimiters = new List<IRateLimiter>();
+            options.UsdFuturesOptions.AutoTimestamp = false;
+
+            options.CoinFuturesOptions.RateLimiters = new List<IRateLimiter>();
+            options.CoinFuturesOptions.AutoTimestamp = false;
         }));
 
         [Test]

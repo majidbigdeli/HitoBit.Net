@@ -3,7 +3,7 @@
 namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
-    /// Params for a new futures batch order
+    /// Parameters for a new futures batch order
     /// </summary>
     public class HitoBitFuturesBatchOrder
     {

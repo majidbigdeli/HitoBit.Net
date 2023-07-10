@@ -10,9 +10,13 @@
         /// </summary>
         public string RestClientAddress { get; set; } = "";
         /// <summary>
+        /// The address used by the HitoBitSocketClient for the Spot streams
+        /// </summary>
+        public string SocketClientStreamAddress { get; set; } = "";
+        /// <summary>
         /// The address used by the HitoBitSocketClient for the Spot API
         /// </summary>
-        public string SocketClientAddress { get; set; } = "";
+        public string SocketClientApiAddress { get; set; } = "";
         /// <summary>
         /// The address used by the HitoBitSocketClient for connecting to the BLVT streams
         /// </summary>
@@ -40,13 +44,14 @@
         /// </summary>
         public static HitoBitApiAddresses Default = new HitoBitApiAddresses
         {
-            RestClientAddress = "https://api.HitoBit.com",
-            SocketClientAddress = "wss://stream.HitoBit.com:9443/",
-            BlvtSocketClientAddress = "wss://nbstream.HitoBit.com/lvt-p",
-            UsdFuturesRestClientAddress = "https://fapi.HitoBit.com",
-            UsdFuturesSocketClientAddress = "wss://fstream.HitoBit.com/",
-            CoinFuturesRestClientAddress = "https://dapi.HitoBit.com",
-            CoinFuturesSocketClientAddress = "wss://dstream.HitoBit.com/",
+            RestClientAddress = "https://api.hitobit.com",
+            SocketClientStreamAddress = "https://stream.hitobit.com",
+            SocketClientApiAddress = "https://stream.hitobit.com",
+            BlvtSocketClientAddress = null,
+            UsdFuturesRestClientAddress = null,
+            UsdFuturesSocketClientAddress = null,
+            CoinFuturesRestClientAddress = null,
+            CoinFuturesSocketClientAddress = null,
         };
 
         /// <summary>
@@ -55,7 +60,8 @@
         public static HitoBitApiAddresses TestNet = new HitoBitApiAddresses
         {
             RestClientAddress = "https://testnet.HitoBit.vision",
-            SocketClientAddress = "wss://testnet.HitoBit.vision",
+            SocketClientStreamAddress = "wss://testnet.HitoBit.vision",
+            SocketClientApiAddress = "wss://testnet.HitoBit.vision",
             BlvtSocketClientAddress = "wss://fstream.HitoBitfuture.com",
             UsdFuturesRestClientAddress = "https://testnet.HitoBitfuture.com",
             UsdFuturesSocketClientAddress = "wss://fstream.HitoBitfuture.com",
@@ -69,7 +75,8 @@
         public static HitoBitApiAddresses Us = new HitoBitApiAddresses
         {
             RestClientAddress = "https://api.HitoBit.us",
-            SocketClientAddress = "wss://stream.HitoBit.us:9443",
+            SocketClientApiAddress = "wss://ws-api.HitoBit.us:443",
+            SocketClientStreamAddress = "wss://stream.HitoBit.us:9443",
         };
     }
 }

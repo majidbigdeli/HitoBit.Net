@@ -1,27 +1,23 @@
-﻿using HitoBit.Net.Objects;
+﻿using HitoBit.Net.Clients;
+using HitoBit.Net.Clients.SpotApi;
+using HitoBit.Net.Objects.Options;
 using HitoBit.Net.UnitTests.TestImplementations;
-using CryptoExchange.Net;
 using CryptoExchange.Net.Authentication;
+using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Requests;
+using CryptoExchange.Net.Sockets;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using CryptoExchange.Net.Objects;
-using HitoBit.Net.Enums;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using System.Reflection;
-using System.Diagnostics;
+using System.Threading.Tasks;
 using HitoBit.Net.Objects.Models.Spot;
-using CryptoExchange.Net.Sockets;
-using HitoBit.Net.Clients;
-using HitoBit.Net.Clients.SpotApi;
-using CryptoExchange.Net.Logging;
 
 namespace HitoBit.Net.UnitTests
 {
@@ -54,13 +50,10 @@ namespace HitoBit.Net.UnitTests
                 ListenKey = "123"
             };
 
-            var client = TestHelpers.CreateResponseClient(key, new HitoBitClientOptions()
+            var client = TestHelpers.CreateResponseClient(key, options =>
             {
-                ApiCredentials = new HitoBitApiCredentials("Test", "Test"),
-                SpotApiOptions = new HitoBitApiClientOptions
-                {
-                    AutoTimestamp = false
-                }
+                options.ApiCredentials = new ApiCredentials("Test", "Test");
+                options.SpotOptions.AutoTimestamp = false;
             });
 
             // act
@@ -75,13 +68,10 @@ namespace HitoBit.Net.UnitTests
         public async Task KeepAliveUserStream_Should_Respond()
         {
             // arrange
-            var client = TestHelpers.CreateResponseClient("{}", new HitoBitClientOptions()
+            var client = TestHelpers.CreateResponseClient("{}", options =>
             {
-                ApiCredentials = new HitoBitApiCredentials("Test", "Test"),
-                SpotApiOptions = new HitoBitApiClientOptions
-                {
-                    AutoTimestamp = false
-                }
+                options.ApiCredentials = new ApiCredentials("Test", "Test");
+                options.SpotOptions.AutoTimestamp = false;
             });
 
             // act
@@ -95,14 +85,7 @@ namespace HitoBit.Net.UnitTests
         public async Task StopUserStream_Should_Respond()
         {
             // arrange
-            var client = TestHelpers.CreateResponseClient("{}", new HitoBitClientOptions()
-            {
-                ApiCredentials = new HitoBitApiCredentials("Test", "Test"),
-                SpotApiOptions = new HitoBitApiClientOptions
-                {
-                    AutoTimestamp = false
-                }
-            });
+            var client = TestHelpers.CreateResponseClient("{}", options => { options.ApiCredentials = new ApiCredentials("Test", "Test"); options.SpotOptions.AutoTimestamp = false; });
 
             // act
             var result = await client.SpotApi.Account.StopUserStreamAsync("test");
@@ -115,13 +98,10 @@ namespace HitoBit.Net.UnitTests
         public async Task EnablingAutoTimestamp_Should_CallServerTime()
         {
             // arrange
-            var client = TestHelpers.CreateResponseClient("{}", new HitoBitClientOptions()
+            var client = TestHelpers.CreateResponseClient("{}", options =>
             {
-                ApiCredentials = new HitoBitApiCredentials("Test", "Test"),
-                SpotApiOptions = new HitoBitApiClientOptions
-                {
-                    AutoTimestamp = true
-                }
+                options.ApiCredentials = new ApiCredentials("Test", "Test");
+                options.SpotOptions.AutoTimestamp = true;
             });
 
             // act
@@ -161,24 +141,23 @@ namespace HitoBit.Net.UnitTests
         {
             // arrange
             // act
-            var authProvider = new HitoBitAuthenticationProvider(new HitoBitApiCredentials("TestKey", "TestSecret"));
+            var authProvider = new HitoBitAuthenticationProvider(new ApiCredentials("TestKey", "TestSecret"));
 
             // assert
-            Assert.AreEqual(authProvider.Credentials.Key.GetString(), "TestKey");
-            Assert.AreEqual(authProvider.Credentials.Secret.GetString(), "TestSecret");
+            Assert.AreEqual(authProvider.GetApiKey(), "TestKey");
         }
 
         [Test]
         public void AddingAuthToRequest_Should_AddApiKeyHeader()
         {
             // arrange
-            var authProvider = new HitoBitAuthenticationProvider(new HitoBitApiCredentials("TestKey", "TestSecret"));
+            var authProvider = new HitoBitAuthenticationProvider(new ApiCredentials("TestKey", "TestSecret"));
             var client = new HttpClient();
             var request = new Request(new HttpRequestMessage(HttpMethod.Get, "https://test.test-api.com"), client, 1);
 
             // act
             var headers = new Dictionary<string, string>();
-            authProvider.AuthenticateRequest(new HitoBitRestApiClient(new Log(""), new HitoBitClientOptions(), new HitoBitClientOptions().SpotApiOptions), request.Uri, HttpMethod.Get, new Dictionary<string, object>(), true, ArrayParametersSerialization.MultipleValues,
+            authProvider.AuthenticateRequest(new HitoBitRestApiClient(new TraceLogger(), new HitoBitRestOptions(), new HitoBitRestOptions().SpotOptions), request.Uri, HttpMethod.Get, new Dictionary<string, object>(), true, ArrayParametersSerialization.MultipleValues,
                 HttpMethodParameterPosition.InUri, out var uriParameters, out var bodyParameters, out headers);
 
             // assert
@@ -206,7 +185,7 @@ namespace HitoBit.Net.UnitTests
         [Test]
         public void CheckRestInterfaces()
         {
-            var assembly = Assembly.GetAssembly(typeof(HitoBitClient));
+            var assembly = Assembly.GetAssembly(typeof(HitoBitRestClient));
             var ignore = new string[] { "IHitoBitClientUsdFuturesApi", "IHitoBitClientCoinFuturesApi", "IHitoBitClientSpotApi" };
             var clientInterfaces = assembly.GetTypes().Where(t => t.Name.StartsWith("IHitoBitClient") && !ignore.Contains(t.Name));
             
@@ -227,7 +206,7 @@ namespace HitoBit.Net.UnitTests
         [Test]
         public void CheckSocketInterfaces()
         {
-            var assembly = Assembly.GetAssembly(typeof(HitoBitSocketClientSpotStreams));
+            var assembly = Assembly.GetAssembly(typeof(HitoBitSocketClientSpotApi));
             var clientInterfaces = assembly.GetTypes().Where(t => t.Name.StartsWith("IHitoBitSocketClient"));
 
             foreach (var clientInterface in clientInterfaces)

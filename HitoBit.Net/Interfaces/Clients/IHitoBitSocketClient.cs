@@ -1,7 +1,9 @@
-﻿using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
+﻿using HitoBit.Net.Clients.SpotApi;
+using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using HitoBit.Net.Objects;
+using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Interfaces;
 
 namespace HitoBit.Net.Interfaces.Clients
@@ -14,20 +16,20 @@ namespace HitoBit.Net.Interfaces.Clients
         /// <summary>
         /// Coin futures streams
         /// </summary>
-        IHitoBitSocketClientCoinFuturesStreams CoinFuturesStreams { get; }
+        IHitoBitSocketClientCoinFuturesApi CoinFuturesApi { get; }
         /// <summary>
-        /// Spot streams
+        /// Spot streams and requests
         /// </summary>
-        IHitoBitSocketClientSpotStreams SpotStreams { get; }
+        IHitoBitSocketClientSpotApi SpotApi { get; }
         /// <summary>
         /// Usd futures streams
         /// </summary>
-        IHitoBitSocketClientUsdFuturesStreams UsdFuturesStreams { get; }
+        IHitoBitSocketClientUsdFuturesApi UsdFuturesApi { get; }
 
         /// <summary>
         /// Set the API credentials for this client. All Api clients in this client will use the new credentials, regardless of earlier set options.
         /// </summary>
         /// <param name="credentials">The credentials to set</param>
-        void SetApiCredentials(HitoBitApiCredentials credentials);
+        void SetApiCredentials(ApiCredentials credentials);
     }
 }

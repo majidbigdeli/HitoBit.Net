@@ -10,7 +10,6 @@ namespace HitoBit.Net.Objects.Models.Futures.Socket
     /// </summary>
     public class HitoBitFuturesStreamBookPrice : HitoBitStreamBookPrice
     {
-
         /// <summary>
         /// Timestamp
         /// </summary>

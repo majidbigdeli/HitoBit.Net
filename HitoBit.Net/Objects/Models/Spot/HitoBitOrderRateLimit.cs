@@ -3,7 +3,7 @@
     /// <summary>
     /// Rate limit info
     /// </summary>
-    public class HitoBitOrderRateLimit: HitoBitRateLimit
+    public class HitoBitCurrentRateLimit: HitoBitRateLimit
     {
         /// <summary>
         /// The current used amount

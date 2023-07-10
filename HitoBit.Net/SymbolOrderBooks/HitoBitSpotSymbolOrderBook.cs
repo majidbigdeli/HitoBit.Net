@@ -5,9 +5,12 @@ using HitoBit.Net.Clients;
 using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients;
 using HitoBit.Net.Objects;
+using HitoBit.Net.Objects.Options;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.OrderBook;
 using CryptoExchange.Net.Sockets;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace HitoBit.Net.SymbolOrderBooks
 {
@@ -17,31 +20,52 @@ namespace HitoBit.Net.SymbolOrderBooks
     /// </summary>
     public class HitoBitSpotSymbolOrderBook : SymbolOrderBook
     {
-        private readonly IHitoBitClient _restClient;
+        private readonly bool _clientOwner;
+        private readonly IHitoBitRestClient _restClient;
         private readonly IHitoBitSocketClient _socketClient;
         private readonly TimeSpan _initialDataTimeout;
-        private readonly bool _restOwner;
-        private readonly bool _socketOwner;
         private readonly int? _updateInterval;
 
         /// <summary>
-        /// Create a new instance
+        /// Create a new order book instance
         /// </summary>
-        /// <param name="symbol">The symbol of the order book</param>
-        /// <param name="options">The options for the order book</param>
-        public HitoBitSpotSymbolOrderBook(string symbol, HitoBitOrderBookOptions? options = null) : base("HitoBit", symbol, options ?? new HitoBitOrderBookOptions())
+        /// <param name="symbol">The symbol the order book is for</param>
+        /// <param name="optionsDelegate">Option configuration delegate</param>
+        public HitoBitSpotSymbolOrderBook(string symbol, Action<HitoBitOrderBookOptions>? optionsDelegate = null)
+            : this(symbol, optionsDelegate, null, null, null)
         {
-            symbol.ValidateHitoBitSymbol();
-            Levels = options?.Limit;
-            _updateInterval = options?.UpdateInterval;
-            _initialDataTimeout = options?.InitialDataTimeout ?? TimeSpan.FromSeconds(30);
-            _socketClient = options?.SocketClient ?? new HitoBitSocketClient();
-            _restClient = options?.RestClient ?? new HitoBitClient();
-            _restOwner = options?.RestClient == null;
-            _socketOwner = options?.SocketClient == null;
+            _clientOwner = true;
+        }
 
-            sequencesAreConsecutive = options?.Limit == null;
-            strictLevels = false;
+        /// <summary>
+        /// Create a new order book instance
+        /// </summary>
+        /// <param name="symbol">The symbol the order book is for</param>
+        /// <param name="optionsDelegate">Option configuration delegate</param>
+        /// <param name="logger">Logger</param>
+        /// <param name="restClient">Rest client instance</param>
+        /// <param name="socketClient">Socket client instance</param>
+        public HitoBitSpotSymbolOrderBook(
+            string symbol,
+            Action<HitoBitOrderBookOptions>? optionsDelegate,
+            ILogger<HitoBitSpotSymbolOrderBook>? logger,
+            IHitoBitRestClient? restClient,
+            IHitoBitSocketClient? socketClient) : base(logger, "HitoBit", symbol)
+        {
+            var options = HitoBitOrderBookOptions.Default.Copy();
+            if (optionsDelegate != null)
+                optionsDelegate(options);
+            Initialize(options);
+
+            _strictLevels = false;
+            _sequencesAreConsecutive = options?.Limit == null;
+            _updateInterval = options?.UpdateInterval;
+
+            Levels = options?.Limit;
+            _initialDataTimeout = options?.InitialDataTimeout ?? TimeSpan.FromSeconds(30);
+            _clientOwner = socketClient == null;
+            _socketClient = socketClient ?? new HitoBitSocketClient();
+            _restClient = restClient ?? new HitoBitRestClient();
         }
 
         /// <inheritdoc />
@@ -49,9 +73,9 @@ namespace HitoBit.Net.SymbolOrderBooks
         {
             CallResult<UpdateSubscription> subResult;
             if (Levels == null)
-                subResult = await _socketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(Symbol, _updateInterval, HandleUpdate).ConfigureAwait(false);
+                subResult = await _socketClient.SpotApi.ExchangeData.SubscribeToOrderBookUpdatesAsync(Symbol, _updateInterval, HandleUpdate).ConfigureAwait(false);
             else
-                subResult = await _socketClient.SpotStreams.SubscribeToPartialOrderBookUpdatesAsync(Symbol, Levels.Value, _updateInterval, HandleUpdate).ConfigureAwait(false);
+                subResult = await _socketClient.SpotApi.ExchangeData.SubscribeToPartialOrderBookUpdatesAsync(Symbol, Levels.Value, _updateInterval, HandleUpdate).ConfigureAwait(false);
 
             if (!subResult)
                 return new CallResult<UpdateSubscription>(subResult.Error!);
@@ -70,7 +94,7 @@ namespace HitoBit.Net.SymbolOrderBooks
                 var bookResult = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(Symbol, Levels ?? 5000).ConfigureAwait(false);
                 if (!bookResult)
                 {
-                    log.Write(Microsoft.Extensions.Logging.LogLevel.Debug, $"{Id} order book {Symbol} failed to retrieve initial order book");
+                    _logger.Log(Microsoft.Extensions.Logging.LogLevel.Debug, $"{Id} order book {Symbol} failed to retrieve initial order book");
                     await _socketClient.UnsubscribeAsync(subResult.Data).ConfigureAwait(false);
                     return new CallResult<UpdateSubscription>(bookResult.Error!);
                 }
@@ -125,10 +149,11 @@ namespace HitoBit.Net.SymbolOrderBooks
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
-            if (_restOwner)
+            if (_clientOwner)
+            {
                 _restClient?.Dispose();
-            if (_socketOwner)
                 _socketClient?.Dispose();
+            }
 
             base.Dispose(disposing);
         }

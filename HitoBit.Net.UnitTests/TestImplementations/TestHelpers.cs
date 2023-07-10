@@ -10,13 +10,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using HitoBit.Net.Clients;
-using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients;
-using HitoBit.Net.Objects;
-using CryptoExchange.Net;
+using HitoBit.Net.Objects.Options;
 using CryptoExchange.Net.Interfaces;
-using CryptoExchange.Net.Logging;
 using CryptoExchange.Net.Sockets;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
 
@@ -64,23 +62,23 @@ namespace HitoBit.Net.UnitTests.TestImplementations
             return self == to;
         }
 
-        public static IHitoBitSocketClient CreateSocketClient(IWebsocket socket, HitoBitSocketClientOptions options = null)
+        public static IHitoBitSocketClient CreateSocketClient(IWebsocket socket, Action<HitoBitSocketOptions> options = null)
         {
             HitoBitSocketClient client;
             client = options != null ? new HitoBitSocketClient(options) : new HitoBitSocketClient();
-            client.SpotStreams.SocketFactory = Mock.Of<IWebsocketFactory>();
-            client.UsdFuturesStreams.SocketFactory = Mock.Of<IWebsocketFactory>();
-            client.CoinFuturesStreams.SocketFactory = Mock.Of<IWebsocketFactory>();
-            Mock.Get(client.SpotStreams.SocketFactory).Setup(f => f.CreateWebsocket(It.IsAny<Log>(), It.IsAny<WebSocketParameters>())).Returns(socket);
-            Mock.Get(client.UsdFuturesStreams.SocketFactory).Setup(f => f.CreateWebsocket(It.IsAny<Log>(), It.IsAny<WebSocketParameters>())).Returns(socket);
-            Mock.Get(client.CoinFuturesStreams.SocketFactory).Setup(f => f.CreateWebsocket(It.IsAny<Log>(), It.IsAny<WebSocketParameters>())).Returns(socket);
+            client.SpotApi.SocketFactory = Mock.Of<IWebsocketFactory>();
+            client.UsdFuturesApi.SocketFactory = Mock.Of<IWebsocketFactory>();
+            client.CoinFuturesApi.SocketFactory = Mock.Of<IWebsocketFactory>();
+            Mock.Get(client.SpotApi.SocketFactory).Setup(f => f.CreateWebsocket(It.IsAny<ILogger>(), It.IsAny<WebSocketParameters>())).Returns(socket);
+            Mock.Get(client.UsdFuturesApi.SocketFactory).Setup(f => f.CreateWebsocket(It.IsAny<ILogger>(), It.IsAny<WebSocketParameters>())).Returns(socket);
+            Mock.Get(client.CoinFuturesApi.SocketFactory).Setup(f => f.CreateWebsocket(It.IsAny<ILogger>(), It.IsAny<WebSocketParameters>())).Returns(socket);
             return client;
         }
 
-        public static IHitoBitClient CreateClient(HitoBitClientOptions options = null)
+        public static IHitoBitRestClient CreateClient(Action<HitoBitRestOptions> options = null)
         {
-            IHitoBitClient client;
-            client = options != null ? new HitoBitClient(options) : new HitoBitClient();
+            IHitoBitRestClient client;
+            client = options != null ? new HitoBitRestClient(options) : new HitoBitRestClient();
             client.SpotApi.RequestFactory = Mock.Of<IRequestFactory>();
             client.GeneralApi.RequestFactory = Mock.Of<IRequestFactory>();
             client.CoinFuturesApi.RequestFactory = Mock.Of<IRequestFactory>();
@@ -88,21 +86,21 @@ namespace HitoBit.Net.UnitTests.TestImplementations
             return client;
         }
 
-        public static IHitoBitClient CreateResponseClient(string response, HitoBitClientOptions options = null)
+        public static IHitoBitRestClient CreateResponseClient(string response, Action<HitoBitRestOptions> options = null)
         {
-            var client = (HitoBitClient)CreateClient(options);
+            var client = (HitoBitRestClient)CreateClient(options);
             SetResponse(client, response);
             return client;
         }
 
-        public static IHitoBitClient CreateResponseClient<T>(T response, HitoBitClientOptions options = null)
+        public static IHitoBitRestClient CreateResponseClient<T>(T response, Action<HitoBitRestOptions> options = null)
         {
-            var client = (HitoBitClient)CreateClient(options);
+            var client = (HitoBitRestClient)CreateClient(options);
             SetResponse(client, JsonConvert.SerializeObject(response));
             return client;
         }
 
-        public static void SetResponse(HitoBitClient client, string responseData)
+        public static void SetResponse(HitoBitRestClient client, string responseData)
         {
             var expectedBytes = Encoding.UTF8.GetBytes(responseData);
             var responseStream = new MemoryStream();
@@ -135,7 +133,7 @@ namespace HitoBit.Net.UnitTests.TestImplementations
                 .Returns(request.Object);
         }
 
-        public static void SetErrorWithResponse(IHitoBitClient client, string responseData, HttpStatusCode code)
+        public static void SetErrorWithResponse(IHitoBitRestClient client, string responseData, HttpStatusCode code)
         {
             var expectedBytes = Encoding.UTF8.GetBytes(responseData);
             var responseStream = new MemoryStream();
