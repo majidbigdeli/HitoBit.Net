@@ -8,12 +8,12 @@ using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Objects.Models;
+using HitoBit.Net.Objects.Models.Futures.AlgoOrders;
 using HitoBit.Net.Objects.Models.Spot;
 using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.BSwap;
 using HitoBit.Net.Objects.Models.Spot.ConvertTransfer;
 using HitoBit.Net.Objects.Models.Spot.Margin;
-using HitoBit.Net.Objects.Models.Spot.Staking;
 using CryptoExchange.Net;
 using CryptoExchange.Net.CommonObjects;
 using CryptoExchange.Net.Converters;
@@ -83,11 +83,11 @@ namespace HitoBit.Net.Clients.SpotApi
         private const string bSwapAddLiquidityEndpoint = "bswap/liquidityAdd";
         private const string bSwapRemoveLiquidityEndpoint = "bswap/liquidityRemove";
         private const string bSwapLiquidityOperationsEndpoint = "bswap/liquidityOps";
-        private const string bSwapQuoteEndpoint = "bswap/quote ";
-        private const string bSwapSwapEndpoint = "bswap/swap ";
-        private const string bSwapSwapRecordsEndpoint = "bswap/swap ";
-        private const string bSwapAddLiquidityPreviewEndpoint = "bswap/addLiquidityPreview ";
-        private const string bSwapRemoveLiquidityPreviewEndpoint = "bswap/removeLiquidityPreview ";
+        private const string bSwapQuoteEndpoint = "bswap/quote";
+        private const string bSwapSwapEndpoint = "bswap/swap";
+        private const string bSwapSwapRecordsEndpoint = "bswap/swap";
+        private const string bSwapAddLiquidityPreviewEndpoint = "bswap/addLiquidityPreview";
+        private const string bSwapRemoveLiquidityPreviewEndpoint = "bswap/removeLiquidityPreview";
 
         // C2C
         private const string c2cTradeHistoryEndpoint = "c2c/orderMatch/listUserOrderHistory";
@@ -97,12 +97,6 @@ namespace HitoBit.Net.Clients.SpotApi
 
         // Convert
         private const string convertTradeHistoryEndpoint = "convert/tradeFlow";
-
-        // Staking
-        private const string stakingPurchaseEndpoint = "staking/purchase";
-        private const string stakingRedeemEndpoint = "staking/redeem";
-        private const string stakingPositionEndpoint = "staking/position";
-        private const string stakingHistoryEndpoint = "staking/stakingRecord";
 
         // Convert transfer
         private const string convertTransferEndpoint = "asset/convert-transfer";
@@ -232,7 +226,7 @@ namespace HitoBit.Net.Clients.SpotApi
 
             var result = await _baseClient.SendRequestInternal<HitoBitOrderBase>(_baseClient.GetUrl(cancelOrderEndpoint, api, signedVersion), HttpMethod.Delete, ct, parameters, true).ConfigureAwait(false);
             if (result)
-                    _baseClient.InvokeOrderCanceled(new OrderId() { SourceObject = result.Data, Id = result.Data.Id.ToString(CultureInfo.InvariantCulture) });
+                _baseClient.InvokeOrderCanceled(new OrderId() { SourceObject = result.Data, Id = result.Data.Id.ToString(CultureInfo.InvariantCulture) });
             return result;
         }
 
@@ -273,7 +267,7 @@ namespace HitoBit.Net.Clients.SpotApi
             decimal? icebergQty = null,
             OrderResponseType? orderResponseType = null,
             int? trailingDelta = null,
-            int? strategyId = null, 
+            int? strategyId = null,
             int? strategyType = null,
             int? receiveWindow = null,
             CancellationToken ct = default)
@@ -301,6 +295,8 @@ namespace HitoBit.Net.Clients.SpotApi
             stopPrice = rulesCheck.StopPrice;
             quoteQuantity = rulesCheck.QuoteQuantity;
 
+            string clientOrderId = newClientOrderId ?? ExchangeHelpers.AppendRandomString(_baseClient._brokerId, 32);
+
             var parameters = new Dictionary<string, object>
             {
                 { "symbol", symbol },
@@ -309,7 +305,7 @@ namespace HitoBit.Net.Clients.SpotApi
                 { "cancelReplaceMode", EnumConverter.GetString(cancelReplaceMode) }
             };
             parameters.AddOptionalParameter("cancelNewClientOrderId", newCancelClientOrderId);
-            parameters.AddOptionalParameter("newClientOrderId", newClientOrderId);
+            parameters.AddOptionalParameter("newClientOrderId", clientOrderId);
             parameters.AddOptionalParameter("cancelOrderId", cancelOrderId);
             parameters.AddOptionalParameter("strategyId", strategyId);
             parameters.AddOptionalParameter("strategyType", strategyType);
@@ -346,7 +342,7 @@ namespace HitoBit.Net.Clients.SpotApi
             return result;
         }
         #endregion
-         
+
         #region Query Order
 
         /// <inheritdoc />
@@ -1148,6 +1144,12 @@ namespace HitoBit.Net.Clients.SpotApi
 
         #endregion
 
+
+
+
+
+
+
         #endregion
 
         #region C2C
@@ -1214,73 +1216,6 @@ namespace HitoBit.Net.Clients.SpotApi
 
         #endregion
 
-        #region Staking
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitStakingPositionResult>> PurchaseStakingProductAsync(StakingProductType product, string productId, decimal quantity, bool? renewable = null, long? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) },
-                { "productId", productId },
-                { "amount", quantity.ToString(CultureInfo.InvariantCulture) },
-            };
-            parameters.AddOptionalParameter("renewable", renewable);
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<HitoBitStakingPositionResult>(_baseClient.GetUrl(stakingPurchaseEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 1).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitStakingResult>> RedeemStakingProductAsync(StakingProductType product, string productId, string? positionId = null, decimal? quantity = null, bool? renewable = null, long? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) },
-                { "productId", productId },
-            };
-            parameters.AddOptionalParameter("positionId", positionId);
-            parameters.AddOptionalParameter("amount", quantity?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("renewable", renewable);
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<HitoBitStakingResult>(_baseClient.GetUrl(stakingRedeemEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 1).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitStakingPosition>>> GetStakingPositionsAsync(StakingProductType product, string? productId = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) }
-            };
-            parameters.AddOptionalParameter("productId", productId);
-            parameters.AddOptionalParameter("current", page);
-            parameters.AddOptionalParameter("size", limit);
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitStakingPosition>>(_baseClient.GetUrl(stakingPositionEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitStakingHistory>>> GetStakingHistoryAsync(StakingProductType product, StakingTransactionType transactionType, string? asset = null, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) },
-                { "txnType", EnumConverter.GetString(transactionType) }
-            };
-            parameters.AddOptionalParameter("asset", asset);
-            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
-            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
-            parameters.AddOptionalParameter("current", page);
-            parameters.AddOptionalParameter("size", limit);
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitStakingHistory>>(_baseClient.GetUrl(stakingHistoryEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
-        }
-
-        #endregion
-
         #region Convert Transfer
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitConvertTransferResult>> ConvertTransferAsync(string clientTransferId, string asset, decimal quantity, string targetAsset, long? receiveWindow = null, CancellationToken ct = default)
@@ -1330,6 +1265,94 @@ namespace HitoBit.Net.Clients.SpotApi
 
             return await _baseClient.SendRequestInternal<IEnumerable<HitoBitPreventedTrade>>(_baseClient.GetUrl("myPreventedMatches", "api", "3"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
         }
-#endregion
+        #endregion
+
+        #region Spot Algo
+
+        #region Place TWAP
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitAlgoOrderResult>> PlaceTimeWeightedAveragePriceOrderAsync(
+            string symbol,
+            OrderSide side,
+            decimal quantity,
+            int duration,
+            string? clientOrderId = null,
+            decimal? limitPrice = null,
+            long? receiveWindow = null,
+            CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>()
+            {
+                { "symbol", symbol },
+                { "side", JsonConvert.SerializeObject(side, new OrderSideConverter(false)) },
+                { "quantity", quantity.ToString(CultureInfo.InvariantCulture) },
+                { "duration", duration },
+            };
+            parameters.AddOptionalParameter("clientAlgoId", clientOrderId);
+            parameters.AddOptionalParameter("limitPrice", limitPrice);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitAlgoOrderResult>(_baseClient.GetUrl("algo/spot/newOrderTwap", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Cancel algo order
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitAlgoResult>> CancelAlgoOrderAsync(long algoOrderId, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>()
+            {
+                { "algoId", algoOrderId },
+            };
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitAlgoResult>(_baseClient.GetUrl("algo/spot/order", "sapi", "1"), HttpMethod.Delete, ct, parameters, true, weight: 1).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get Open Algo Orders
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitAlgoOrders>> GetOpenAlgoOrdersAsync(long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>();
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitAlgoOrders>(_baseClient.GetUrl("algo/spot/openOrders", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get historical Algo Orders
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitAlgoOrders>> GetClosedAlgoOrdersAsync(string? symbol = null, OrderSide? side = null, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>();
+            parameters.AddOptionalParameter("symbol", symbol);
+            parameters.AddOptionalParameter("side", side == null ? null : JsonConvert.SerializeObject(side, new OrderSideConverter(false)));
+            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("page", page);
+            parameters.AddOptionalParameter("pageSize", limit);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitAlgoOrders>(_baseClient.GetUrl("algo/spot/historicalOrders", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get Algo sub Orders
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitAlgoSubOrderList>> GetAlgoSubOrdersAsync(long algoId, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>()
+            {
+                { "algoId", algoId }
+            };
+            parameters.AddOptionalParameter("page", page);
+            parameters.AddOptionalParameter("pageSize", limit);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitAlgoSubOrderList>(_baseClient.GetUrl("algo/spot/subOrders", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
+        }
+        #endregion
+        #endregion
     }
 }

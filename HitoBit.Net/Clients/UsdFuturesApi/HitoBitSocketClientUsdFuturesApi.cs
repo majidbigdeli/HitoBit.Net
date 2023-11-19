@@ -8,11 +8,9 @@ using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
-using HitoBit.Net.Objects;
 using HitoBit.Net.Objects.Internal;
 using HitoBit.Net.Objects.Models;
 using HitoBit.Net.Objects.Models.Futures.Socket;
-using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.Socket;
 using HitoBit.Net.Objects.Options;
 using CryptoExchange.Net;
@@ -35,7 +33,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         private const string continuousContractKlineStreamEndpoint = "@continuousKline";
         private const string markPriceStreamEndpoint = "@markPrice";
         private const string allMarkPriceStreamEndpoint = "!markPrice@arr";
-        private const string symbolMiniTickerStreamEndpoint = "@miniTicker";    
+        private const string symbolMiniTickerStreamEndpoint = "@miniTicker";
         private const string allMiniTickerStreamEndpoint = "!miniTicker@arr";
         private const string symbolTickerStreamEndpoint = "@ticker";
         private const string allTickerStreamEndpoint = "!ticker@arr";
@@ -68,7 +66,6 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             base(logger, options.Environment.UsdFuturesSocketAddress!, options, options.UsdFuturesOptions)
         {
             SetDataInterpreter((data) => string.Empty, null);
-            RateLimitPerSocketPerSecond = 4;
         }
         #endregion 
 
@@ -369,6 +366,24 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
 
         #endregion
 
+        #region Asset Index Streams
+
+        /// <inheritdoc />
+        public async Task<CallResult<UpdateSubscription>> SubscribeToAssetIndexUpdatesAsync(Action<DataEvent<IEnumerable<HitoBitFuturesStreamAssetIndexUpdate>>> onMessage, CancellationToken ct = default)
+        {
+            var handler = new Action<DataEvent<HitoBitCombinedStream<IEnumerable<HitoBitFuturesStreamAssetIndexUpdate>>>>(data => onMessage(data.As(data.Data.Data)));
+            return await SubscribeAsync(BaseAddress, new[] { "!assetIndex@arr" }, handler, ct).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<CallResult<UpdateSubscription>> SubscribeToAssetIndexUpdatesAsync(string symbol, Action<DataEvent<HitoBitFuturesStreamAssetIndexUpdate>> onMessage, CancellationToken ct = default)
+        {
+            var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitFuturesStreamAssetIndexUpdate>>>(data => onMessage(data.As(data.Data.Data)));
+            return await SubscribeAsync(BaseAddress, new[] { symbol.ToLowerInvariant() + "@assetIndex" }, handler, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
         #region User Data Streams
 
         /// <inheritdoc />
@@ -381,6 +396,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             Action<DataEvent<HitoBitStreamEvent>>? onListenKeyExpired,
             Action<DataEvent<HitoBitStrategyUpdate>>? onStrategyUpdate,
             Action<DataEvent<HitoBitGridUpdate>>? onGridUpdate,
+            Action<DataEvent<HitoBitConditionOrderTriggerRejectUpdate>>? onConditionalOrderTriggerRejectUpdate,
             CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
@@ -452,7 +468,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
                         {
                             var result = Deserialize<HitoBitStreamEvent>(token);
                             if (result)
-                                onListenKeyExpired?.Invoke(data.As(result.Data, combinedToken["stream"]!.Value<string>()));                            
+                                onListenKeyExpired?.Invoke(data.As(result.Data, combinedToken["stream"]!.Value<string>()));
                             else
                                 _logger.Log(LogLevel.Warning, "Couldn't deserialize data received from the expired listen key event: " + result.Error);
                             break;
@@ -475,6 +491,15 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
                                 _logger.Log(LogLevel.Warning, "Couldn't deserialize data received from the GridUpdate event: " + result.Error);
                             break;
                         }
+                    case "CONDITIONAL_ORDER_TRIGGER_REJECT":
+                        {
+                            var result = Deserialize<HitoBitConditionOrderTriggerRejectUpdate>(token);
+                            if (result)
+                                onConditionalOrderTriggerRejectUpdate?.Invoke(data.As(result.Data, combinedToken["stream"]!.Value<string>()));
+                            else
+                                _logger.Log(LogLevel.Warning, "Couldn't deserialize data received from the CONDITIONAL_ORDER_TRIGGER_REJECT event: " + result.Error);
+                            break;
+                        }
                     default:
                         _logger.Log(LogLevel.Warning, $"Received unknown user data event {evnt}: " + data.Data);
                         break;
@@ -494,7 +519,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             {
                 Method = "SUBSCRIBE",
                 Params = topics.ToArray(),
-                Id = NextId()
+                Id = ExchangeHelpers.NextId()
             };
 
             return SubscribeAsync(url.AppendPath("stream"), request, null, false, onData, ct);
@@ -569,14 +594,30 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         protected override async Task<bool> UnsubscribeAsync(SocketConnection connection, SocketSubscription subscription)
         {
+
             var topics = ((HitoBitSocketRequest)subscription.Request!).Params;
-            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topics, Id = NextId() };
+            var topicsToUnsub = new List<string>();
+            foreach (var topic in topics)
+            {
+                if (connection.Subscriptions.Where(s => s != subscription).Any(s => ((HitoBitSocketRequest?)s.Request)?.Params.Contains(topic) == true))
+                    continue;
+
+                topicsToUnsub.Add(topic);
+            }
+
+            if (!topicsToUnsub.Any())
+            {
+                _logger.LogInformation("No topics need unsubscribing (still active on other subscriptions)");
+                return true;
+            }
+
+            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topicsToUnsub.ToArray(), Id = ExchangeHelpers.NextId() };
             var result = false;
 
             if (!connection.Connected)
                 return true;
 
-            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, data =>
+            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, 1, data =>
             {
                 if (data.Type != JTokenType.Object)
                     return false;

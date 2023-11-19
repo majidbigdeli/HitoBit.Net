@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net.Objects;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Objects.Models.Spot;
 using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.BSwap;
 using HitoBit.Net.Objects.Models.Spot.IsolatedMargin;
 using HitoBit.Net.Objects.Models.Spot.Margin;
-using HitoBit.Net.Objects.Models.Spot.Staking;
-using CryptoExchange.Net.Objects;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Interfaces.Clients.SpotApi
 {
@@ -20,7 +19,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
     {
         /// <summary>
         /// Gets the withdraw/deposit details for an asset
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#asset-detail-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#asset-detail-user_data" /></para>
         /// </summary>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
@@ -37,7 +36,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Pings the HitoBit API
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#test-connectivity" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#test-connectivity" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>True if successful ping, false if no response</returns>
@@ -45,7 +44,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Requests the server for the local time
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#check-server-time" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#check-server-time" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Server time</returns>
@@ -53,7 +52,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets information about the exchange including rate limits and symbol list
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Exchange info</returns>
@@ -61,7 +60,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get's information about the exchange including rate limits and information on the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
         /// </summary>
         /// <param name="symbol">Symbol to get data for token</param>
         /// <param name="ct">Cancellation token</param>
@@ -70,7 +69,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get's information about the exchange including rate limits and information on the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
         /// </summary>
         /// <param name="symbols">Symbols to get data for token</param>
         /// <param name="ct">Cancellation token</param>
@@ -79,7 +78,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get's information about the exchange including rate limits and information on the provided symbol based on an account permission
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
         /// </summary>
         /// <param name="permission">account type</param>
         /// <param name="ct">Cancellation token</param>
@@ -88,7 +87,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get's information about the exchange including rate limits and information on the provided symbols based on account permissions
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#exchange-information" /></para>
         /// </summary>
         /// <param name="permissions">account type</param>
         /// <param name="ct">Cancellation token</param>
@@ -97,7 +96,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the status of the HitoBit platform
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#system-status-system" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#system-status-system" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>The system status</returns>
@@ -105,7 +104,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the recent trades for a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#recent-trades-list" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#recent-trades-list" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get recent trades for</param>
         /// <param name="limit">Result limit</param>
@@ -115,7 +114,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the historical trades for a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#old-trade-lookup-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#old-trade-lookup-market_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get recent trades for</param>
         /// <param name="limit">Result limit</param>
@@ -126,7 +125,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets compressed, aggregate trades. Trades that fill at the same time, from the same order, with the same price will have the quantity aggregated.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#compressed-aggregate-trades-list" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#compressed-aggregate-trades-list" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the trades for</param>
         /// <param name="fromId">ID to get aggregate trades from INCLUSIVE.</param>
@@ -139,7 +138,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get candlestick data for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#kline-candlestick-data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the data for</param>
         /// <param name="interval">The candlestick timespan</param>
@@ -153,7 +152,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get candlestick data for the provided symbol. Returns modified kline data, optimized for the presentation of candlestick charts
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#uiklines" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#uiklines" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the data for</param>
         /// <param name="interval">The candlestick timespan</param>
@@ -167,7 +166,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the order book for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#order-book" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#order-book" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the order book for</param>
         /// <param name="limit">Max number of results</param>
@@ -177,7 +176,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets current average price for a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#current-average-price" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#current-average-price" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the data for</param>
         /// <param name="ct">Cancellation token</param>
@@ -186,7 +185,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the trade fee for a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#trade-fee-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#trade-fee-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Symbol to get withdrawal fee for</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -196,7 +195,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get data regarding the last 24 hours for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the data for</param>
         /// <param name="ct">Cancellation token</param>
@@ -206,7 +205,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get data regarding the last 24 hours for the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics" /></para>
         /// </summary>
         /// <param name="symbols">The symbols to get the data for</param>
         /// <param name="ct">Cancellation token</param>
@@ -216,7 +215,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get data regarding the last 24 hours for all symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>List of data over the last 24 hours</returns>
@@ -224,7 +223,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get data based on the last x time, specified as windowSize
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#rolling-window-price-change-statistics" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#rolling-window-price-change-statistics" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get data for</param>
         /// <param name="windowSize">The window size to use</param>
@@ -234,7 +233,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get data based on the last x time, specified as windowSize
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#rolling-window-price-change-statistics" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#rolling-window-price-change-statistics" /></para>
         /// </summary>
         /// <param name="symbols">The symbols to get data for</param>
         /// <param name="windowSize">The window size to use</param>
@@ -244,7 +243,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the best price/quantity on the order book for a symbol.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#rolling-window-price-change-statistics" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#rolling-window-price-change-statistics" /></para>
         /// </summary>
         /// <param name="symbol">Symbol to get book price for</param>
         /// <param name="ct">Cancellation token</param>
@@ -253,7 +252,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the best price/quantity on the order book for a symbol.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#symbol-order-book-ticker" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#symbol-order-book-ticker" /></para>
         /// </summary>
         /// <param name="symbol">Symbol to get book price for</param>
         /// <param name="ct">Cancellation token</param>
@@ -262,7 +261,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the best price/quantity on the order book for all symbols.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#symbol-order-book-ticker" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#symbol-order-book-ticker" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>List of book prices</returns>
@@ -270,7 +269,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets the price of a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#symbol-price-ticker" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#symbol-price-ticker" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get the price for</param>
         /// <param name="ct">Cancellation token</param>
@@ -279,7 +278,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         ///  Gets the prices of symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#symbol-price-ticker" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#symbol-price-ticker" /></para>
         /// </summary>
         /// <param name="symbols">The symbols to get the price for</param>
         /// <param name="ct">Cancellation token</param>
@@ -288,7 +287,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get a list of the prices of all symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#symbol-price-ticker" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#symbol-price-ticker" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>List of prices</returns>
@@ -296,7 +295,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get a margin asset
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-asset-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-asset-market_data" /></para>
         /// </summary>
         /// <param name="asset">The symbol to get</param>
         /// <param name="ct">Cancellation token</param>
@@ -305,7 +304,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get a margin pair
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-cross-margin-pair-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-cross-margin-pair-market_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get</param>
         /// <param name="ct">Cancellation token</param>
@@ -314,7 +313,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get all assets available for margin trading
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-all-margin-assets-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-all-margin-assets-market_data" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>List of margin assets</returns>
@@ -322,7 +321,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get all asset pairs available for margin trading
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-all-cross-margin-pairs-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-all-cross-margin-pairs-market_data" /></para>
         /// </summary>
         /// <param name="ct">Cancellation token</param>
         /// <returns>List of margin pairs</returns>
@@ -330,7 +329,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get margin price index
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-priceindex-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-priceindex-market_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get</param>
         /// <param name="ct">Cancellation token</param>
@@ -339,7 +338,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Isolated margin symbol info
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-isolated-margin-symbol-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-isolated-margin-symbol-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -350,7 +349,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Isolated margin symbol info
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-all-isolated-margin-symbol-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-all-isolated-margin-symbol-user_data" /></para>
         /// </summary>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
@@ -359,7 +358,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get blvt info
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-blvt-info-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-blvt-info-market_data" /></para>
         /// </summary>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
@@ -368,7 +367,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get's historical klines
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#historical-blvt-nav-kline-candlestick" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#historical-blvt-nav-kline-candlestick" /></para>
         /// </summary>
         /// <param name="symbol">The token</param>
         /// <param name="interval">Kline interval</param>
@@ -382,7 +381,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get all swap pools
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#list-all-swap-pools-market_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#list-all-swap-pools-market_data" /></para>
         /// </summary>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
@@ -391,7 +390,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get pool config
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-pool-configure-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-pool-configure-user_data" /></para>
         /// </summary>
         /// <param name="poolId">Id of the pool</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -400,24 +399,13 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
         Task<WebCallResult<IEnumerable<HitoBitBSwapPoolConfig>>> GetLiquidityPoolConfigurationAsync(int poolId, int? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
-        /// Get avaialble staking products list
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-staking-product-list-user_data" /></para>
-        /// </summary>
-        /// <param name="product">Product type</param>
-        /// <param name="asset">Filter for asset</param>
-        /// <param name="page">Page</param>
-        /// <param name="limit">Max items per page</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<HitoBitStakingProduct>>> GetStakingProductsAsync(StakingProductType product, string? asset = null, int? page = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
         /// Get cross margin collateral ratio
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#cross-margin-collateral-ratio-market_data" /></para>
         /// </summary>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns></returns>
         Task<WebCallResult<IEnumerable<HitoBitCrossMarginCollateralRatio>>> GetCrossMarginCollateralRatioAsync(int? receiveWindow = null, CancellationToken ct = default);
+
     }
 }

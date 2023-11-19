@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net;
+using CryptoExchange.Net.Converters;
+using CryptoExchange.Net.Objects;
 using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces;
@@ -16,12 +11,16 @@ using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.BSwap;
 using HitoBit.Net.Objects.Models.Spot.IsolatedMargin;
 using HitoBit.Net.Objects.Models.Spot.Margin;
-using HitoBit.Net.Objects.Models.Spot.Staking;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Clients.SpotApi
 {
@@ -65,9 +64,6 @@ namespace HitoBit.Net.Clients.SpotApi
         private const string bSwapPoolsEndpoint = "bswap/pools";
         private const string bSwapPoolsConfigureEndpoint = "bswap/poolConfigure";
 
-        // Staking
-        private const string stakingProductListEndpoint = "staking/productList";
-
         private const string api = "api";
         private const string publicVersion = "3";
 
@@ -109,7 +105,7 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<DateTime>> GetServerTimeAsync(CancellationToken ct = default)
         {
             var result = await _baseClient.SendRequestInternal<HitoBitCheckTime>(_baseClient.GetUrl(checkTimeEndpoint, api, publicVersion), HttpMethod.Get, ct, ignoreRateLimit: true).ConfigureAwait(false);
-            return result.As(result.Data?.ServerTime ?? default);            
+            return result.As(result.Data?.ServerTime ?? default);
         }
 
         #endregion
@@ -362,10 +358,10 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<IHitoBitTick>>> GetTickersAsync(IEnumerable<string> symbols, CancellationToken ct = default)
         {
-            foreach(var symbol in symbols)
+            foreach (var symbol in symbols)
                 symbol.ValidateHitoBitSymbol();
 
-            var parameters = new Dictionary<string, object> { { "symbols", $"[{string.Join("," ,symbols.Select(s => $"\"{s}\""))}]" } };
+            var parameters = new Dictionary<string, object> { { "symbols", $"[{string.Join(",", symbols.Select(s => $"\"{s}\""))}]" } };
             var symbolCount = symbols.Count();
             var weight = symbolCount <= 20 ? 1 : symbolCount <= 100 ? 20 : 40;
             var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBit24HPrice>>(_baseClient.GetUrl(price24HEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: weight).ConfigureAwait(false);
@@ -435,7 +431,7 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitPrice>>> GetPricesAsync(IEnumerable<string> symbols, CancellationToken ct = default)
         {
-            foreach(var symbol in symbols)
+            foreach (var symbol in symbols)
                 symbol.ValidateHitoBitSymbol();
 
             var parameters = new Dictionary<string, object> { { "symbols", $"[{string.Join(",", symbols.Select(s => $"\"{s}\""))}]" } };
@@ -464,7 +460,7 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitBookPrice>>> GetBookPricesAsync(IEnumerable<string> symbols, CancellationToken ct = default)
         {
-            foreach(var symbol in symbols)
+            foreach (var symbol in symbols)
                 symbol.ValidateHitoBitSymbol();
             var parameters = new Dictionary<string, object> { { "symbols", $"[{string.Join(",", symbols.Select(s => $"\"{s}\""))}]" } };
 
@@ -671,25 +667,6 @@ namespace HitoBit.Net.Clients.SpotApi
 
         #endregion
 
-        #region Staking
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitStakingProduct>>> GetStakingProductsAsync(StakingProductType product, string? asset = null, int? page = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) }
-            };
-            parameters.AddOptionalParameter("asset", asset);
-            parameters.AddOptionalParameter("current", page);
-            parameters.AddOptionalParameter("size", limit);
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitStakingProduct>>(_baseClient.GetUrl(stakingProductListEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-        }
-
-        #endregion
-
         #region Get Cross Margin Colleteral Ratio
 
         /// <inheritdoc />
@@ -702,5 +679,7 @@ namespace HitoBit.Net.Clients.SpotApi
         }
 
         #endregion
+
+
     }
 }

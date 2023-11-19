@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net.Objects;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Objects.Models;
 using HitoBit.Net.Objects.Models.Spot.Loans;
-using CryptoExchange.Net.Objects;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 {
@@ -16,7 +16,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
     {
         /// <summary>
         /// Get income history from crypto loans
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-crypto-loans-income-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-crypto-loans-income-history-user_data" /></para>
         /// </summary>
         /// <param name="asset">The asset</param>
         /// <param name="type">Filter by type of incoming</param>
@@ -30,7 +30,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Take a crypto loan
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#borrow-crypto-loan-borrow-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#borrow-crypto-loan-borrow-trade" /></para>
         /// </summary>
         /// <param name="loanAsset">Asset to loan</param>
         /// <param name="collateralAsset">Collateral asset</param>
@@ -44,7 +44,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Get borrow order history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#borrow-get-loan-borrow-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#borrow-get-loan-borrow-history-user_data" /></para>
         /// </summary>
         /// <param name="orderId">Filter by order id</param>
         /// <param name="loanAsset">Filter by loan asset</param>
@@ -60,7 +60,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Get ongoing loan orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#borrow-get-loan-ongoing-orders-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#borrow-get-loan-ongoing-orders-user_data" /></para>
         /// </summary>
         /// <param name="orderId">Filter by order id</param>
         /// <param name="loanAsset">Filter by loan asset</param>
@@ -74,7 +74,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Repay a loan
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#repay-crypto-loan-repay-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#repay-crypto-loan-repay-trade" /></para>
         /// </summary>
         /// <param name="orderId">Order id to repay</param>
         /// <param name="quantity">Quantity to repay</param>
@@ -87,7 +87,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Get loan repayment history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#repay-get-loan-repayment-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#repay-get-loan-repayment-history-user_data" /></para>
         /// </summary>
         /// <param name="orderId">Filter by order id</param>
         /// <param name="loanAsset">Filter by loan asset</param>
@@ -103,7 +103,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Adjust LTV for a loan
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#adjust-ltv-crypto-loan-adjust-ltv-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#adjust-ltv-crypto-loan-adjust-ltv-trade" /></para>
         /// </summary>
         /// <param name="orderId">Order id</param>
         /// <param name="quantity">Adjustment quantity</param>
@@ -115,7 +115,7 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 
         /// <summary>
         /// Get LTV adjustment history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#adjust-ltv-get-loan-ltv-adjustment-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#adjust-ltv-get-loan-ltv-adjustment-history-user_data" /></para>
         /// </summary>
         /// <param name="orderId">Filter by order id</param>
         /// <param name="loanAsset">Filter by loan asset</param>
@@ -128,5 +128,50 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
         /// <param name="ct">Cancellation token</param>
         /// <returns></returns>
         Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanLtvAdjustRecord>>> GetLtvAdjustHistoryAsync(long? orderId = null, string? loanAsset = null, string? collateralAsset = null, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Get interest rate and borrow limit of loanable assets. The borrow limit is shown in USD value.
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-loanable-assets-data-user_data-2" /></para>
+        /// </summary>
+        /// <param name="loanAsset">Filter by loan asset</param>
+        /// <param name="vipLevel">Vip level</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanAsset>>> GetLoanableAssetsAsync(string? loanAsset = null, int? vipLevel = null, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Get LTV information and collateral limit of collateral assets. The collateral limit is shown in USD value.
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-collateral-assets-data-user_data" /></para>
+        /// </summary>
+        /// <param name="collateralAsset">Filter by collateral asset</param>
+        /// <param name="vipLevel">Vip level</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanCollateralAsset>>> GetCollateralAssetsAsync(string? collateralAsset = null, int? vipLevel = null, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Get the the rate of collateral coin / loan coin when using collateral repay, the rate will be valid within 8 second.
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#check-collateral-repay-rate-user_data" /></para>
+        /// </summary>
+        /// <param name="loanAsset">Loan asset</param>
+        /// <param name="collateralAsset">Collateral asset</param>
+        /// <param name="quantity">Quantity</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitCryptoLoanRepayRate>> GetCollateralRepayRateAsync(string loanAsset, string collateralAsset, decimal quantity, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Customize margin call for ongoing orders only.
+        /// </summary>
+        /// <param name="marginCall">Margin call value</param>
+        /// <param name="orderId">Order id. Required if collateralAsset is not send</param>
+        /// <param name="collateralAsset">Collateral asset. Required if order id is not send</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanMarginCallResult>>> CustomizeMarginCallAsync(decimal marginCall, string? orderId = null, string? collateralAsset = null, long? receiveWindow = null, CancellationToken ct = default);
     }
 }

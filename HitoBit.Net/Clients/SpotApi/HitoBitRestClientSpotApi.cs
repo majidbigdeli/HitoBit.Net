@@ -21,6 +21,8 @@ using CryptoExchange.Net.Interfaces.CommonClients;
 using Newtonsoft.Json.Linq;
 using CryptoExchange.Net.Converters;
 using HitoBit.Net.Objects.Options;
+using HitoBit.Net.Converters;
+using HitoBit.Net.Enums;
 
 namespace HitoBit.Net.Clients.SpotApi
 {
@@ -35,6 +37,8 @@ namespace HitoBit.Net.Clients.SpotApi
 
         internal HitoBitExchangeInfo? _exchangeInfo;
         internal DateTime? _lastExchangeInfoUpdate;
+
+        internal readonly string _brokerId;
 
         internal static TimeSyncState _timeSyncState = new TimeSyncState("Spot Api");
         #endregion
@@ -70,6 +74,8 @@ namespace HitoBit.Net.Clients.SpotApi
             requestBodyEmptyContent = "";
             requestBodyFormat = RequestBodyFormat.FormData;
             arraySerialization = ArrayParametersSerialization.MultipleValues;
+
+            _brokerId = !string.IsNullOrEmpty(options.SpotOptions.BrokerId) ? options.SpotOptions.BrokerId! : "x-VICEW9VV";
         }
         #endregion
 
@@ -121,6 +127,8 @@ namespace HitoBit.Net.Clients.SpotApi
             stopPrice = rulesCheck.StopPrice;
             quoteQuantity = rulesCheck.QuoteQuantity;
 
+            string clientOrderId = newClientOrderId ?? ExchangeHelpers.AppendRandomString(_brokerId, 32);
+
             var parameters = new Dictionary<string, object>
             {
                 { "symbol", symbol },
@@ -129,7 +137,7 @@ namespace HitoBit.Net.Clients.SpotApi
             };
             parameters.AddOptionalParameter("quantity", quantity?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("quoteOrderQty", quoteQuantity?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("newClientOrderId", newClientOrderId);
+            parameters.AddOptionalParameter("newClientOrderId", clientOrderId);
             parameters.AddOptionalParameter("price", price?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("timeInForce", timeInForce == null ? null : JsonConvert.SerializeObject(timeInForce, new TimeInForceConverter(false)));
             parameters.AddOptionalParameter("stopPrice", stopPrice?.ToString(CultureInfo.InvariantCulture));
@@ -180,7 +188,7 @@ namespace HitoBit.Net.Clients.SpotApi
                 _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
                 _timeSyncState.LastSyncTime = DateTime.MinValue;
             }
-            return result;                    
+            return result;
         }
 
         internal async Task<WebCallResult> SendRequestInternal(Uri uri, HttpMethod method, CancellationToken cancellationToken,
@@ -232,7 +240,7 @@ namespace HitoBit.Net.Clients.SpotApi
                 throw new ArgumentException(nameof(symbol) + " required for HitoBit " + nameof(ISpotClient.PlaceOrderAsync), nameof(symbol));
 
             var order = await Trading.PlaceOrderAsync(symbol, GetOrderSide(side), GetOrderType(type), quantity, price: price, timeInForce: type == CommonOrderType.Limit ? TimeInForce.GoodTillCanceled : (TimeInForce?)null, newClientOrderId: clientOrderId, ct: ct).ConfigureAwait(false);
-            if(!order)
+            if (!order)
                 return order.As<OrderId>(null);
 
             return order.As(new OrderId
@@ -336,7 +344,7 @@ namespace HitoBit.Net.Clients.SpotApi
                     Price = s.Price,
                     Quantity = s.Quantity,
                     QuantityFilled = s.QuantityFilled,
-                    Side = s.Side == Enums.OrderSide.Buy ? CommonOrderSide.Buy: CommonOrderSide.Sell,
+                    Side = s.Side == Enums.OrderSide.Buy ? CommonOrderSide.Buy : CommonOrderSide.Sell,
                     Type = GetOrderType(s.Type),
                     Status = GetOrderStatus(s.Status),
                     Timestamp = s.CreateTime
@@ -435,8 +443,8 @@ namespace HitoBit.Net.Clients.SpotApi
                 OpenTime = t.OpenTime,
                 ClosePrice = t.ClosePrice,
                 OpenPrice = t.OpenPrice,
-                Volume  = t.Volume
-            })); 
+                Volume = t.Volume
+            }));
         }
 
         async Task<WebCallResult<OrderBook>> IBaseRestClient.GetOrderBookAsync(string symbol, CancellationToken ct)
@@ -547,18 +555,22 @@ namespace HitoBit.Net.Clients.SpotApi
         }
 
         /// <inheritdoc />
-        protected override Error ParseErrorResponse(JToken error)
+        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, string data)
         {
-            if (!error.HasValues)
-                return new ServerError(error.ToString());
+            var errorData = ValidateJson(data);
+            if (!errorData)
+                return new ServerError(data);
 
-            if (error["msg"] == null && error["code"] == null)
-                return new ServerError(error.ToString());
+            if (!errorData.Data.HasValues)
+                return new ServerError(errorData.Data.ToString());
 
-            if (error["msg"] != null && error["code"] == null)
-                return new ServerError((string)error["msg"]!);
+            if (errorData.Data["msg"] == null && errorData.Data["code"] == null)
+                return new ServerError(errorData.Data.ToString());
 
-            return new ServerError((int)error["code"]!, (string)error["msg"]!);
+            if (errorData.Data["msg"] != null && errorData.Data["code"] == null)
+                return new ServerError((string)errorData.Data["msg"]!);
+
+            return new ServerError((int)errorData.Data["code"]!, (string)errorData.Data["msg"]!);
         }
     }
 }

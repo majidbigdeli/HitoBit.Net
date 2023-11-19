@@ -11,9 +11,10 @@ using HitoBit.Net.Objects.Models.Spot;
 using HitoBit.Net.Objects.Options;
 using CryptoExchange.Net;
 using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Interfaces;
+using CryptoExchange.Net.Converters;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Sockets;
+using HitoBit.Net.Enums;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -31,6 +32,8 @@ namespace HitoBit.Net.Clients.SpotApi
 
         internal HitoBitExchangeInfo? _exchangeInfo;
         internal DateTime? _lastExchangeInfoUpdate;
+        internal readonly string _brokerId;
+
         #endregion
 
         /// <inheritdoc />
@@ -46,11 +49,12 @@ namespace HitoBit.Net.Clients.SpotApi
             base(logger, options.Environment.SpotSocketStreamAddress, options, options.SpotOptions)
         {
             SetDataInterpreter((data) => string.Empty, null);
-            RateLimitPerSocketPerSecond = 4;
 
             Account = new HitoBitSocketClientSpotApiAccount(logger, this);
             ExchangeData = new HitoBitSocketClientSpotApiExchangeData(logger, this);
             Trading = new HitoBitSocketClientSpotApiTrading(logger, this);
+
+            _brokerId = !string.IsNullOrEmpty(options.SpotOptions.BrokerId) ? options.SpotOptions.BrokerId! : "x-VICEW9VV";
         }
         #endregion
 
@@ -64,13 +68,13 @@ namespace HitoBit.Net.Clients.SpotApi
             {
                 Method = "SUBSCRIBE",
                 Params = topics.ToArray(),
-                Id = NextId()
+                Id = ExchangeHelpers.NextId()
             };
 
             return SubscribeAsync(url.AppendPath("stream"), request, null, false, onData, ct);
         }
 
-        internal Task<CallResult<HitoBitResponse<T>>> QueryAsync<T>(string url, string method, Dictionary<string, object> parameters, bool authenticated = false, bool sign = false)
+        internal Task<CallResult<HitoBitResponse<T>>> QueryAsync<T>(string url, string method, Dictionary<string, object> parameters, bool authenticated = false, bool sign = false, int weight = 1)
         {
             if (authenticated)
             {
@@ -92,10 +96,10 @@ namespace HitoBit.Net.Clients.SpotApi
             {
                 Method = method,
                 Params = parameters,
-                Id = NextId()
+                Id = ExchangeHelpers.NextId()
             };
 
-            return QueryAsync<HitoBitResponse<T>>(url, request, false);
+            return QueryAsync<HitoBitResponse<T>>(url, request, false, weight);
         }
 
         internal CallResult<T> DeserializeInternal<T>(JToken obj, JsonSerializer? serializer = null, int? requestId = null)
@@ -115,7 +119,21 @@ namespace HitoBit.Net.Clients.SpotApi
             if (status != 200)
             {
                 var error = data["error"]!;
-                callResult = new CallResult<T>(new ServerError(error["code"]!.Value<int>(), error["msg"]!.Value<string>()!));
+
+                if (status == 429 || status == 418)
+                {
+                    DateTime? retryAfter = null;
+                    var retryAfterVal = error["data"]?["retryAfter"]?.ToString();
+                    if (long.TryParse(retryAfterVal, out var retryAfterMs))
+                        retryAfter = DateTimeConverter.ConvertFromMilliseconds(retryAfterMs);
+
+                    callResult = new CallResult<T>(new ServerRateLimitError(error["msg"]!.Value<string>()!)
+                    {
+                        RetryAfter = retryAfter
+                    });
+                }
+                else
+                    callResult = new CallResult<T>(new ServerError(error["code"]!.Value<int>(), error["msg"]!.Value<string>()!));
                 return true;
             }
             callResult = Deserialize<T>(data!);
@@ -125,27 +143,35 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         protected override bool HandleSubscriptionResponse(SocketConnection s, SocketSubscription subscription, object request, JToken message, out CallResult<object>? callResult)
         {
-            var result = message;
+            callResult = null;
+            if (message.Type != JTokenType.Object)
+                return false;
 
-            if (result != null && message.Count() > 0)
+            var id = message["id"];
+            if (id == null)
+                return false;
+
+            var bRequest = (HitoBitSocketRequest)request;
+            if ((int)id != bRequest.Id)
+                return false;
+
+            var result = message["result"];
+            if (result != null && result.Type == JTokenType.Null)
             {
-                if (message.Value<bool>("hasError"))
-                {
-
-                    callResult = new CallResult<object>(new ServerError("Unknown error: " + message.Value<string>("data")));
-                    return true;
-                }
-
                 _logger.Log(LogLevel.Trace, $"Socket {s.SocketId} Subscription completed");
-
-
-
                 callResult = new CallResult<object>(new object());
                 return true;
             }
 
-            callResult = new CallResult<object>(new ServerError("Unknown error: " + message));
-            return false;
+            var error = message["error"];
+            if (error == null)
+            {
+                callResult = new CallResult<object>(new ServerError("Unknown error: " + message));
+                return true;
+            }
+
+            callResult = new CallResult<object>(new ServerError(error["code"]!.Value<int>(), error["msg"]!.ToString()));
+            return true;
         }
 
         /// <inheritdoc />
@@ -178,13 +204,28 @@ namespace HitoBit.Net.Clients.SpotApi
         protected override async Task<bool> UnsubscribeAsync(SocketConnection connection, SocketSubscription subscription)
         {
             var topics = ((HitoBitSocketRequest)subscription.Request!).Params;
-            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topics, Id = NextId() };
+            var topicsToUnsub = new List<string>();
+            foreach (var topic in topics)
+            {
+                if (connection.Subscriptions.Where(s => s != subscription).Any(s => ((HitoBitSocketRequest?)s.Request)?.Params.Contains(topic) == true))
+                    continue;
+
+                topicsToUnsub.Add(topic);
+            }
+
+            if (!topicsToUnsub.Any())
+            {
+                _logger.LogInformation("No topics need unsubscribing (still active on other subscriptions)");
+                return true;
+            }
+
+            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topicsToUnsub.ToArray(), Id = ExchangeHelpers.NextId() };
             var result = false;
 
             if (!connection.Connected)
                 return true;
 
-            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, data =>
+            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, 1, data =>
             {
                 if (data.Type != JTokenType.Object)
                     return false;
@@ -222,9 +263,5 @@ namespace HitoBit.Net.Clients.SpotApi
             return HitoBitHelpers.ValidateTradeRules(_logger, ApiOptions.TradeRulesBehaviour, _exchangeInfo, symbol, quantity, quoteQuantity, price, stopPrice, type);
         }
 
-        protected override IWebsocket CreateSocket(string address)
-        {
-            return new SignalRCryptoExchangeWebSocketClient(_logger, GetWebSocketParameters(address), null);
-        }
     }
 }

@@ -10,6 +10,7 @@ using HitoBit.Net.Objects.Models.Futures.Socket;
 using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.Socket;
 using CryptoExchange.Net.Interfaces;
+using HitoBit.Net.Enums;
 
 namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 {
@@ -20,7 +21,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
     {
         /// <summary>
         /// Subscribes to the aggregated trades update stream for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#aggregate-trade-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#aggregate-trade-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -50,7 +51,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the aggregated trades update stream for the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#aggregate-trade-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#aggregate-trade-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -60,7 +61,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the Mark price update stream for a single symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#mark-price-stream" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#mark-price-stream" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="updateInterval">Update interval in milliseconds, either 1000 or 3000. Defaults to 3000</param>
@@ -71,7 +72,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the Mark price update stream for a list of symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#mark-price-stream" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#mark-price-stream" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="updateInterval">Update interval in milliseconds, either 1000 or 3000. Defaults to 3000</param>
@@ -82,7 +83,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the candlestick update stream for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="interval">The interval of the candlesticks</param>
@@ -93,7 +94,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the candlestick update stream for the provided symbol and intervals
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="intervals">The intervals of the candlesticks</param>
@@ -104,7 +105,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the candlestick update stream for the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="interval">The interval of the candlesticks</param>
@@ -115,7 +116,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the candlestick update stream for the provided symbols and intervals
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#kline-candlestick-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="intervals">The intervals of the candlesticks</param>
@@ -126,7 +127,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the continuous contract candlestick update stream for the provided pair
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#continuous-contract-kline-candlestick-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#continuous-contract-kline-candlestick-streams" /></para>
         /// </summary>
         /// <param name="pair">The pair</param>
         /// <param name="contractType">The contract type</param>
@@ -138,7 +139,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the continuous contract candlestick update stream for the provided pairs
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#continuous-contract-kline-candlestick-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#continuous-contract-kline-candlestick-streams" /></para>
         /// </summary>
         /// <param name="pairs">The pairs</param>
         /// <param name="contractType">The contract type</param>
@@ -150,7 +151,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to mini ticker updates stream for a specific symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#individual-symbol-mini-ticker-stream" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#individual-symbol-mini-ticker-stream" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to subscribe to</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -160,7 +161,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to mini ticker updates stream for a list of symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#individual-symbol-mini-ticker-stream" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#individual-symbol-mini-ticker-stream" /></para>
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -170,7 +171,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to mini ticker updates stream for all symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#all-market-mini-tickers-stream" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#all-market-mini-tickers-stream" /></para>
         /// </summary>
         /// <param name="onMessage">The event handler for the received data</param>
         /// <param name="ct">Cancellation token for closing this subscription</param>
@@ -179,7 +180,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to ticker updates stream for a specific symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#individual-symbol-ticker-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#individual-symbol-ticker-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to subscribe to</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -189,7 +190,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to ticker updates stream for a specific symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#individual-symbol-ticker-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#individual-symbol-ticker-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -199,7 +200,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to ticker updates stream for all symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#all-market-tickers-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#all-market-tickers-streams" /></para>
         /// </summary>
         /// <param name="onMessage">The event handler for the received data</param>
         /// <param name="ct">Cancellation token for closing this subscription</param>
@@ -208,7 +209,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to all book ticker update streams
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#all-book-tickers-stream" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#all-book-tickers-stream" /></para>
         /// </summary>
         /// <param name="onMessage">The event handler for the received data</param>
         /// <param name="ct">Cancellation token for closing this subscription</param>
@@ -217,7 +218,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the book ticker update stream for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#individual-symbol-book-ticker-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#individual-symbol-book-ticker-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -227,7 +228,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the book ticker update stream for the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#individual-symbol-book-ticker-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#individual-symbol-book-ticker-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -237,7 +238,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to specific symbol forced liquidations stream
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#liquidation-order-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#liquidation-order-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="ct">Cancellation token for closing this subscription</param>
@@ -247,7 +248,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to list of symbol forced liquidations stream
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#liquidation-order-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#liquidation-order-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -257,7 +258,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to all forced liquidations stream
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#all-market-liquidation-order-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#all-market-liquidation-order-streams" /></para>
         /// </summary>
         /// <param name="onMessage">The event handler for the received data</param>
         /// <param name="ct">Cancellation token for closing this subscription</param>
@@ -266,7 +267,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the depth updates for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#partial-book-depth-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#partial-book-depth-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to subscribe on</param>
         /// <param name="levels">The amount of entries to be returned in the update</param>
@@ -278,7 +279,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the depth updates for the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#partial-book-depth-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#partial-book-depth-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols to subscribe on</param>
         /// <param name="levels">The amount of entries to be returned in the update of each symbol</param>
@@ -290,7 +291,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the order book updates for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#diff-book-depth-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#diff-book-depth-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="updateInterval">Update interval in milliseconds, either 0 or 100, 500 or 1000, depending on endpoint</param>
@@ -301,7 +302,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the depth update stream for the provided symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#diff-book-depth-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#diff-book-depth-streams" /></para>
         /// </summary>
         /// <param name="symbols">The symbols</param>
         /// <param name="updateInterval">Update interval in milliseconds, either 0 or 100, 500 or 1000, depending on endpoint</param>
@@ -320,7 +321,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to the account update stream. Prior to using this, the HitoBitClient.Futures.UserStreams.StartUserStream method should be called.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#user-data-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#user-data-streams" /></para>
         /// </summary>
         /// <param name="listenKey">Listen key retrieved by the StartUserStream method</param>
         /// <param name="onLeverageUpdate">The event handler for leverage changed update</param>
@@ -330,6 +331,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
         /// <param name="onListenKeyExpired">Responds when the listen key for the stream has expired. Initiate a new instance of the stream here</param>
         /// <param name="onStrategyUpdate">The event handler for whenever a strategy update is received</param>
         /// <param name="onGridUpdate">The event handler for whenever a grid update is received</param>
+        /// <param name="onConditionalOrderTriggerRejectUpdate">The event handler for whenever a trigger order failed to place an order</param>
         /// <param name="ct">Cancellation token for closing this subscription</param>
         /// <returns>A stream subscription. This stream subscription can be used to be notified when the socket is disconnected/reconnected</returns>
         Task<CallResult<UpdateSubscription>> SubscribeToUserDataUpdatesAsync(
@@ -341,12 +343,13 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
             Action<DataEvent<HitoBitStreamEvent>> onListenKeyExpired,
             Action<DataEvent<HitoBitStrategyUpdate>>? onStrategyUpdate,
             Action<DataEvent<HitoBitGridUpdate>>? onGridUpdate,
+            Action<DataEvent<HitoBitConditionOrderTriggerRejectUpdate>>? onConditionalOrderTriggerRejectUpdate,
             CancellationToken ct = default);
 
-        
+
         /// <summary>
         /// Subscribes to the Mark price update stream for a all symbols
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#mark-price-stream-for-all-market" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#mark-price-stream-for-all-market" /></para>
         /// </summary>
         /// <param name="updateInterval">Update interval in milliseconds, either 1000 or 3000. Defaults to 3000</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -356,7 +359,7 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
 
         /// <summary>
         /// Subscribes to composite index updates stream for a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/futures/en/#composite-index-symbol-information-streams" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#composite-index-symbol-information-streams" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to subscribe</param>
         /// <param name="onMessage">The event handler for the received data</param>
@@ -365,5 +368,23 @@ namespace HitoBit.Net.Interfaces.Clients.UsdFuturesApi
         Task<CallResult<UpdateSubscription>> SubscribeToCompositeIndexUpdatesAsync(string symbol,
             Action<DataEvent<HitoBitFuturesStreamCompositeIndex>> onMessage, CancellationToken ct = default);
 
+        /// <summary>
+        /// Subscribe to asset index updates stream
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#multi-assets-mode-asset-index-2" /></para>
+        /// </summary>
+        /// <param name="onMessage">The event handler for the received data</param>
+        /// <param name="ct">Cancellation token for closing this subscription</param>
+        /// <returns></returns>
+        Task<CallResult<UpdateSubscription>> SubscribeToAssetIndexUpdatesAsync(Action<DataEvent<IEnumerable<HitoBitFuturesStreamAssetIndexUpdate>>> onMessage, CancellationToken ct = default);
+
+        /// <summary>
+        /// Subscribe to asset index updates for a single
+        /// <para><a href="https://binance-docs.github.io/apidocs/futures/en/#multi-assets-mode-asset-index-2" /></para>
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="onMessage">The event handler for the received data</param>
+        /// <param name="ct">Cancellation token for closing this subscription</param>
+        /// <returns></returns>
+        Task<CallResult<UpdateSubscription>> SubscribeToAssetIndexUpdatesAsync(string symbol, Action<DataEvent<HitoBitFuturesStreamAssetIndexUpdate>> onMessage, CancellationToken ct = default);
     }
 }

@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net.Objects;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Objects.Models;
+using HitoBit.Net.Objects.Models.Futures.AlgoOrders;
 using HitoBit.Net.Objects.Models.Spot;
 using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.BSwap;
 using HitoBit.Net.Objects.Models.Spot.ConvertTransfer;
 using HitoBit.Net.Objects.Models.Spot.Margin;
-using HitoBit.Net.Objects.Models.Spot.Staking;
-using CryptoExchange.Net.Objects;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Interfaces.Clients.SpotApi
 {
@@ -21,7 +21,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
     {
         /// <summary>
         /// Places a new test order. Test orders are not actually being executed and just test the functionality.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#test-new-order-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#test-new-order-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="side">The order side (buy/sell)</param>
@@ -61,7 +61,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Places a new order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#new-order-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#new-order-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="side">The order side (buy/sell)</param>
@@ -101,20 +101,21 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Cancels a pending order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#cancel-order-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#cancel-order-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="orderId">The order id of the order</param>
         /// <param name="origClientOrderId">The client order id of the order</param>
         /// <param name="newClientOrderId">Unique identifier for this cancel</param>
+        /// <param name="cancelRestriction">Restrict cancellation based on order state</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Id's for canceled order</returns>
-        Task<WebCallResult<HitoBitOrderBase>> CancelOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, string? newClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default);
+        Task<WebCallResult<HitoBitOrderBase>> CancelOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, string? newClientOrderId = null,  long? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
         /// Cancels all open orders on a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#cancel-all-open-orders-on-a-symbol-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#cancel-all-open-orders-on-a-symbol-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -143,6 +144,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
         /// <param name="trailingDelta">Trailing delta value for order in BIPS. A value of 1 means 0.01% trailing delta.</param>
         /// <param name="strategyId">Strategy id</param>
         /// <param name="strategyType">Strategy type</param>
+        /// <param name="cancelRestriction">Restrict cancellation based on order state</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns></returns>
@@ -169,7 +171,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves data for a specific order. Either orderId or origClientOrderId should be provided.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-order-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-order-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="orderId">The order id of the order</param>
@@ -181,7 +183,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets a list of open orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#current-open-orders-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#current-open-orders-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get open orders for</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -191,7 +193,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets all orders for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#all-orders-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#all-orders-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get orders for</param>
         /// <param name="orderId">If set, only orders with an order id higher than the provided will be returned</param>
@@ -205,7 +207,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Places a new OCO(One cancels other) order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#new-oco-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#new-oco-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="side">The order side (buy/sell)</param>
@@ -251,7 +253,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Cancels a pending oco order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#cancel-oco-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#cancel-oco-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="orderListId">The id of the order list to cancel</param>
@@ -264,7 +266,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves data for a specific oco order. Either orderListId or listClientOrderId should be provided.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-oco-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-oco-user_data" /></para>
         /// </summary>
         /// <param name="orderListId">The list order id of the order</param>
         /// <param name="listClientOrderId">The client order id of the list order</param>
@@ -275,7 +277,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves a list of oco orders matching the parameters
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-all-oco-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-all-oco-user_data" /></para>
         /// </summary>
         /// <param name="fromId">Only return oco orders with id higher than this</param>
         /// <param name="startTime">Only return oco orders placed later than this. Only valid if fromId isn't provided</param>
@@ -288,7 +290,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves a list of open oco orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-open-oco-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-open-oco-user_data" /></para>
         /// </summary>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
@@ -297,7 +299,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets user trades for provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#account-trade-list-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#account-trade-list-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Symbol to get trades for</param>
         /// <param name="orderId">Get trades for this order id</param>
@@ -312,7 +314,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Margin account new order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#margin-account-new-order-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#margin-account-new-order-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="side">The order side (buy/sell)</param>
@@ -348,7 +350,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Cancel an active order for margin account
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#margin-account-cancel-order-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#margin-account-cancel-order-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="orderId">The order id of the order</param>
@@ -362,7 +364,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Cancel all active orders for a symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#margin-account-cancel-all-open-orders-on-a-symbol-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#margin-account-cancel-all-open-orders-on-a-symbol-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the to cancel orders for</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -373,7 +375,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves data for a specific margin account order. Either orderId or origClientOrderId should be provided.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-order-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-order-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -386,7 +388,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets a list of open margin account orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-open-orders-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-open-orders-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get open orders for</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -397,7 +399,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets all margin account orders for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-all-orders-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-all-orders-user_data" /></para>
         /// </summary>
         /// <param name="symbol">The symbol to get orders for</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -412,7 +414,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Gets all user margin account trades for provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-trade-list-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-trade-list-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Symbol to get trades for</param>
         /// <param name="limit">The max number of results</param>
@@ -427,7 +429,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Places a new margin OCO(One cancels other) order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#margin-account-new-oco-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#margin-account-new-oco-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="side">The order side (buy/sell)</param>
@@ -467,7 +469,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Cancels a pending margin oco order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#margin-account-cancel-oco-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#margin-account-cancel-oco-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -481,7 +483,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves data for a specific margin oco order. Either orderListId or listClientOrderId should be provided.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-oco-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-oco-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Mandatory for isolated margin, not supported for cross margin</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -494,7 +496,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves a list of margin oco orders matching the parameters
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-all-oco-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-all-oco-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Mandatory for isolated margin, not supported for cross margin</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -509,7 +511,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Retrieves a list of open margin oco orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-open-oco-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-margin-account-39-s-open-oco-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Mandatory for isolated margin, not supported for cross margin</param>
         /// <param name="isIsolated">For isolated margin or not</param>
@@ -520,7 +522,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Subscribe to a token
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#subscribe-blvt-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#subscribe-blvt-user_data" /></para>
         /// </summary>
         /// <param name="tokenName">Name of the token to subscribe to</param>
         /// <param name="cost">Cost of the subscription</param>
@@ -531,7 +533,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get subscription records
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-subscription-record-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-subscription-record-user_data" /></para>
         /// </summary>
         /// <param name="tokenName">Filter by token</param>
         /// <param name="id">Filter by id</param>
@@ -545,7 +547,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Redeem a token
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#redeem-blvt-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#redeem-blvt-user_data" /></para>
         /// </summary>
         /// <param name="tokenName">Name of the token to redeem</param>
         /// <param name="quantity">Quantity to redeem</param>
@@ -556,7 +558,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get redemption records
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-redemption-record-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-redemption-record-user_data" /></para>
         /// </summary>
         /// <param name="tokenName">Filter by token</param>
         /// <param name="id">Filter by id</param>
@@ -570,7 +572,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Add liquidity to a pool
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#add-liquidity-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#add-liquidity-trade" /></para>
         /// </summary>
         /// <param name="poolId">The pool</param>
         /// <param name="asset">The asset</param>
@@ -583,7 +585,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Remove liquidity from a pool
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#remove-liquidity-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#remove-liquidity-trade" /></para>
         /// </summary>
         /// <param name="poolId">The pool</param>
         /// <param name="asset">The asset</param>
@@ -596,7 +598,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get liquidity operation records
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-liquidity-operation-record-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-liquidity-operation-record-user_data" /></para>
         /// </summary>
         /// <param name="operationId">Filter by operationId</param>
         /// <param name="poolId">Filter by poolId</param>
@@ -612,7 +614,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
         /// <summary>
         /// Request a quote for swap quote asset (selling asset) for base asset (buying asset), essentially price/exchange rates. quoteQty is quantity of quote asset(to sell).
         /// Please be noted the quote is for reference only, the actual price will change as the liquidity changes, it's recommended to swap immediate after request a quote for slippage prevention.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#request-quote-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#request-quote-user_data" /></para>
         /// </summary>
         /// <param name="quoteAsset">Quote asset</param>
         /// <param name="baseAsset">Base asset</param>
@@ -624,7 +626,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Swap quote asset for base asset
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#swap-trade" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#swap-trade" /></para>
         /// </summary>
         /// <param name="quoteAsset">Quote asset</param>
         /// <param name="baseAsset">Base asset</param>
@@ -636,7 +638,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get swap history records
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-swap-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-swap-history-user_data" /></para>
         /// </summary>
         /// <param name="swapId">Filter by swapId</param>
         /// <param name="status">Filter by status</param>
@@ -653,7 +655,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Calculate expected share quantity for adding liquidity in single or dual token.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#add-liquidity-preview-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#add-liquidity-preview-user_data" /></para>
         /// </summary>
         /// <param name="poolId">The pool</param>
         /// <param name="asset">The asset</param>
@@ -666,7 +668,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Calculate expected share quantity for removing liquidity in single or dual token.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#remove-liquidity-preview-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#remove-liquidity-preview-user_data" /></para>
         /// </summary>
         /// <param name="poolId">The pool</param>
         /// <param name="asset">The asset</param>
@@ -679,7 +681,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get liquidity info for a pool
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-liquidity-information-of-a-pool-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-liquidity-information-of-a-pool-user_data" /></para>
         /// </summary>
         /// <param name="poolId">Get a specific pool</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -687,9 +689,10 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
         /// <returns></returns>
         Task<WebCallResult<IEnumerable<HitoBitBSwapPoolLiquidity>>> GetLiquidityPoolInfoAsync(int? poolId = null, int? receiveWindow = null, CancellationToken ct = default);
 
+
         /// <summary>
         /// Get Customer to Customer trade history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-c2c-trade-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-c2c-trade-history-user_data" /></para>
         /// </summary>
         /// <param name="side">Trade side</param>
         /// <param name="startTime">Filter by start time</param>
@@ -703,7 +706,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get pay trade history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-pay-trade-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-pay-trade-history-user_data" /></para>
         /// </summary>
         /// <param name="startTime">Filter by start time</param>
         /// <param name="endTime">Filter by end time</param>
@@ -715,7 +718,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get convert trade history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-convert-trade-history-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-convert-trade-history-user_data" /></para>
         /// </summary>
         /// <param name="startTime">Filter by start time</param>
         /// <param name="endTime">Filter by end time</param>
@@ -724,62 +727,6 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
         /// <param name="ct">Cancellation token</param>
         /// <returns></returns>
         Task<WebCallResult<HitoBitListResult<HitoBitConvertTrade>>> GetConvertTradeHistoryAsync(DateTime startTime, DateTime endTime, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Purchase a staking product
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#purchase-staking-product-user_data" /></para>
-        /// </summary>
-        /// <param name="product">Product type</param>
-        /// <param name="productId">Product id</param>
-        /// <param name="quantity">Quantity to purchase</param>
-        /// <param name="renewable">Renewable</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<HitoBitStakingPositionResult>> PurchaseStakingProductAsync(StakingProductType product, string productId, decimal quantity, bool? renewable = null, long? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Redeem a staking product
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#redeem-staking-product-user_data" /></para>
-        /// </summary>
-        /// <param name="product">Product type</param>
-        /// <param name="productId">Product id</param>
-        /// <param name="quantity">Quantity to purchase</param>
-        /// <param name="renewable">Renewable</param>
-        /// <param name="positionId">Position id, required for Staking or LockedDefi types</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<HitoBitStakingResult>> RedeemStakingProductAsync(StakingProductType product, string productId, string? positionId = null, decimal? quantity = null, bool? renewable = null, long? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get staking positions
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-staking-product-position-user_data" /></para>
-        /// </summary>
-        /// <param name="product">Product type</param>
-        /// <param name="productId">Product id</param>
-        /// <param name="page">Page</param>
-        /// <param name="limit">Max results</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<HitoBitStakingPosition>>> GetStakingPositionsAsync(StakingProductType product, string? productId = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get staking history
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#get-staking-history-user_data" /></para>
-        /// </summary>
-        /// <param name="product">Product type</param>
-        /// <param name="transactionType">Transaction type</param>
-        /// <param name="asset">Filter by asset</param>
-        /// <param name="startTime">Filter by start time</param>
-        /// <param name="endTime">Filter by end time</param>
-        /// <param name="page">Page</param>
-        /// <param name="limit">Max results</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<HitoBitStakingHistory>>> GetStakingHistoryAsync(StakingProductType product, StakingTransactionType transactionType, string? asset = null, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
         /// Convert between BUSD and stablecoins
@@ -809,7 +756,7 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
 
         /// <summary>
         /// Get prevented matches because of self trade prevention
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/spot/en/#query-prevented-matches-user_data" /></para>
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-prevented-matches-user_data" /></para>
         /// </summary>
         /// <param name="symbol">Symbol</param>
         /// <param name="preventedMatchId">Filter by prevented match id</param>
@@ -820,5 +767,74 @@ namespace HitoBit.Net.Interfaces.Clients.SpotApi
         /// <param name="ct">Cancellation token</param>
         /// <returns></returns>
         Task<WebCallResult<IEnumerable<HitoBitPreventedTrade>>> GetPreventedTradesAsync(string symbol, long? preventedMatchId = null, long? orderId = null, long? fromPreventedMatchId = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Place a new spot time weighted average price order
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#time-weighted-average-price-twap-new-order-trade-2" /></para>
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="side">Order side</param>
+        /// <param name="quantity">Order quantity</param>
+        /// <param name="duration">Duration in seconds. 300 - 86400</param>
+        /// <param name="clientOrderId">Client order id</param>
+        /// <param name="limitPrice">Limit price of the order. If null will use market price</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitAlgoOrderResult>> PlaceTimeWeightedAveragePriceOrderAsync(
+            string symbol,
+            OrderSide side,
+            decimal quantity,
+            int duration,
+            string? clientOrderId = null,
+            decimal? limitPrice = null,
+            long? receiveWindow = null,
+            CancellationToken ct = default);
+
+        /// <summary>
+        /// Cancel a spot algo order
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#cancel-algo-order-trade-2" /></para>
+        /// </summary>
+        /// <param name="algoOrderId">Algo order id to cancel</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitAlgoResult>> CancelAlgoOrderAsync(long algoOrderId, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Get all open spot algo orders
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-current-algo-open-orders-user_data-2" /></para>
+        /// </summary>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitAlgoOrders>> GetOpenAlgoOrdersAsync(long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Get list of closed algo orders
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-historical-algo-orders-user_data-2" /></para>
+        /// </summary>
+        /// <param name="symbol">Filter by symbol</param>
+        /// <param name="side">Filter by side</param>
+        /// <param name="startTime">Fitler by start time</param>
+        /// <param name="endTime">Filter by end time</param>
+        /// <param name="page">Page</param>
+        /// <param name="limit">Max results</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitAlgoOrders>> GetClosedAlgoOrdersAsync(string? symbol = null, OrderSide? side = null, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
+
+        /// <summary>
+        /// Get algo sub orders overview
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#query-historical-algo-orders-user_data-2" /></para>
+        /// </summary>
+        /// <param name="algoId">Algo id</param>
+        /// <param name="page">Page</param>
+        /// <param name="limit">Max results</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<HitoBitAlgoSubOrderList>> GetAlgoSubOrdersAsync(long algoId, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default);
     }
 }

@@ -11,6 +11,8 @@ using HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData;
 using CryptoExchange.Net;
 using CryptoExchange.Net.Converters;
 using CryptoExchange.Net.Objects;
+using HitoBit.Net.Converters;
+using HitoBit.Net.Enums;
 using Newtonsoft.Json;
 
 namespace HitoBit.Net.Clients.GeneralApi

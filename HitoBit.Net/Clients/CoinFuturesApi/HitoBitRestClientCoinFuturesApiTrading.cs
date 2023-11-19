@@ -1,20 +1,20 @@
-﻿using System;
+﻿using CryptoExchange.Net;
+using CryptoExchange.Net.CommonObjects;
+using CryptoExchange.Net.Converters;
+using CryptoExchange.Net.Objects;
+using HitoBit.Net.Converters;
+using HitoBit.Net.Enums;
+using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
+using HitoBit.Net.Objects.Models.Futures;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using HitoBit.Net.Converters;
-using HitoBit.Net.Enums;
-using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
-using HitoBit.Net.Objects.Models.Futures;
-using CryptoExchange.Net;
-using CryptoExchange.Net.CommonObjects;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Clients.CoinFuturesApi
 {
@@ -91,6 +91,8 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             price = rulesCheck.Price;
             stopPrice = rulesCheck.StopPrice;
 
+            string clientOrderId = newClientOrderId ?? ExchangeHelpers.AppendRandomString(_baseClient._brokerId, 32);
+
             var parameters = new Dictionary<string, object>
             {
                 { "symbol", symbol },
@@ -98,7 +100,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                 { "type", JsonConvert.SerializeObject(type, new FuturesOrderTypeConverter(false)) }
             };
             parameters.AddOptionalParameter("quantity", quantity?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("newClientOrderId", newClientOrderId);
+            parameters.AddOptionalParameter("newClientOrderId", clientOrderId);
             parameters.AddOptionalParameter("price", price?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("timeInForce", timeInForce == null ? null : JsonConvert.SerializeObject(timeInForce, new TimeInForceConverter(false)));
             parameters.AddOptionalParameter("positionSide", positionSide == null ? null : JsonConvert.SerializeObject(positionSide, new PositionSideConverter(false)));

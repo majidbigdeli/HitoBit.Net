@@ -20,6 +20,7 @@ namespace HitoBit.Net.UnitTests.TestImplementations
         public event Action OnOpen;
         public event Action OnReconnecting;
         public event Action OnReconnected;
+        public event Action<int> OnRequestSent;
 #pragma warning restore 0067
 
         public int Id { get; }
@@ -109,6 +110,11 @@ namespace HitoBit.Net.UnitTests.TestImplementations
         }
 
         public Task ReconnectAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Send(int id, string data, int weight)
         {
             throw new NotImplementedException();
         }

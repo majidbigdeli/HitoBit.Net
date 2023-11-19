@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net;
+using CryptoExchange.Net.Converters;
+using CryptoExchange.Net.Objects;
 using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
@@ -15,11 +11,14 @@ using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.IsolatedMargin;
 using HitoBit.Net.Objects.Models.Spot.Margin;
 using HitoBit.Net.Objects.Models.Spot.PortfolioMargin;
-using HitoBit.Net.Objects.Models.Spot.Staking;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Clients.SpotApi
 {
@@ -36,7 +35,7 @@ namespace HitoBit.Net.Clients.SpotApi
         private const string accountSnapshotEndpoint = "accountSnapshot";
         private const string accountStatusEndpoint = "account/status";
         private const string fundingWalletEndpoint = "asset/get-funding-asset";
-        private const string apiRestrictionsEndpoint = "account/apiRestrictions ";
+        private const string apiRestrictionsEndpoint = "account/apiRestrictions";
         private const string dividendRecordsEndpoint = "asset/assetDividend";
         private const string userCoinsEndpoint = "capital/config/getall";
         private const string disableFastWithdrawSwitchEndpoint = "account/disableFastWithdrawSwitch";
@@ -91,10 +90,6 @@ namespace HitoBit.Net.Clients.SpotApi
 
         // Rebate
         private const string rebateHistoryEndpoint = "rebate/taxQuery";
-
-        // Staking
-        private const string setAutoStakingEndpoint = "staking/setAutoStaking";
-        private const string stakingQuotaLeftEndpoint = "staking/personalLeftQuota";
 
         // Portfolio Margin
         private const string portfolioMarginAccountEndpoint = "portfolio/account";
@@ -629,6 +624,8 @@ namespace HitoBit.Net.Clients.SpotApi
         }
 
         #endregion
+
+
 
         #region Margin DustLog
         /// <inheritdoc />
@@ -1206,51 +1203,21 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("tokenName", tokenName);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBlvtUserLimit>>(_baseClient.GetUrl(blvtUserLimitEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);           
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBlvtUserLimit>>(_baseClient.GetUrl(blvtUserLimitEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
         }
 
-        #endregion
-
-        #region Staking
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitStakingResult>> SetAutoStakingAsync(StakingProductType product, string positionId, bool renewable, long? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) },
-                { "positionId", positionId },
-                { "renewable", renewable },
-            };
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<HitoBitStakingResult>(_baseClient.GetUrl(setAutoStakingEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitStakingPersonalQuota>> GetStakingPersonalQuotaAsync(StakingProductType product, string productId, long? receiveWindow = null, CancellationToken ct = default)
-        {
-            var parameters = new Dictionary<string, object>()
-            {
-                { "product", EnumConverter.GetString(product) },
-                { "productId", productId }
-            };
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<HitoBitStakingPersonalQuota>(_baseClient.GetUrl(stakingQuotaLeftEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-        }
         #endregion
 
         #region Portfolio margin
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitPortfolioMarginInfo>> GetPortfolioMarginAccountInfoAsync (long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitPortfolioMarginInfo>> GetPortfolioMarginAccountInfoAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
             var parameters = new Dictionary<string, object>();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             return await _baseClient.SendRequestInternal<HitoBitPortfolioMarginInfo>(_baseClient.GetUrl(portfolioMarginAccountEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
         }
-        
+
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitPortfolioMarginCollateralRate>>> GetPortfolioMarginCollateralRateAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
@@ -1305,5 +1272,34 @@ namespace HitoBit.Net.Clients.SpotApi
         }
 
         #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+        #region Small Liability Exchange Assets
+
+        /// <inheritdoc />
+        public async Task<WebCallResult> CrossMarginSmallLiabilityExchangeAsync(IEnumerable<string> assets, int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>()
+            {
+                { "assetNames", string.Join(",", assets) }
+            };
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal(_baseClient.GetUrl("margin/exchange-small-liability", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+        }
+
+        #endregion
+
+
     }
 }

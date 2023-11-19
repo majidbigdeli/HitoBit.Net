@@ -13,6 +13,8 @@ using System;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Objects;
 using Microsoft.Extensions.Logging;
+using HitoBit.Net.Converters;
+using HitoBit.Net.Enums;
 
 namespace HitoBit.Net.Clients.SpotApi
 {
@@ -60,6 +62,8 @@ namespace HitoBit.Net.Clients.SpotApi
                 return new CallResult<HitoBitResponse<HitoBitPlacedOrder>>(new ArgumentError(rulesCheck.ErrorMessage!));
             }
 
+            string clientOrderId = newClientOrderId ?? ExchangeHelpers.AppendRandomString(_client._brokerId, 32);
+
             var parameters = new Dictionary<string, object>();
             parameters.AddParameter("symbol", symbol);
             parameters.AddParameter("side", EnumConverter.GetString(side));
@@ -68,7 +72,7 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("price", rulesCheck.Price?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("quantity", rulesCheck.Quantity?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("quoteOrderQty", rulesCheck.QuoteQuantity?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("newClientOrderId", newClientOrderId);
+            parameters.AddOptionalParameter("newClientOrderId", clientOrderId);
             parameters.AddOptionalParameter("stopPrice", rulesCheck.StopPrice?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("trailingDelta", trailingDelta?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("icebergQty", icebergQty?.ToString(CultureInfo.InvariantCulture));
@@ -127,7 +131,7 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddParameter("symbol", symbol);
             parameters.AddOptionalParameter("orderId", orderId);
             parameters.AddOptionalParameter("origClientOrderId", clientOrderId);
-            return await _client.QueryAsync<HitoBitOrder>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"order.status", parameters, true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<HitoBitOrder>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"order.status", parameters, true, true, weight: 4).ConfigureAwait(false);
         }
 
         #endregion
@@ -203,7 +207,7 @@ namespace HitoBit.Net.Clients.SpotApi
         {
             var parameters = new Dictionary<string, object>();
             parameters.AddOptionalParameter("symbol", symbol);
-            return await _client.QueryAsync<IEnumerable<HitoBitOrder>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"openOrders.status", parameters, true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<IEnumerable<HitoBitOrder>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"openOrders.status", parameters, true, true, weight: symbol == null ? 80 : 6).ConfigureAwait(false);
         }
 
         #endregion
@@ -286,7 +290,7 @@ namespace HitoBit.Net.Clients.SpotApi
             var parameters = new Dictionary<string, object>();
             parameters.AddOptionalParameter("orderListId", orderId);
             parameters.AddOptionalParameter("origClientOrderId", clientOrderId);
-            return await _client.QueryAsync<HitoBitOrderOcoList>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"orderList.status", parameters, true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<HitoBitOrderOcoList>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"orderList.status", parameters, true, true, weight: 4).ConfigureAwait(false);
         }
 
         #endregion
@@ -311,7 +315,7 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<CallResult<HitoBitResponse<IEnumerable<HitoBitOrderOcoList>>>> GetOpenOcoOrdersAsync()
         {
-            return await _client.QueryAsync<IEnumerable<HitoBitOrderOcoList>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"openOrderLists.status", new Dictionary<string, object>(), true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<IEnumerable<HitoBitOrderOcoList>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"openOrderLists.status", new Dictionary<string, object>(), true, true, weight: 6).ConfigureAwait(false);
         }
 
         #endregion
@@ -327,7 +331,7 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit);
-            return await _client.QueryAsync<IEnumerable<HitoBitOrder>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"allOrders", parameters, true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<IEnumerable<HitoBitOrder>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"allOrders", parameters, true, true, weight: 20).ConfigureAwait(false);
         }
 
         #endregion
@@ -342,7 +346,7 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit);
-            return await _client.QueryAsync<IEnumerable<HitoBitOrderOcoList>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"allOrderLists", parameters, true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<IEnumerable<HitoBitOrderOcoList>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"allOrderLists", parameters, true, true, weight: 20).ConfigureAwait(false);
         }
 
         #endregion
@@ -359,12 +363,12 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit);
-            return await _client.QueryAsync<IEnumerable<HitoBitTrade>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"myTrades", parameters, true, true).ConfigureAwait(false);
+            return await _client.QueryAsync<IEnumerable<HitoBitTrade>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"myTrades", parameters, true, true, weight: 20).ConfigureAwait(false);
         }
 
         #endregion
 
-        #region Get User Trades
+        #region Get Prevented Trades
 
         /// <inheritdoc />
         public async Task<CallResult<HitoBitResponse<IEnumerable<HitoBitPreventedTrade>>>> GetPreventedTradesAsync(string symbol, long? preventedTradeId = null, long? orderId = null, long? fromPreventedTradeId = null, int? limit = null)
@@ -375,7 +379,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("preventedMatchId", preventedTradeId);
             parameters.AddOptionalParameter("fromPreventedMatchId", fromPreventedTradeId);
             parameters.AddOptionalParameter("limit", limit);
-            return await _client.QueryAsync<IEnumerable<HitoBitPreventedTrade>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"myPreventedMatches", parameters, true, true).ConfigureAwait(false);
+            int weight = preventedTradeId != null ? 2 : 20;
+            return await _client.QueryAsync<IEnumerable<HitoBitPreventedTrade>>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"myPreventedMatches", parameters, true, true, weight: weight).ConfigureAwait(false);
         }
 
         #endregion

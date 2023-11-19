@@ -47,3 +47,6 @@ namespace HitoBit.Net.Objects.Models.Futures
         public DateTime Timestamp { get; set; }
     }
 }
+
+
+

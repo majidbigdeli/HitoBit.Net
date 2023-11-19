@@ -13,6 +13,7 @@ using HitoBit.Net.Objects.Models.Spot;
 using CryptoExchange.Net;
 using CryptoExchange.Net.Converters;
 using CryptoExchange.Net.Objects;
+
 using Newtonsoft.Json;
 
 namespace HitoBit.Net.Clients.CoinFuturesApi

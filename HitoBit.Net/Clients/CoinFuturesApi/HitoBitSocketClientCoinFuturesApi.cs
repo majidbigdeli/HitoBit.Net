@@ -1,26 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net;
+using CryptoExchange.Net.Authentication;
+using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.Sockets;
 using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
-using HitoBit.Net.Objects;
 using HitoBit.Net.Objects.Internal;
 using HitoBit.Net.Objects.Models;
 using HitoBit.Net.Objects.Models.Futures.Socket;
 using HitoBit.Net.Objects.Models.Spot.Socket;
 using HitoBit.Net.Objects.Options;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Objects;
-using CryptoExchange.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Clients.CoinFuturesApi
 {
@@ -54,6 +53,8 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         private const string accountUpdateEvent = "ACCOUNT_UPDATE";
         private const string orderUpdateEvent = "ORDER_TRADE_UPDATE";
         private const string listenKeyExpiredEvent = "listenKeyExpired";
+        private const string strategyUpdateEvent = "STRATEGY_UPDATE";
+        private const string gridUpdateEvent = "GRID_UPDATE";
         #endregion
 
         #region constructor/destructor
@@ -62,7 +63,6 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             base(logger, options.Environment.CoinFuturesSocketAddress!, options, options.CoinFuturesOptions)
         {
             SetDataInterpreter((data) => string.Empty, null);
-            RateLimitPerSocketPerSecond = 4;
         }
         #endregion 
 
@@ -94,7 +94,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                 onMessage(data.As<IHitoBitStreamKlineData>(result, result.Symbol));
             });
             symbols = symbols.SelectMany(a => intervals.Select(i => a.ToLower(CultureInfo.InvariantCulture) + klineStreamEndpoint + "_" + JsonConvert.SerializeObject(i, new KlineIntervalConverter(false)))).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -112,7 +112,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var internalHandler = new Action<DataEvent<JToken>>(data => HandlePossibleSingleData(data, onMessage));
             pairs = pairs.Select(a => a.ToLower(CultureInfo.InvariantCulture) + indexPriceStreamEndpoint + (updateInterval == 1000 ? "@1s" : "")).ToArray();
-            return await SubscribeAsync( BaseAddress, pairs, internalHandler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, pairs, internalHandler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -129,7 +129,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var internalHandler = new Action<DataEvent<JToken>>(data => HandlePossibleSingleData(data, onMessage));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + markPriceStreamEndpoint + (updateInterval == 1000 ? "@1s" : "")).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, internalHandler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, internalHandler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -150,7 +150,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                                       continuousKlineStreamEndpoint +
                                       "_" +
                                       JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false))).ToArray();
-            return await SubscribeAsync( BaseAddress, pairs, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, pairs, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -169,7 +169,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                                       indexKlineStreamEndpoint +
                                       "_" +
                                       JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false))).ToArray();
-            return await SubscribeAsync( BaseAddress, pairs, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, pairs, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -188,7 +188,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                                           markKlineStreamEndpoint +
                                          "_" +
                                          JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false))).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -205,7 +205,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitStreamCoinMiniTick>>>(data => onMessage(data.As<IHitoBitMiniTick>(data.Data.Data, data.Data.Data.Symbol)));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + symbolMiniTickerStreamEndpoint).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -215,7 +215,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         public async Task<CallResult<UpdateSubscription>> SubscribeToAllMiniTickerUpdatesAsync(Action<DataEvent<IEnumerable<IHitoBitMiniTick>>> onMessage, CancellationToken ct = default)
         {
             var handler = new Action<DataEvent<HitoBitCombinedStream<IEnumerable<HitoBitStreamCoinMiniTick>>>>(data => onMessage(data.As<IEnumerable<IHitoBitMiniTick>>(data.Data.Data, data.Data.Stream)));
-            return await SubscribeAsync( BaseAddress, new[] { allMiniTickerStreamEndpoint }, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, new[] { allMiniTickerStreamEndpoint }, handler, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -231,7 +231,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitStreamCoinTick>>>(data => onMessage(data.As<IHitoBit24HPrice>(data.Data.Data, data.Data.Data.Symbol)));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + symbolTickerStreamEndpoint).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -242,7 +242,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         public async Task<CallResult<UpdateSubscription>> SubscribeToAllTickerUpdatesAsync(Action<DataEvent<IEnumerable<IHitoBit24HPrice>>> onMessage, CancellationToken ct = default)
         {
             var handler = new Action<DataEvent<HitoBitCombinedStream<IEnumerable<HitoBitStreamCoinTick>>>>(data => onMessage(data.As<IEnumerable<IHitoBit24HPrice>>(data.Data.Data, data.Data.Stream)));
-            return await SubscribeAsync( BaseAddress, new[] { allTickerStreamEndpoint }, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, new[] { allTickerStreamEndpoint }, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -259,7 +259,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitStreamAggregatedTrade>>>(data => onMessage(data.As(data.Data.Data, data.Data.Data.Symbol)));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + aggregatedTradesStreamEndpoint).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -308,7 +308,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitFuturesStreamBookPrice>>>(data => onMessage(data.As(data.Data.Data, data.Data.Data.Symbol)));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + bookTickerStreamEndpoint).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -319,7 +319,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         public async Task<CallResult<UpdateSubscription>> SubscribeToAllBookTickerUpdatesAsync(Action<DataEvent<HitoBitFuturesStreamBookPrice>> onMessage, CancellationToken ct = default)
         {
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitFuturesStreamBookPrice>>>(data => onMessage(data.As(data.Data.Data, data.Data.Data.Symbol)));
-            return await SubscribeAsync( BaseAddress, new[] { allBookTickerStreamEndpoint }, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, new[] { allBookTickerStreamEndpoint }, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -336,7 +336,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitFuturesStreamLiquidationData>>>(data => onMessage(data.As(data.Data.Data.Data, data.Data.Data.Data.Symbol)));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + liquidationStreamEndpoint).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -347,7 +347,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         public async Task<CallResult<UpdateSubscription>> SubscribeToAllLiquidationUpdatesAsync(Action<DataEvent<HitoBitFuturesStreamLiquidation>> onMessage, CancellationToken ct = default)
         {
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitFuturesStreamLiquidationData>>>(data => onMessage(data.As(data.Data.Data.Data, data.Data.Data.Data.Symbol)));
-            return await SubscribeAsync( BaseAddress, new[] { allLiquidationStreamEndpoint }, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, new[] { allLiquidationStreamEndpoint }, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -371,7 +371,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             });
 
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + partialBookDepthStreamEndpoint + levels + (updateInterval.HasValue ? $"@{updateInterval.Value}ms" : "")).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -389,7 +389,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             updateInterval?.ValidateIntValues(nameof(updateInterval), 100, 250, 500);
             var handler = new Action<DataEvent<HitoBitCombinedStream<HitoBitFuturesStreamOrderBookDepth>>>(data => onMessage(data.As<IHitoBitFuturesEventOrderBook>(data.Data.Data, data.Data.Data.Symbol)));
             symbols = symbols.Select(a => a.ToLower(CultureInfo.InvariantCulture) + depthStreamEndpoint + (updateInterval.HasValue ? $"@{updateInterval.Value}ms" : "")).ToArray();
-            return await SubscribeAsync( BaseAddress, symbols, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, symbols, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -415,6 +415,8 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             Action<DataEvent<HitoBitFuturesStreamAccountUpdate>>? onAccountUpdate,
             Action<DataEvent<HitoBitFuturesStreamOrderUpdate>>? onOrderUpdate,
             Action<DataEvent<HitoBitStreamEvent>>? onListenKeyExpired,
+            Action<DataEvent<HitoBitStrategyUpdate>>? onStrategyUpdate,
+            Action<DataEvent<HitoBitGridUpdate>>? onGridUpdate,
             CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
@@ -493,13 +495,31 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                                 _logger.Log(LogLevel.Warning, "Couldn't deserialize data received from the expired listen key event: " + result.Error);
                             break;
                         }
+                    case strategyUpdateEvent:
+                        {
+                            var result = Deserialize<HitoBitStrategyUpdate>(token);
+                            if (result)
+                                onStrategyUpdate?.Invoke(data.As(result.Data, combinedToken["stream"]!.Value<string>()));
+                            else
+                                _logger.Log(LogLevel.Warning, "Couldn't deserialize data received from the StrategyUpdate event: " + result.Error);
+                            break;
+                        }
+                    case gridUpdateEvent:
+                        {
+                            var result = Deserialize<HitoBitGridUpdate>(token);
+                            if (result)
+                                onGridUpdate?.Invoke(data.As(result.Data, combinedToken["stream"]!.Value<string>()));
+                            else
+                                _logger.Log(LogLevel.Warning, "Couldn't deserialize data received from the GridUpdate event: " + result.Error);
+                            break;
+                        }
                     default:
                         _logger.Log(LogLevel.Warning, $"Received unknown user data event {evnt}: " + data);
                         break;
                 }
             });
 
-            return await SubscribeAsync( BaseAddress, new[] { listenKey }, handler, ct).ConfigureAwait(false);
+            return await SubscribeAsync(BaseAddress, new[] { listenKey }, handler, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -538,7 +558,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             {
                 Method = "SUBSCRIBE",
                 Params = topics.ToArray(),
-                Id = NextId()
+                Id = ExchangeHelpers.NextId()
             };
 
             return SubscribeAsync(url.AppendPath("stream"), request, null, false, onData, ct);
@@ -614,13 +634,28 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         protected override async Task<bool> UnsubscribeAsync(SocketConnection connection, SocketSubscription subscription)
         {
             var topics = ((HitoBitSocketRequest)subscription.Request!).Params;
-            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topics, Id = NextId() };
+            var topicsToUnsub = new List<string>();
+            foreach (var topic in topics)
+            {
+                if (connection.Subscriptions.Where(s => s != subscription).Any(s => ((HitoBitSocketRequest?)s.Request)?.Params.Contains(topic) == true))
+                    continue;
+
+                topicsToUnsub.Add(topic);
+            }
+
+            if (!topicsToUnsub.Any())
+            {
+                _logger.LogInformation("No topics need unsubscribing (still active on other subscriptions)");
+                return true;
+            }
+
+            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topics.ToArray(), Id = ExchangeHelpers.NextId() };
             var result = false;
 
             if (!connection.Connected)
                 return true;
 
-            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, data =>
+            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, 1, data =>
             {
                 if (data.Type != JTokenType.Object)
                     return false;

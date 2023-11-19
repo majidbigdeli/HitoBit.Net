@@ -40,11 +40,12 @@ namespace HitoBit.Net.Clients.GeneralApi
         public IHitoBitRestClientGeneralApiMining Mining { get; }
         /// <inheritdoc />
         public IHitoBitRestClientGeneralApiSubAccount SubAccount { get; }
+        /// <inheritdoc />
         #endregion
 
         #region constructor/destructor
 
-        internal HitoBitRestClientGeneralApi(ILogger logger, HttpClient? httpClient, HitoBitRestClient baseClient, HitoBitRestOptions options) 
+        internal HitoBitRestClientGeneralApi(ILogger logger, HttpClient? httpClient, HitoBitRestClient baseClient, HitoBitRestOptions options)
             : base(logger, httpClient, options.Environment.SpotRestAddress, options, options.SpotOptions)
         {
             _baseClient = baseClient;
@@ -104,18 +105,22 @@ namespace HitoBit.Net.Clients.GeneralApi
             => HitoBitRestClientSpotApi._timeSyncState.TimeOffset;
 
         /// <inheritdoc />
-        protected override Error ParseErrorResponse(JToken error)
+        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, string data)
         {
-            if (!error.HasValues)
-                return new ServerError(error.ToString());
+            var errorData = ValidateJson(data);
+            if (!errorData)
+                return new ServerError(data);
 
-            if (error["msg"] == null && error["code"] == null)
-                return new ServerError(error.ToString());
+            if (!errorData.Data.HasValues)
+                return new ServerError(errorData.Data.ToString());
 
-            if (error["msg"] != null && error["code"] == null)
-                return new ServerError((string)error["msg"]!);
+            if (errorData.Data["msg"] == null && errorData.Data["code"] == null)
+                return new ServerError(errorData.Data.ToString());
 
-            return new ServerError((int)error["code"]!, (string)error["msg"]!);
+            if (errorData.Data["msg"] != null && errorData.Data["code"] == null)
+                return new ServerError((string)errorData.Data["msg"]!);
+
+            return new ServerError((int)errorData.Data["code"]!, (string)errorData.Data["msg"]!);
         }
     }
 }

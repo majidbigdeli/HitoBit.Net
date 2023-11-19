@@ -1,5 +1,5 @@
-﻿using HitoBit.Net.Enums;
-using CryptoExchange.Net.Objects.Options;
+﻿using CryptoExchange.Net.Objects.Options;
+using HitoBit.Net.Enums;
 using System;
 
 namespace HitoBit.Net.Objects.Options
@@ -18,6 +18,11 @@ namespace HitoBit.Net.Objects.Options
         /// How often the trade rules should be updated. Only used when TradeRulesBehaviour is not None
         /// </summary>
         public TimeSpan TradeRulesUpdateInterval { get; set; } = TimeSpan.FromMinutes(60);
+
+        /// <summary>
+        /// The broker reference id to use
+        /// </summary>
+        public string? BrokerId { get; set; }
 
         internal HitoBitSocketApiOptions Copy()
         {

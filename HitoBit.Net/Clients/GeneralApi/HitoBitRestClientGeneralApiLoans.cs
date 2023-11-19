@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using CryptoExchange.Net;
+using CryptoExchange.Net.Converters;
+using CryptoExchange.Net.Objects;
 using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.GeneralApi;
 using HitoBit.Net.Objects.Models;
 using HitoBit.Net.Objects.Models.Spot.Loans;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HitoBit.Net.Clients.GeneralApi
 {
@@ -172,6 +172,64 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
             return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitCryptoLoanLtvAdjustRecord>>(_baseClient.GetUrl(adjustLtvHistoryEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 400).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get Loanable Assets
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanAsset>>> GetLoanableAssetsAsync(string? loanAsset = null, int? vipLevel = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>();
+            parameters.AddOptionalParameter("vipLevel", vipLevel);
+            parameters.AddOptionalParameter("loanAsset", loanAsset);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitCryptoLoanAsset>>(_baseClient.GetUrl("loan/loanable/data", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 400).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get Collateral Assets
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanCollateralAsset>>> GetCollateralAssetsAsync(string? collateralAsset = null, int? vipLevel = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>();
+            parameters.AddOptionalParameter("vipLevel", vipLevel);
+            parameters.AddOptionalParameter("collateralCoin", collateralAsset);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitCryptoLoanCollateralAsset>>(_baseClient.GetUrl("loan/collateral/data", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 400).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get Collateral Assets
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitCryptoLoanRepayRate>> GetCollateralRepayRateAsync(string loanAsset, string collateralAsset, decimal quantity, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>()
+            {
+                { "loanCoin", loanAsset },
+                { "collateralCoin", collateralAsset },
+                { "repayAmount", quantity.ToString(CultureInfo.InvariantCulture) }
+            };
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitCryptoLoanRepayRate>(_baseClient.GetUrl("loan/repay/collateral/rate", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 6000).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Customize Margin Call
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitCryptoLoanMarginCallResult>>> CustomizeMarginCallAsync(decimal marginCall, string? orderId = null, string? collateralAsset = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new Dictionary<string, object>()
+            {
+                { "marginCall", marginCall.ToString(CultureInfo.InvariantCulture) }
+            };
+            parameters.AddOptionalParameter("orderId", orderId);
+            parameters.AddOptionalParameter("collateralCoin", collateralAsset);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitCryptoLoanMarginCallResult>>(_baseClient.GetUrl("loan/customize/margin_call", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 6000).ConfigureAwait(false);
         }
         #endregion
     }
