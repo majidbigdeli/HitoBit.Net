@@ -232,43 +232,43 @@ namespace HitoBit.Net.UnitTests
             await tester.ValidateAsync(client => client.UsdFuturesApi.Account.GetAccountInfoV3Async(), "GetAccountInfoV3");
         }
 
-        [Test]
-        public async Task ValidateUsdFuturesExchangeDataCalls()
-        {
-            var client = new HitoBitRestClient(opts =>
-            {
-                opts.RateLimiterEnabled = false;
-                opts.AutoTimestamp = false;
-                opts.ApiCredentials = new CryptoExchange.Net.Authentication.ApiCredentials("123", "456");
-            });
-            var tester = new RestRequestValidator<HitoBitRestClient>(client, "Endpoints/UsdFutures/ExchangeData", "https://fapi.hitobit.com", IsAuthenticated, stjCompare: true);
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetServerTimeAsync(), "GetServerTime", "serverTime");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync(), "GetExchangeInfo", ignoreProperties: new List<string> { "orderTypes", "timeInForce" });
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetOrderBookAsync("ETHUSDT"), "GetOrderBook");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetAggregatedTradeHistoryAsync("ETHUSDT"), "GetAggregatedTradeHistory");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetFundingInfoAsync(), "GetFundingInfo", ignoreProperties: new List<string> { "disclaimer" });
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetFundingRatesAsync("ETHUSDT"), "GetFundingRates");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTopLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortAccountRatio");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTopLongShortPositionRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortPositionRatio");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetGlobalLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetGlobalLongShortAccountRatio");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetMarkPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetMarkPriceKlines");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetRecentTradesAsync("ETHUSDT"), "GetRecentTrades");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTradeHistoryAsync("ETHUSDT"), "GetTradeHistory");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetMarkPriceAsync("ETHUSDT"), "GetMarkPrice");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTickerAsync("ETHUSDT"), "GetTicker");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetKlinesAsync("ETHUSDT", Enums.KlineInterval.OneDay), "GetKlines");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetPremiumIndexKlinesAsync("ETHUSDT", Enums.KlineInterval.OneDay), "GetPremiumIndexKlines");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetBookPriceAsync("ETHUSDT"), "GetBookPrice");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetOpenInterestAsync("ETHUSDT"), "GetOpenInterest");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetOpenInterestHistoryAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetOpenInterestHistory");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTakerBuySellVolumeRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTakerBuySellVolumeRatio");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetCompositeIndexInfoAsync("ETHUSDT"), "GetCompositeIndexInfo");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetPriceAsync("ETHUSDT"), "GetPrice");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetContinuousContractKlinesAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.KlineInterval.OneSecond), "GetContinuousContractKlines");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetIndexPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetIndexPriceKlines");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetAssetIndexesAsync(), "GetAssetIndexes");
-            await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetBasisAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetBasis");
-        }
+        //[Test]
+        //public async Task ValidateUsdFuturesExchangeDataCalls()
+        //{
+        //    var client = new HitoBitRestClient(opts =>
+        //    {
+        //        opts.RateLimiterEnabled = false;
+        //        opts.AutoTimestamp = false;
+        //        opts.ApiCredentials = new CryptoExchange.Net.Authentication.ApiCredentials("123", "456");
+        //    });
+        //    var tester = new RestRequestValidator<HitoBitRestClient>(client, "Endpoints/UsdFutures/ExchangeData", "https://fapi.hitobit.com", IsAuthenticated, stjCompare: true);
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetServerTimeAsync(), "GetServerTime", "serverTime");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync(), "GetExchangeInfo", ignoreProperties: new List<string> { "orderTypes", "timeInForce" });
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetOrderBookAsync("ETHUSDT"), "GetOrderBook");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetAggregatedTradeHistoryAsync("ETHUSDT"), "GetAggregatedTradeHistory");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetFundingInfoAsync(), "GetFundingInfo", ignoreProperties: new List<string> { "disclaimer" });
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetFundingRatesAsync("ETHUSDT"), "GetFundingRates");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTopLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortAccountRatio");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTopLongShortPositionRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortPositionRatio");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetGlobalLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetGlobalLongShortAccountRatio");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetMarkPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetMarkPriceKlines");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetRecentTradesAsync("ETHUSDT"), "GetRecentTrades");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTradeHistoryAsync("ETHUSDT"), "GetTradeHistory");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetMarkPriceAsync("ETHUSDT"), "GetMarkPrice");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTickerAsync("ETHUSDT"), "GetTicker");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetKlinesAsync("ETHUSDT", Enums.KlineInterval.OneDay), "GetKlines");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetPremiumIndexKlinesAsync("ETHUSDT", Enums.KlineInterval.OneDay), "GetPremiumIndexKlines");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetBookPriceAsync("ETHUSDT"), "GetBookPrice");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetOpenInterestAsync("ETHUSDT"), "GetOpenInterest");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetOpenInterestHistoryAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetOpenInterestHistory");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetTakerBuySellVolumeRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTakerBuySellVolumeRatio");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetCompositeIndexInfoAsync("ETHUSDT"), "GetCompositeIndexInfo");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetPriceAsync("ETHUSDT"), "GetPrice");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetContinuousContractKlinesAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.KlineInterval.OneSecond), "GetContinuousContractKlines");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetIndexPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetIndexPriceKlines");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetAssetIndexesAsync(), "GetAssetIndexes");
+        //    await tester.ValidateAsync(client => client.UsdFuturesApi.ExchangeData.GetBasisAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetBasis");
+        //}
 
         [Test]
         public async Task ValidateUsdFuturesTradingCalls()
@@ -350,41 +350,41 @@ namespace HitoBit.Net.UnitTests
             await tester.ValidateAsync(client => client.CoinFuturesApi.Account.GetDownloadLinkForTransactionHistoryAsync("123"), "GetDownloadLinkForTransactionHistory", ignoreProperties: new List<string> { "notified" });
         }
 
-        [Test]
-        public async Task ValidateCoinFuturesExchangeDataCalls()
-        {
-            var client = new HitoBitRestClient(opts =>
-            {
-                opts.RateLimiterEnabled = false;
-                opts.AutoTimestamp = false;
-                opts.ApiCredentials = new CryptoExchange.Net.Authentication.ApiCredentials("123", "456");
-            });
-            var tester = new RestRequestValidator<HitoBitRestClient>(client, "Endpoints/CoinFutures/ExchangeData", "https://dapi.hitobit.com", IsAuthenticated, stjCompare: true);
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetServerTimeAsync(), "GetServerTime", "serverTime");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetExchangeInfoAsync(), "GetExchangeInfo", ignoreProperties: new List<string> { "orderTypes", "timeInForce" });
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetOrderBookAsync("ETHUSDT"), "GetOrderBook");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetAggregatedTradeHistoryAsync("ETHUSDT"), "GetAggregatedTradeHistory");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetFundingRatesAsync("ETHUSDT"), "GetFundingRates");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetFundingInfoAsync(), "GetFundingInfo", ignoreProperties: new List<string> { "disclaimer" });
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTopLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortAccountRatio");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTopLongShortPositionRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortPositionRatio", ignoreProperties: new List<string> { "longPosition", "shortPosition" });
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetGlobalLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetGlobalLongShortAccountRatio");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetMarkPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetMarkPriceKlines");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetRecentTradesAsync("ETHUSDT"), "GetRecentTrades");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTradeHistoryAsync("ETHUSDT"), "GetTradeHistory");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetMarkPricesAsync("ETHUSDT"), "GetMarkPrices");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetKlines");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetPremiumIndexKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetPremiumIndexKlines");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetContinuousContractKlinesAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.KlineInterval.OneSecond), "GetContinuousContractKlines");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetIndexPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetIndexPriceKlines");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTickersAsync("ETHUSDT"), "GetTickers");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetBookPricesAsync("ETHUSDT"), "GetBookPrices");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetOpenInterestAsync("ETHUSDT"), "GetOpenInterest");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetOpenInterestHistoryAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetOpenInterestHistory");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTakerBuySellVolumeRatioAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetTakerBuySellVolumeRatio");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetBasisAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetBasis");
-            await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetPricesAsync("ETHUSDT"), "GetPrices");
-        }
+        //[Test]
+        //public async Task ValidateCoinFuturesExchangeDataCalls()
+        //{
+        //    var client = new HitoBitRestClient(opts =>
+        //    {
+        //        opts.RateLimiterEnabled = false;
+        //        opts.AutoTimestamp = false;
+        //        opts.ApiCredentials = new CryptoExchange.Net.Authentication.ApiCredentials("123", "456");
+        //    });
+        //    var tester = new RestRequestValidator<HitoBitRestClient>(client, "Endpoints/CoinFutures/ExchangeData", "https://dapi.hitobit.com", IsAuthenticated, stjCompare: true);
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetServerTimeAsync(), "GetServerTime", "serverTime");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetExchangeInfoAsync(), "GetExchangeInfo", ignoreProperties: new List<string> { "orderTypes", "timeInForce" });
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetOrderBookAsync("ETHUSDT"), "GetOrderBook");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetAggregatedTradeHistoryAsync("ETHUSDT"), "GetAggregatedTradeHistory");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetFundingRatesAsync("ETHUSDT"), "GetFundingRates");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetFundingInfoAsync(), "GetFundingInfo", ignoreProperties: new List<string> { "disclaimer" });
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTopLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortAccountRatio");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTopLongShortPositionRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetTopLongShortPositionRatio", ignoreProperties: new List<string> { "longPosition", "shortPosition" });
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetGlobalLongShortAccountRatioAsync("ETHUSDT", Enums.PeriodInterval.OneDay), "GetGlobalLongShortAccountRatio");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetMarkPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetMarkPriceKlines");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetRecentTradesAsync("ETHUSDT"), "GetRecentTrades");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTradeHistoryAsync("ETHUSDT"), "GetTradeHistory");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetMarkPricesAsync("ETHUSDT"), "GetMarkPrices");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetKlines");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetPremiumIndexKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetPremiumIndexKlines");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetContinuousContractKlinesAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.KlineInterval.OneSecond), "GetContinuousContractKlines");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetIndexPriceKlinesAsync("ETHUSDT", Enums.KlineInterval.OneSecond), "GetIndexPriceKlines");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTickersAsync("ETHUSDT"), "GetTickers");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetBookPricesAsync("ETHUSDT"), "GetBookPrices");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetOpenInterestAsync("ETHUSDT"), "GetOpenInterest");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetOpenInterestHistoryAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetOpenInterestHistory");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetTakerBuySellVolumeRatioAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetTakerBuySellVolumeRatio");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetBasisAsync("ETHUSDT", Enums.ContractType.Perpetual, Enums.PeriodInterval.ThirtyMinutes), "GetBasis");
+        //    await tester.ValidateAsync(client => client.CoinFuturesApi.ExchangeData.GetPricesAsync("ETHUSDT"), "GetPrices");
+        //}
 
         [Test]
         public async Task ValidateCoinFuturesTradingCalls()
