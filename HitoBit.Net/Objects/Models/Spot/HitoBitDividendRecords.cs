@@ -1,41 +1,39 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot
+﻿namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// Dividend record
     /// </summary>
-    public class HitoBitDividendRecord
+    public record HitoBitDividendRecord
     {
         /// <summary>
         /// Id
         /// </summary>
+        [JsonPropertyName("id")]
         public long Id { get; set; }
         /// <summary>
         /// Quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
         /// <summary>
         /// Asset
         /// </summary>
+        [JsonPropertyName("asset")]
         public string Asset { get; set; } = string.Empty;
         /// <summary>
         /// Timestamp of the transaction
         /// </summary>
-        [JsonConverter(typeof(DateTimeConverter)), JsonProperty("divTime")]
+        [JsonConverter(typeof(DateTimeConverter)), JsonPropertyName("divTime")]
         public DateTime Timestamp { get; set; }
         /// <summary>
         /// Transaction id
         /// </summary>
-        [JsonProperty("tranId")]
-        public string TransactionId { get; set; } = string.Empty;
+        [JsonPropertyName("tranId")]
+        public long TransactionId { get; set; }
         /// <summary>
         /// Info
         /// </summary>
-        [JsonProperty("enInfo")]
+        [JsonPropertyName("enInfo")]
         public string? Info { get; set; }
     }
 }

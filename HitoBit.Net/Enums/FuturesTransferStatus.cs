@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// Status of a transfer between spot and futures account
@@ -8,14 +10,17 @@
         /// <summary>
         /// Pending to execute
         /// </summary>
+        [Map("PENDING")]
         Pending,
         /// <summary>
         /// Successfully transferred
         /// </summary>
+        [Map("CONFIRMED")]
         Confirmed,
         /// <summary>
         /// Execution failed
         /// </summary>
+        [Map("FAILED")]
         Failed
     }
 }

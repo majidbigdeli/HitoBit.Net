@@ -1,5 +1,4 @@
 ﻿using HitoBit.Net.Enums;
-using System;
 
 namespace HitoBit.Net.Interfaces
 {

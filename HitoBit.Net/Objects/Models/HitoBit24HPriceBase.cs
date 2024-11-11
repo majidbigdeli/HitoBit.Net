@@ -1,52 +1,56 @@
-﻿using System;
-using HitoBit.Net.Interfaces;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using HitoBit.Net.Interfaces;
 
 namespace HitoBit.Net.Objects.Models
 {
     /// <summary>
     /// 24 hour rolling window price data
     /// </summary>
-    public abstract class HitoBit24HPriceBase : IHitoBit24HPrice
+    public abstract record HitoBit24HPriceBase : IHitoBit24HPrice
     {
         /// <summary>
         /// The symbol the price is for
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
         /// <summary>
         /// The actual price change in the last 24 hours
         /// </summary>
+        [JsonPropertyName("priceChange")]
         public decimal PriceChange { get; set; }
         /// <summary>
         /// The price change in percentage in the last 24 hours
         /// </summary>
+        [JsonPropertyName("priceChangePercent")]
         public decimal PriceChangePercent { get; set; }
         /// <summary>
         /// The weighted average price in the last 24 hours
         /// </summary>
-        [JsonProperty("weightedAvgPrice")]
+        [JsonPropertyName("weightedAvgPrice")]
         public decimal WeightedAveragePrice { get; set; }
         /// <summary>
         /// The most recent trade price
         /// </summary>
+        [JsonPropertyName("lastPrice")]
         public decimal LastPrice { get; set; }
         /// <summary>
         /// The most recent trade quantity
         /// </summary>
-        [JsonProperty("lastQty")]
+        [JsonPropertyName("lastQty")]
         public decimal LastQuantity { get; set; }
         /// <summary>
         /// The open price 24 hours ago
         /// </summary>
+        [JsonPropertyName("openPrice")]
         public decimal OpenPrice { get; set; }
         /// <summary>
         /// The highest price in the last 24 hours
         /// </summary>
+        [JsonPropertyName("highPrice")]
         public decimal HighPrice { get; set; }
         /// <summary>
         /// The lowest price in the last 24 hours
         /// </summary>
+        [JsonPropertyName("lowPrice")]
         public decimal LowPrice { get; set; }
         /// <summary>
         /// The base volume traded in the last 24 hours
@@ -60,26 +64,28 @@ namespace HitoBit.Net.Objects.Models
         /// Time at which this 24 hours opened
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("openTime")]
         public DateTime OpenTime { get; set; }
         /// <summary>
         /// Time at which this 24 hours closed
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("closeTime")]
         public DateTime CloseTime { get; set; }
         /// <summary>
         /// The first trade ID in the last 24 hours
         /// </summary>
-        [JsonProperty("firstId")]
+        [JsonPropertyName("firstId")]
         public long FirstTradeId { get; set; }
         /// <summary>
         /// The last trade ID in the last 24 hours
         /// </summary>
-        [JsonProperty("lastId")]
+        [JsonPropertyName("lastId")]
         public long LastTradeId { get; set; }
         /// <summary>
         /// The amount of trades made in the last 24 hours
         /// </summary>
-        [JsonProperty("count")]
+        [JsonPropertyName("count")]
         public long TotalTrades { get; set; }
     }
 }

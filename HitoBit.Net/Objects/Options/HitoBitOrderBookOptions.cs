@@ -1,5 +1,4 @@
 ﻿using CryptoExchange.Net.Objects.Options;
-using System;
 
 namespace HitoBit.Net.Objects.Options
 {

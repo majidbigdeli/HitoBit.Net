@@ -1,20 +1,19 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Futures
+﻿namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
     /// Transaction download info
     /// </summary>
-    public class HitoBitFuturesDownloadIdInfo
+    public record HitoBitFuturesDownloadIdInfo
     {
         /// <summary>
         /// Average time taken for data download in the past 30 days
         /// </summary>
-        [JsonProperty("avgCostTimestampOfLast30d")]
+        [JsonPropertyName("avgCostTimestampOfLast30d")]
         public long AverageCostTimestampOfLast30Days { get; set; }
         /// <summary>
         /// Download id
         /// </summary>
+        [JsonPropertyName("downloadId")]
         public string DownloadId { get; set; } = string.Empty;
     }
 }

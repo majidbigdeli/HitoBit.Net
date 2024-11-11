@@ -1,28 +1,20 @@
 ﻿using HitoBit.Net.Enums;
 using HitoBit.Net.Objects;
-using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Objects;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using HitoBit.Net.Objects.Internal;
 using HitoBit.Net.Objects.Models.Futures;
-using CryptoExchange.Net;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using CryptoExchange.Net.CommonObjects;
 using CryptoExchange.Net.Interfaces.CommonClients;
-using Newtonsoft.Json.Linq;
 using HitoBit.Net.Objects.Options;
+using CryptoExchange.Net.Converters.MessageParsing;
+using CryptoExchange.Net.Clients;
+using CryptoExchange.Net.RateLimiting.Interfaces;
+using CryptoExchange.Net.SharedApis;
 
 namespace HitoBit.Net.Clients.UsdFuturesApi
 {
     /// <inheritdoc cref="IHitoBitRestClientUsdFuturesApi" />
-    public class HitoBitRestClientUsdFuturesApi : RestApiClient, IHitoBitRestClientUsdFuturesApi, IFuturesClient
+    internal partial class HitoBitRestClientUsdFuturesApi : RestApiClient, IHitoBitRestClientUsdFuturesApi, IFuturesClient
     {
         #region fields 
         /// <inheritdoc />
@@ -32,6 +24,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
 
         internal HitoBitFuturesUsdtExchangeInfo? _exchangeInfo;
         internal DateTime? _lastExchangeInfoUpdate;
+        internal readonly string _brokerId;
 
         internal static TimeSyncState _timeSyncState = new TimeSyncState("USD Futures Api");
         #endregion
@@ -56,6 +49,10 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// </summary>
         public event Action<OrderId>? OnOrderCanceled;
 
+        /// <inheritdoc />
+        public override string FormatSymbol(string baseAsset, string quoteAsset, TradingMode tradingMode, DateTime? deliverTime = null)
+                => HitoBitExchange.FormatSymbol(baseAsset, quoteAsset, tradingMode, deliverTime);
+
         #region constructor/destructor
         internal HitoBitRestClientUsdFuturesApi(ILogger logger, HttpClient? httpClient, HitoBitRestOptions options)
             : base(logger, httpClient, options.Environment.UsdFuturesRestAddress!, options, options.UsdFuturesOptions)
@@ -64,9 +61,10 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             ExchangeData = new HitoBitRestClientUsdFuturesApiExchangeData(logger, this);
             Trading = new HitoBitRestClientUsdFuturesApiTrading(logger, this);
 
-            requestBodyEmptyContent = "";
-            requestBodyFormat = RequestBodyFormat.FormData;
-            arraySerialization = ArrayParametersSerialization.MultipleValues;
+            RequestBodyEmptyContent = "";
+            RequestBodyFormat = RequestBodyFormat.FormData;
+            ArraySerialization = ArrayParametersSerialization.MultipleValues;
+            _brokerId = !string.IsNullOrEmpty(options.UsdFuturesOptions.BrokerId) ? options.UsdFuturesOptions.BrokerId! : "x-d63tKbx3";
         }
 
         event Action<CryptoExchange.Net.CommonObjects.OrderId> IBaseRestClient.OnOrderPlaced
@@ -99,7 +97,11 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         protected override AuthenticationProvider CreateAuthenticationProvider(ApiCredentials credentials)
             => new HitoBitAuthenticationProvider(credentials);
-       
+
+        protected override IStreamMessageAccessor CreateAccessor() => new SystemTextJsonStreamMessageAccessor();
+
+        protected override IMessageSerializer CreateSerializer() => new SystemTextJsonMessageSerializer();
+
         internal Uri GetUrl(string endpoint, string api, string? version = null)
         {
             var result = BaseAddress.AppendPath(api);
@@ -240,11 +242,23 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             return HitoBitTradeRuleResult.CreatePassed(outputQuantity, outputQuoteQuantity, outputPrice, outputStopPrice);
         }
 
-        internal async Task<WebCallResult<T>> SendRequestInternal<T>(Uri uri, HttpMethod method, CancellationToken cancellationToken,
-            Dictionary<string, object>? parameters = null, bool signed = false, HttpMethodParameterPosition? postPosition = null,
-            ArrayParametersSerialization? arraySerialization = null, int weight = 1, bool ignoreRateLimit = false) where T : class
+        internal async Task<WebCallResult> SendAsync(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null)
         {
-            var result = await SendRequestAsync<T>(uri, method, cancellationToken, parameters, signed, postPosition, arraySerialization, weight, ignoreRatelimit: ignoreRateLimit).ConfigureAwait(false);
+            var result = await base.SendAsync(BaseAddress, definition, parameters, cancellationToken, null, weight).ConfigureAwait(false);
+            if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
+            {
+                _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
+                _timeSyncState.LastSyncTime = DateTime.MinValue;
+            }
+            return result;
+        }
+
+        internal Task<WebCallResult<T>> SendAsync<T>(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null) where T : class
+            => SendToAddressAsync<T>(BaseAddress, definition, parameters, cancellationToken, weight);
+
+        internal async Task<WebCallResult<T>> SendToAddressAsync<T>(string baseAddress, RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null) where T : class
+        {
+            var result = await base.SendAsync<T>(baseAddress, definition, parameters, cancellationToken, null, weight).ConfigureAwait(false);
             if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
             {
                 _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
@@ -267,6 +281,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
 
         /// <inheritdoc />
         public IFuturesClient CommonFuturesClient => this;
+        public IHitoBitRestClientUsdFuturesApiShared SharedClient => this;
 
         internal void InvokeOrderPlaced(OrderId id)
         {
@@ -279,8 +294,10 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         }
 
         /// <inheritdoc />
-        public string GetSymbolName(string baseAsset, string quoteAsset) =>
-            (baseAsset + quoteAsset).ToUpper(CultureInfo.InvariantCulture);
+        public string GetSymbolName(string baseAsset, string quoteAsset)
+        {
+            return (baseAsset + quoteAsset).ToUpper(CultureInfo.InvariantCulture);
+        }
 
         async Task<WebCallResult<OrderId>> IFuturesClient.PlaceOrderAsync(string symbol, CommonOrderSide side, CommonOrderType type, decimal quantity, decimal? price, int? leverage, string? accountId, string? clientOrderId, CancellationToken ct)
         {
@@ -557,7 +574,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
 
         async Task<WebCallResult<IEnumerable<Balance>>> IBaseRestClient.GetBalancesAsync(string? accountId, CancellationToken ct)
         {
-            var balances = await Account.GetAccountInfoAsync(ct: ct).ConfigureAwait(false);
+            var balances = await Account.GetAccountInfoV2Async(ct: ct).ConfigureAwait(false);
             if (!balances)
                 return balances.As<IEnumerable<Balance>>(null);
 
@@ -626,24 +643,59 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             throw new ArgumentException("Unsupported timespan for HitoBit Klines, check supported intervals using HitoBit.Net.Enums.KlineInterval");
         }
 
-
-
-        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, string data)
+        /// <inheritdoc />
+        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, IMessageAccessor accessor)
         {
-            var errorData = ValidateJson(data);
-            if (!errorData)
-                return new ServerError(data);
+            if (!accessor.IsJson)
+                return new ServerError(accessor.GetOriginalString());
 
-            if (!errorData.Data.HasValues)
-                return new ServerError(errorData.Data.ToString());
+            var code = accessor.GetValue<int?>(MessagePath.Get().Property("code"));
+            var msg = accessor.GetValue<string>(MessagePath.Get().Property("msg"));
+            if (msg == null)
+                return new ServerError(accessor.GetOriginalString());
 
-            if (errorData.Data["msg"] == null && errorData.Data["code"] == null)
-                return new ServerError(errorData.Data.ToString());
+            if (code == null)
+                return new ServerError(msg);
 
-            if (errorData.Data["msg"] != null && errorData.Data["code"] == null)
-                return new ServerError((string)errorData.Data["msg"]!);
+            return new ServerError(code.Value, msg);
+        }
 
-            return new ServerError((int)errorData.Data["code"]!, (string)errorData.Data["msg"]!);
+        /// <inheritdoc />
+        protected override ServerRateLimitError ParseRateLimitResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, IMessageAccessor accessor)
+        {
+            var error = GetRateLimitError(accessor);
+            var retryAfterHeader = responseHeaders.SingleOrDefault(r => r.Key.Equals("Retry-After", StringComparison.InvariantCultureIgnoreCase));
+            if (retryAfterHeader.Value?.Any() != true)
+                return error;
+
+            var value = retryAfterHeader.Value.First();
+            if (!int.TryParse(value, out var seconds))
+                return error;
+
+            if (seconds == 0)
+            {
+                var now = DateTime.UtcNow;
+                seconds = (int)(new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc).AddMinutes(1) - now).TotalSeconds + 1;
+            }
+
+            error.RetryAfter = DateTime.UtcNow.AddSeconds(seconds);
+            return error;
+        }
+
+        private HitoBitRateLimitError GetRateLimitError(IMessageAccessor accessor)
+        {
+            if (!accessor.IsJson)
+                return new HitoBitRateLimitError(accessor.GetOriginalString());
+
+            var code = accessor.GetValue<int?>(MessagePath.Get().Property("code"));
+            var msg = accessor.GetValue<string>(MessagePath.Get().Property("msg"));
+            if (msg == null)
+                return new HitoBitRateLimitError(accessor.GetOriginalString());
+
+            if (code == null)
+                return new HitoBitRateLimitError(msg);
+
+            return new HitoBitRateLimitError(code.Value, msg, null);
         }
     }
 }

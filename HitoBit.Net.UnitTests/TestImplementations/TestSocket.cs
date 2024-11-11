@@ -1,27 +1,31 @@
 ﻿using System;
+using System.IO;
+using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CryptoExchange.Net.Interfaces;
 using CryptoExchange.Net.Objects;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.UnitTests.TestImplementations
 {
     public class TestSocket: IWebsocket
     {
-        public bool CanConnect { get; set; }
+        public bool CanConnect { get; set; } = true;
         public bool Connected { get; set; }
 
-        public event Action OnClose;
-        public event Action<string> OnMessage;
+        public event Func<Task> OnClose;
 #pragma warning disable 0067
-        public event Action<Exception> OnError;
-        public event Action OnOpen;
-        public event Action OnReconnecting;
-        public event Action OnReconnected;
-        public event Action<int> OnRequestSent;
+        public event Func<Task> OnReconnected;
+        public event Func<Task> OnReconnecting;
+        public event Func<int, Task> OnRequestRateLimited;
+        public event Func<Task> OnConnectRateLimited;
+        public event Func<Exception, Task> OnError;
 #pragma warning restore 0067
+        public event Func<int, Task> OnRequestSent;
+        public event Func<WebSocketMessageType, ReadOnlyMemory<byte>, Task> OnStreamMessage;
+        public event Func<Task> OnOpen;
 
         public int Id { get; }
         public bool ShouldReconnect { get; set; }
@@ -46,16 +50,19 @@ namespace HitoBit.Net.UnitTests.TestImplementations
         public TimeSpan KeepAliveInterval { get; set; }
         public Func<Task<Uri>> GetReconnectionUrl { get; set; }
 
-        public Task<bool> ConnectAsync()
+        public Task<CallResult> ConnectAsync()
         {
             Connected = CanConnect;
-            return Task.FromResult(CanConnect);
+            return Task.FromResult(CanConnect ? new CallResult(null) : new CallResult(new CantConnectError()));
         }
 
-        public void Send(string data)
+        public bool Send(int requestId, string data, int weight)
         {
             if(!Connected)
                 throw new Exception("Socket not connected");
+
+            OnRequestSent?.Invoke(requestId);
+            return true;
         }
 
         public void Reset()
@@ -90,12 +97,12 @@ namespace HitoBit.Net.UnitTests.TestImplementations
 
         public void InvokeMessage(string data)
         {
-            OnMessage?.Invoke(data);
+            OnStreamMessage?.Invoke(WebSocketMessageType.Text, new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(data))).Wait();
         }
 
         public void InvokeMessage<T>(T data)
         {
-            OnMessage?.Invoke(JsonConvert.SerializeObject(data));
+            OnStreamMessage?.Invoke(WebSocketMessageType.Text, new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(data)))).Wait();
         }
 
         public void SetProxy(ApiProxy proxy)
@@ -110,11 +117,6 @@ namespace HitoBit.Net.UnitTests.TestImplementations
         }
 
         public Task ReconnectAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Send(int id, string data, int weight)
         {
             throw new NotImplementedException();
         }

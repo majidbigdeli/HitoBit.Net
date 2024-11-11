@@ -1,20 +1,19 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models
+﻿namespace HitoBit.Net.Objects.Models
 {
     /// <summary>
     /// Query result
     /// </summary>
-    public class HitoBitResult
+    public record HitoBitResult
     {
         /// <summary>
         /// Result code
         /// </summary>
+        [JsonPropertyName("code")]
         public int Code { get; set; }
         /// <summary>
         /// Message
         /// </summary>
-        [JsonProperty("msg")]
+        [JsonPropertyName("msg")]
         public string Message { get; set; } = string.Empty;
     }
 
@@ -22,11 +21,12 @@ namespace HitoBit.Net.Objects.Models
     /// Query result
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class HitoBitResult<T>: HitoBitResult
+    internal record HitoBitResult<T>: HitoBitResult
     {
         /// <summary>
         /// The data
         /// </summary>
+        [JsonPropertyName("data")]
         public T Data { get; set; } = default!;
     }
 }

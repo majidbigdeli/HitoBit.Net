@@ -1,6 +1,5 @@
 ﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
@@ -8,18 +7,19 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// A filter for order placed on a symbol.
     /// </summary>
     [JsonConverter(typeof(SymbolFilterConverter))]
-    public class HitoBitSymbolFilter
+    public record HitoBitSymbolFilter
     {
         /// <summary>
         /// The type of this filter
         /// </summary>
+        [JsonPropertyName("filterType")]
         public SymbolFilterType FilterType { get; set; }
     }
 
     /// <summary>
     /// Price filter
     /// </summary>
-    public class HitoBitSymbolPriceFilter: HitoBitSymbolFilter
+    public record HitoBitSymbolPriceFilter: HitoBitSymbolFilter
     {
         /// <summary>
         /// The minimal price the order can be for
@@ -38,7 +38,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Price percentage filter
     /// </summary>
-    public class HitoBitSymbolPercentPriceFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolPercentPriceFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The max factor the price can deviate up
@@ -48,16 +48,21 @@ namespace HitoBit.Net.Objects.Models.Spot
         /// The max factor the price can deviate down
         /// </summary>
         public decimal MultiplierDown { get; set; }
+
         /// <summary>
         /// The amount of minutes the average price of trades is calculated over. 0 means the last price is used
         /// </summary>
-        public int AveragePriceMinutes { get; set; }
+        public int? MultiplierDecimal { get; set; }
+        /// <summary>
+        /// The amount of minutes the average price of trades is calculated over. 0 means the last price is used
+        /// </summary>
+        public int? AveragePriceMinutes { get; set; }
     }
 
     /// <summary>
     /// Price percentage filter
     /// </summary>
-    public class HitoBitSymbolPercentPriceBySideFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolPercentPriceBySideFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The max factor the price can deviate up for buys
@@ -84,7 +89,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Lot size filter
     /// </summary>
-    public class HitoBitSymbolLotSizeFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolLotSizeFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The minimal quantity of an order
@@ -103,7 +108,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Market lot size filter
     /// </summary>
-    public class HitoBitSymbolMarketLotSizeFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolMarketLotSizeFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The minimal quantity of an order
@@ -122,7 +127,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Min notional filter
     /// </summary>
-    public class HitoBitSymbolMinNotionalFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolMinNotionalFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The minimal total quote quantity of an order. This is calculated by Price * Quantity.
@@ -132,18 +137,18 @@ namespace HitoBit.Net.Objects.Models.Spot
         /// <summary>
         /// Whether or not this filter is applied to market orders. If so the average trade price is used.
         /// </summary>
-        public bool ApplyToMarketOrders { get; set; }
+        public bool? ApplyToMarketOrders { get; set; }
 
         /// <summary>
         /// The amount of minutes the average price of trades is calculated over for market orders. 0 means the last price is used
         /// </summary>
-        public int AveragePriceMinutes { get; set; }
+        public int? AveragePriceMinutes { get; set; }
     }
 
     /// <summary>
     /// Notional filter
     /// </summary>
-    public class HitoBitSymbolNotionalFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolNotionalFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The minimal total quote quantity of an order. This is calculated by Price * Quantity.
@@ -174,7 +179,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     ///Max orders filter
     /// </summary>
-    public class HitoBitSymbolMaxOrdersFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolMaxOrdersFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The max number of orders for this symbol
@@ -185,7 +190,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Max algo orders filter
     /// </summary>
-    public class HitoBitSymbolMaxAlgorithmicOrdersFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolMaxAlgorithmicOrdersFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The max number of Algorithmic orders for this symbol
@@ -196,7 +201,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Max iceberg parts filter
     /// </summary>
-    public class HitoBitSymbolIcebergPartsFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolIcebergPartsFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The max parts of an iceberg order for this symbol.
@@ -207,7 +212,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Max position filter
     /// </summary>
-    public class HitoBitSymbolMaxPositionFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolMaxPositionFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The MaxPosition filter defines the allowed maximum position an account can have on the base asset of a symbol.
@@ -218,7 +223,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Trailing delta filter
     /// </summary>
-    public class HitoBitSymbolTrailingDeltaFilter : HitoBitSymbolFilter
+    public record HitoBitSymbolTrailingDeltaFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// The MinTrailingAboveDelta filter defines the minimum amount in Basis Point or BIPS above the price to activate the order.
@@ -241,7 +246,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Max Iceberg Orders Filter
     /// </summary>
-    public class HitoBitMaxNumberOfIcebergOrdersFilter : HitoBitSymbolFilter
+    public record HitoBitMaxNumberOfIcebergOrdersFilter : HitoBitSymbolFilter
     {
         /// <summary>
         /// Maximum number of iceberg orders for this symbol

@@ -1,66 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Blvt
+﻿namespace HitoBit.Net.Objects.Models.Spot.Blvt
 {
     /// <summary>
     /// Blvt info update
     /// </summary>
-    public class HitoBitBlvtInfoUpdate: HitoBitStreamEvent
+    public record HitoBitBlvtInfoUpdate: HitoBitStreamEvent
     {
         /// <summary>
         /// Token name
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string TokenName { get; set; } = string.Empty;
         /// <summary>
         /// Token issued
         /// </summary>
-        [JsonProperty("m")]
+        [JsonPropertyName("m")]
         public decimal TokenIssued { get; set; }
         /// <summary>
         /// Nav
         /// </summary>
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public decimal Nav { get; set; }
 
         /// <summary>
         /// Baskets
         /// </summary>
-        [JsonProperty("b")]
+        [JsonPropertyName("b")]
         public IEnumerable<BlvtBasket> Baskets { get; set; } = Array.Empty<BlvtBasket>();
         /// <summary>
         /// Token issued
         /// </summary>
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public decimal RealLeverage { get; set; }
         /// <summary>
         /// Token issued
         /// </summary>
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public decimal TargetLeverage { get; set; }
         /// <summary>
         /// Funding ratio
         /// </summary>
-        [JsonProperty("f")]
+        [JsonPropertyName("f")]
         public decimal FundingRatio { get; set; }
     }
 
     /// <summary>
     /// Basket
     /// </summary>
-    public class BlvtBasket
+    public record BlvtBasket
     {
         /// <summary>
         /// Symbol
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Symbol { get; set; } = string.Empty;
         /// <summary>
         /// Position
         /// </summary>
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public decimal Position { get; set; }
     }
 }

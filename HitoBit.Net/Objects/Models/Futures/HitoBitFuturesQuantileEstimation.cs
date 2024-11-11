@@ -3,38 +3,44 @@
     /// <summary>
     /// Quantile estimation
     /// </summary>
-    public class HitoBitFuturesQuantileEstimation
+    public record HitoBitFuturesQuantileEstimation
     {
         /// <summary>
         /// The symbol
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
         /// <summary>
         /// Quantile
         /// </summary>
-        public HitoBitFuturesAdlQuantile? AdlQuantile{ get; set; }
+        [JsonPropertyName("adlQuantile")]
+        public HitoBitFuturesAdlQuantile? AdlQuantile { get; set; }
     }
 
     /// <summary>
     /// Quantile info
     /// </summary>
-    public class HitoBitFuturesAdlQuantile
+    public record HitoBitFuturesAdlQuantile
     {
         /// <summary>
         /// Long position
         /// </summary>
+        [JsonPropertyName("LONG")]
         public int Long { get; set; }
         /// <summary>
         /// Short position
         /// </summary>
+        [JsonPropertyName("SHORT")]
         public int Short { get; set; }
         /// <summary>
         /// Hedge
         /// </summary>
+        [JsonPropertyName("HEDGE")]
         public int Hedge { get; set; }
         /// <summary>
         /// Hedge
         /// </summary>
+        [JsonPropertyName("BOTH")]
         public int Both { get; set; }
     }
 }

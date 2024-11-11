@@ -3,15 +3,17 @@
     /// <summary>
     /// Sub account futures trading enabled
     /// </summary>
-    public class HitoBitSubAccountFuturesEnabled
+    public record HitoBitSubAccountFuturesEnabled
     {
         /// <summary>
         /// Email of the account
         /// </summary>
+        [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
         /// <summary>
         /// Whether futures trading is enabled
         /// </summary>
+        [JsonPropertyName("isFuturesEnabled")]
         public bool IsFuturesEnabled { get; set; }
     }
 }

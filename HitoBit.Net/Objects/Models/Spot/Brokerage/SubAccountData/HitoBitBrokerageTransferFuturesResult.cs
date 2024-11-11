@@ -1,27 +1,26 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Transfer Futures Result
     /// </summary>
-    public class HitoBitBrokerageTransferFuturesResult
+    public record HitoBitBrokerageTransferFuturesResult
     {
         /// <summary>
         /// Transaction Id
         /// </summary>
-        [JsonProperty("txnId")]
+        [JsonPropertyName("txnId")]
         public string Id { get; set; } = string.Empty;
         
         /// <summary>
         /// Success
         /// </summary>
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
-        
+
         /// <summary>
         /// Client Transfer Id
         /// </summary>
-        [JsonProperty("clientTranId")]
+        [JsonPropertyName("clientTranId")]
         public string ClientTransferId { get; set; } = string.Empty;
     }
 }

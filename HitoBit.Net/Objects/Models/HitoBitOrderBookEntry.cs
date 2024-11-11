@@ -1,6 +1,4 @@
 ﻿using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Interfaces;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models
 {
@@ -8,7 +6,7 @@ namespace HitoBit.Net.Objects.Models
     /// An entry in the order book
     /// </summary>
     [JsonConverter(typeof(ArrayConverter))]
-    public class HitoBitOrderBookEntry : ISymbolOrderBookEntry
+    public record HitoBitOrderBookEntry : ISymbolOrderBookEntry
     {
         /// <summary>
         /// The price of this order book entry

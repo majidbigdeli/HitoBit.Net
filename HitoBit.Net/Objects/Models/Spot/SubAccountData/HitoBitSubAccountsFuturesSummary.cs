@@ -1,94 +1,107 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
 {
     /// <summary>
     /// Sub accounts futures summary
     /// </summary>
-    public class HitoBitSubAccountsFuturesSummary
+    public record HitoBitSubAccountsFuturesSummary
     {
         /// <summary>
         /// Asset
         /// </summary>
+        [JsonPropertyName("asset")]
         public string Asset { get; set; } = string.Empty;
         /// <summary>
         /// Total initial margin
         /// </summary>
+        [JsonPropertyName("totalInitialMargin")]
         public decimal TotalInitialMargin { get; set; }
         /// <summary>
         /// Total maintenance margin
         /// </summary>
+        [JsonPropertyName("totalMaintenanceMargin")]
         public decimal TotalMaintenanceMargin { get; set; }
         /// <summary>
         /// Total margin balance
         /// </summary>
+        [JsonPropertyName("totalMarginBalance")]
         public decimal TotalMarginBalance { get; set; }
         /// <summary>
         /// Total open order initial margin
         /// </summary>
+        [JsonPropertyName("totalOpenOrderInitialMargin")]
         public decimal TotalOpenOrderInitialMargin { get; set; }
         /// <summary>
         /// Total position initial margin
         /// </summary>
+        [JsonPropertyName("totalPositionInitialMargin")]
         public decimal TotalPositionInitialMargin { get; set; }
         /// <summary>
         /// Total unrealized profit
         /// </summary>
+        [JsonPropertyName("totalUnrealizedProfit")]
         public decimal TotalUnrealizedProfit { get; set; }
         /// <summary>
         /// Total wallet balance
         /// </summary>
+        [JsonPropertyName("totalWalletBalance")]
         public decimal TotalWalletBalance { get; set; }
 
         /// <summary>
         /// Sub accounts info
         /// </summary>
-        [JsonProperty("subAccountList")]
+        [JsonPropertyName("subAccountList")]
         public IEnumerable<HitoBitSubAccountFuturesInfo> SubAccounts { get; set; } = Array.Empty<HitoBitSubAccountFuturesInfo>();
     }
 
     /// <summary>
     /// Sub account future details
     /// </summary>
-    public class HitoBitSubAccountFuturesInfo
+    public record HitoBitSubAccountFuturesInfo
     {
         /// <summary>
         /// Email of the sub account
         /// </summary>
+        [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
         /// <summary>
         /// Total initial margin
         /// </summary>
+        [JsonPropertyName("totalInitialMargin")]
         public decimal TotalInitialMargin { get; set; }
         /// <summary>
         /// Total maintenance margin
         /// </summary>
+        [JsonPropertyName("totalMaintenanceMargin")]
         public decimal TotalMaintenanceMargin { get; set; }
         /// <summary>
         /// Total margin balance
         /// </summary>
+        [JsonPropertyName("totalMarginBalance")]
         public decimal TotalMarginBalance { get; set; }
         /// <summary>
         /// Total open order initial margin
         /// </summary>
+        [JsonPropertyName("totalOpenOrderInitialMargin")]
         public decimal TotalOpenOrderInitialMargin { get; set; }
         /// <summary>
         /// Total position initial margin
         /// </summary>
+        [JsonPropertyName("totalPositionInitialMargin")]
         public decimal TotalPositionInitialMargin { get; set; }
         /// <summary>
         /// Total unrealized profit
         /// </summary>
+        [JsonPropertyName("totalUnrealizedProfit")]
         public decimal TotalUnrealizedProfit { get; set; }
         /// <summary>
         /// Total wallet balance
         /// </summary>
+        [JsonPropertyName("totalWalletBalance")]
         public decimal TotalWalletBalance { get; set; }
         /// <summary>
         /// Asset
         /// </summary>
+        [JsonPropertyName("asset")]
         public string Asset { get; set; } = string.Empty;
     }
 }

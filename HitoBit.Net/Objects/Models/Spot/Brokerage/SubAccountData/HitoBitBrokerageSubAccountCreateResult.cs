@@ -3,19 +3,22 @@
     /// <summary>
     /// Sub Account Create Result
     /// </summary>
-    public class HitoBitBrokerageSubAccountCreateResult
+    public record HitoBitBrokerageSubAccountCreateResult
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
         /// <summary>
         /// Email
         /// </summary>
+        [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
         /// <summary>
         /// Tag
         /// </summary>
+        [JsonPropertyName("tag")]
         public string Tag { get; set; } = string.Empty;
     }
 }

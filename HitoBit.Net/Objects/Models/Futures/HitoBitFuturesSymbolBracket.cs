@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Futures
+﻿namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
     /// Notional and Leverage Brackets
     /// </summary>
-    public class HitoBitFuturesSymbolBracket
+    public record HitoBitFuturesSymbolBracket
     {
         /// <summary>
         /// Symbol or pair
         /// </summary>
-        [JsonProperty("symbol")]
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
 
-        [JsonProperty("pair")]
+        /// <summary>
+        /// //user symbol bracket multiplier, only appears when user's symbol bracket is adjusted 
+        /// </summary>
+        [JsonPropertyName("notionalCoef")]
+        public decimal? NotionalCoef { get; set; }
+        [JsonPropertyName("pair")]
         private string Pair
         {
             set => Symbol = value;
@@ -24,6 +25,7 @@ namespace HitoBit.Net.Objects.Models.Futures
         /// <summary>
         /// Brackets
         /// </summary>
+        [JsonPropertyName("brackets")]
         public IEnumerable<HitoBitFuturesBracket> Brackets { get; set; } = Array.Empty<HitoBitFuturesBracket>();
 
     }
@@ -31,24 +33,26 @@ namespace HitoBit.Net.Objects.Models.Futures
     /// <summary>
     /// Bracket
     /// </summary>
-    public class HitoBitFuturesBracket
+    public record HitoBitFuturesBracket
     {
         /// <summary>
         /// Bracket
         /// </summary>
+        [JsonPropertyName("bracket")]
         public int Bracket { get; set; }
 
         /// <summary>
         /// Max initial leverage for this bracket
         /// </summary>
+        [JsonPropertyName("initialLeverage")]
         public int InitialLeverage { get; set; }
 
         /// <summary>
         /// Cap of this bracket
         /// </summary>
-        [JsonProperty("notionalCap")]
+        [JsonPropertyName("notionalCap")]
         public long Cap { get; set; }
-        [JsonProperty("qtyCap")]
+        [JsonPropertyName("qtyCap")]
         private long QuantityCap
         {
             set => Cap = value;
@@ -57,9 +61,9 @@ namespace HitoBit.Net.Objects.Models.Futures
         /// <summary>
         /// Floor of this bracket
         /// </summary>
-        [JsonProperty("notionalFloor")]
+        [JsonPropertyName("notionalFloor")]
         public long Floor { get; set; }
-        [JsonProperty("qtylFloor")]
+        [JsonPropertyName("qtyFloor")]
         private long QuantityFloor
         {
             set => Floor = value;
@@ -68,13 +72,13 @@ namespace HitoBit.Net.Objects.Models.Futures
         /// <summary>
         /// Maintenance ratio for this bracket
         /// </summary>
-        [JsonProperty("maintMarginRatio")]
+        [JsonPropertyName("maintMarginRatio")]
         public decimal MaintenanceMarginRatio { get; set; }
 
         /// <summary>
         /// Auxiliary number for quick calculation 
         /// </summary>
-        [JsonProperty("cum")]
+        [JsonPropertyName("cum")]
         public decimal MaintAmount { get; set; }
     }
 }

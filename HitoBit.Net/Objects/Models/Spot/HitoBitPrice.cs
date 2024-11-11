@@ -1,38 +1,36 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot
+﻿namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// The price of a symbol
     /// </summary>
-    public class HitoBitPrice
+    public record HitoBitPrice
     {
         /// <summary>
         /// The symbol the price is for
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
         /// <summary>
         /// The price of the symbol
         /// </summary>
+        [JsonPropertyName("price")]
         public decimal Price { get; set; }
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("time"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("time"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime? Timestamp { get; set; }
     }
 
     /// <summary>
     /// Futures-Coin price
     /// </summary>
-    public class HitoBitFuturesCoinPrice: HitoBitPrice
+    public record HitoBitFuturesCoinPrice: HitoBitPrice
     {
         /// <summary>
         /// Name of the pair
         /// </summary>
-        [JsonProperty("ps")]
+        [JsonPropertyName("ps")]
         public string Pair { get; set; } = string.Empty;
     }
 }

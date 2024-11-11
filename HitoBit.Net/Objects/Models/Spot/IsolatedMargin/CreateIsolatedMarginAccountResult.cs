@@ -3,16 +3,18 @@
     /// <summary>
     /// Result of creating isolated margin account
     /// </summary>
-    public class CreateIsolatedMarginAccountResult
+    public record CreateIsolatedMarginAccountResult
     {
         /// <summary>
         /// Success
         /// </summary>
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
 
         /// <summary>
         /// Symbol
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
     }
 }

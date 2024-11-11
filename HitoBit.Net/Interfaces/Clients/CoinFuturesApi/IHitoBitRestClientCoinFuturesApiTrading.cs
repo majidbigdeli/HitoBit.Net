@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Enums;
+﻿using HitoBit.Net.Enums;
 using HitoBit.Net.Objects.Models.Futures;
-using CryptoExchange.Net.Objects;
 
 namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 {
@@ -15,9 +10,9 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
     {
         /// <summary>
         /// Places a new order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#new-order-trade" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#new-order-trade" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="symbol">The symbol the order is for, for example `BTCUSD_PERP`</param>
         /// <param name="side">The order side (buy/sell)</param>
         /// <param name="type">The order type</param>
         /// <param name="timeInForce">Lifetime of the order (GoodTillCancel/ImmediateOrCancel/FillOrKill)</param>
@@ -33,10 +28,12 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
         /// <param name="closePosition">Close-All，used with STOP_MARKET or TAKE_PROFIT_MARKET.</param>
         /// <param name="orderResponseType">The response type. Default Acknowledge</param>
         /// <param name="priceProtect">If true when price reaches stopPrice, difference between "MARK_PRICE" and "CONTRACT_PRICE" cannot be larger than "triggerProtect" of the symbol.</param>
+        /// <param name="priceMatch">Only avaliable for Limit/Stop/TakeProfit order</param>
+        /// <param name="selfTradePreventionMode">Self trade prevention mode</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Id's for the placed order</returns>
-        Task<WebCallResult<HitoBitFuturesPlacedOrder>> PlaceOrderAsync(
+        Task<WebCallResult<HitoBitFuturesOrder>> PlaceOrderAsync(
             string symbol,
             OrderSide side,
             FuturesOrderType type,
@@ -53,27 +50,29 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
             bool? closePosition = null,
             OrderResponseType? orderResponseType = null,
             bool? priceProtect = null,
+            PriceMatch? priceMatch = null,
+            SelfTradePreventionMode? selfTradePreventionMode = null,
             int? receiveWindow = null,
             CancellationToken ct = default);
 
         /// <summary>
         /// Place multiple orders in one call
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#place-multiple-orders-trade" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#place-multiple-orders-trade" /></para>
         /// </summary>
         /// <param name="orders">The orders to place</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Returns a list of call results, one for each order. The order the results are in is the order the orders were sent</returns>
-        Task<WebCallResult<IEnumerable<CallResult<HitoBitFuturesPlacedOrder>>>> PlaceMultipleOrdersAsync(
-            HitoBitFuturesBatchOrder[] orders,
+        Task<WebCallResult<IEnumerable<CallResult<HitoBitFuturesOrder>>>> PlaceMultipleOrdersAsync(
+            IEnumerable<HitoBitFuturesBatchOrder> orders,
             int? receiveWindow = null,
             CancellationToken ct = default);
 
         /// <summary>
         /// Retrieves data for a specific order. Either orderId or origClientOrderId should be provided.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#query-order-user_data" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#query-order-user_data" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="symbol">The symbol the order is for, for example `BTCUSD_PERP`</param>
         /// <param name="orderId">The order id of the order</param>
         /// <param name="origClientOrderId">The client order id of the order</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -83,21 +82,21 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 
         /// <summary>
         /// Cancels a pending order
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#cancel-order-trade" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#cancel-order-trade" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="symbol">The symbol the order is for, for example `BTCUSD_PERP`</param>
         /// <param name="orderId">The order id of the order</param>
         /// <param name="origClientOrderId">The client order id of the order</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Id's for canceled order</returns>
-        Task<WebCallResult<HitoBitFuturesCancelOrder>> CancelOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default);
+        Task<WebCallResult<HitoBitFuturesOrder>> CancelOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
         /// Cancels all open orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#cancel-all-open-orders-trade" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#cancel-all-open-orders-trade" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="symbol">The symbol the order is for, for example `BTCUSD_PERP`</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Id's for canceled order</returns>
@@ -106,9 +105,9 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
         /// <summary>
         /// Cancel all open orders of the specified symbol at the end of the specified countdown. This rest endpoint means to ensure your open orders are canceled in case of an outage. The endpoint should be called repeatedly as heartbeats
         /// so that the existing countdown time can be canceled and replaced by a new one.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#auto-cancel-all-open-orders-trade" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#auto-cancel-all-open-orders-trade" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol</param>
+        /// <param name="symbol">The symbol, for example `BTCUSD_PERP`</param>
         /// <param name="countDownTime">The time after which all open orders should cancel, or 0 to cancel an existing timer</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
@@ -117,21 +116,21 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 
         /// <summary>
         /// Cancels muliple orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#cancel-multiple-orders-trade" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#cancel-multiple-orders-trade" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="symbol">The symbol the order is for, for example `BTCUSD_PERP`</param>
         /// <param name="orderIdList">The list of order ids to cancel</param>
         /// <param name="origClientOrderIdList">The list of client order ids to cancel</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Id's for canceled order</returns>
-        Task<WebCallResult<IEnumerable<CallResult<HitoBitFuturesCancelOrder>>>> CancelMultipleOrdersAsync(string symbol, List<long>? orderIdList = null, List<string>? origClientOrderIdList = null, long? receiveWindow = null, CancellationToken ct = default);
+        Task<WebCallResult<IEnumerable<CallResult<HitoBitFuturesOrder>>>> CancelMultipleOrdersAsync(string symbol, IEnumerable<long>? orderIdList = null, IEnumerable<string>? origClientOrderIdList = null, long? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
         /// Retrieves data for a specific open order. Either orderId or origClientOrderId should be provided.
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#query-current-open-order-user_data" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#query-current-open-order-user_data" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="symbol">The symbol the order is for, for example `BTCUSD_PERP`</param>
         /// <param name="orderId">The order id of the order</param>
         /// <param name="origClientOrderId">The client order id of the order</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
@@ -141,9 +140,9 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 
         /// <summary>
         /// Gets a list of open orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#current-all-open-orders-user_data" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#current-all-open-orders-user_data" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol to get open orders for</param>
+        /// <param name="symbol">The symbol to get open orders for, for example `BTCUSD_PERP`</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>List of open orders</returns>
@@ -151,9 +150,9 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 
         /// <summary>
         /// Gets all orders for the provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#all-orders-user_data" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#all-orders-user_data" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol to get orders for</param>
+        /// <param name="symbol">The symbol to get orders for, for example `BTCUSD_PERP`</param>
         /// <param name="orderId">If set, only orders with an order id higher than the provided will be returned</param>
         /// <param name="startTime">If set, only orders placed after this time will be returned</param>
         /// <param name="endTime">If set, only orders placed before this time will be returned</param>
@@ -165,9 +164,9 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 
         /// <summary>
         /// Gets a list of users forced orders
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#user-39-s-force-orders-user_data" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#user-39-s-force-orders-user_data" /></para>
         /// </summary>
-        /// <param name="symbol">The symbol to get forced orders for</param>
+        /// <param name="symbol">The symbol to get forced orders for, for example `BTCUSD_PERP`</param>
         /// <param name="closeType">Filter by reason for close</param>
         /// <param name="startTime">Filter by start time</param>
         /// <param name="endTime">Filter by end time</param>
@@ -180,10 +179,10 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 
         /// <summary>
         /// Gets all user trades for provided symbol
-        /// <para><a href="https://HitoBit-docs.github.io/apidocs/delivery/en/#account-trade-list-user_data" /></para>
+        /// <para><a href="https://hitobit-docs.github.io/apidocs/delivery/en/#account-trade-list-user_data" /></para>
         /// </summary>
-        /// <param name="symbol">Symbol to get trades for</param>
-        /// <param name="pair">Symbol to get trades for</param>
+        /// <param name="symbol">Symbol to get trades for, for example `BTCUSD_PERP`</param>
+        /// <param name="pair">Symbol to get trades for, for example `BTCUSD`</param>
         /// <param name="limit">The max number of results</param>
         /// <param name="fromId">TradeId to fetch from. Default gets most recent trades</param>
         /// <param name="orderId">Get the trades for a specific order</param>

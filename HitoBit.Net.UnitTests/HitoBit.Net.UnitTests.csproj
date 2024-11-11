@@ -7,14 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"></PackageReference>
-    <PackageReference Include="Moq" Version="4.20.69" />
-    <PackageReference Include="NUnit" Version="3.14.0"></PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0"></PackageReference>
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="NUnit" Version="4.1.0"></PackageReference>
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0"></PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HitoBit.Net\HitoBit.Net.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Endpoints\General\SimpleEarn\" />
+    <Folder Include="Endpoints\General\Staking\" />
+    <Folder Include="Endpoints\General\SubAccount\" />
+    <Folder Include="Endpoints\General\Mining\" />
+    <Folder Include="Endpoints\General\Futures\" />
   </ItemGroup>
 
 </Project>

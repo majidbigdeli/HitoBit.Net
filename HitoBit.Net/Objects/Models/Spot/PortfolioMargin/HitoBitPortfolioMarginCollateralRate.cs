@@ -1,20 +1,20 @@
-﻿using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-namespace HitoBit.Net.Objects.Models.Spot.PortfolioMargin
+﻿namespace HitoBit.Net.Objects.Models.Spot.PortfolioMargin
 {
     /// <summary>
     /// Portfolio margin collateral rate info
     /// </summary>
-    public class HitoBitPortfolioMarginCollateralRate
+    public record HitoBitPortfolioMarginCollateralRate
     {
         /// <summary>
         /// Asset
         /// </summary>
+        [JsonPropertyName("asset")]
         public string Asset { get; set; } = string.Empty;
 
         /// <summary>
         /// Collateral rate
         /// </summary>
+        [JsonPropertyName("collateralRate")]
         public decimal CollateralRate { get; set; }
     }
 }

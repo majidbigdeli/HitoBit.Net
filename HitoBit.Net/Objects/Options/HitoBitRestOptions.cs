@@ -1,9 +1,4 @@
-﻿using CryptoExchange.Net.Interfaces;
-using CryptoExchange.Net.Objects;
-using CryptoExchange.Net.Objects.Options;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
+﻿using CryptoExchange.Net.Objects.Options;
 
 namespace HitoBit.Net.Objects.Options
 {
@@ -29,16 +24,7 @@ namespace HitoBit.Net.Objects.Options
         /// <summary>
         /// Spot API options
         /// </summary>
-        public HitoBitRestApiOptions SpotOptions { get; private set; } = new HitoBitRestApiOptions
-        {
-            RateLimiters = new List<IRateLimiter>
-                {
-                    new RateLimiter()
-                        .AddPartialEndpointLimit("/api/", 1200, TimeSpan.FromMinutes(1))
-                        .AddPartialEndpointLimit("/sapi/", 180000, TimeSpan.FromMinutes(1))
-                        .AddEndpointLimit("/api/v3/order", 50, TimeSpan.FromSeconds(10), HttpMethod.Post, true)
-                }
-        };
+        public HitoBitRestApiOptions SpotOptions { get; private set; } = new HitoBitRestApiOptions();
 
         /// <summary>
         /// Usd futures API options

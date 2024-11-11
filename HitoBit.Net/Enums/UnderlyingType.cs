@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// Underlying Type
@@ -8,10 +10,12 @@
         /// <summary>
         /// Coin
         /// </summary>
+        [Map("COIN")]
         Coin,
         /// <summary>
         /// Index
         /// </summary>
+        [Map("INDEX")]
         Index
     }
 }

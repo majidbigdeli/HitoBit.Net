@@ -1,27 +1,26 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// BNB Burn Status
     /// </summary>
-    public class HitoBitBrokerageBnbBurnStatus
+    public record HitoBitBrokerageBnbBurnStatus
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Is Spot BNB Burn
         /// </summary>
-        [JsonProperty("spotBNBBurn")]
+        [JsonPropertyName("spotBNBBurn")]
         public bool IsSpotBnbBurn { get; set; }
         
         /// <summary>
         /// Is Interest BNB Burn
         /// </summary>
-        [JsonProperty("interestBNBBurn")]
+        [JsonPropertyName("interestBNBBurn")]
         public bool IsInterestBnbBurn { get; set; }
     }
 }

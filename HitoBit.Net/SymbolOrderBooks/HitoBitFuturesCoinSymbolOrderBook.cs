@@ -1,15 +1,10 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Clients;
+﻿using HitoBit.Net.Clients;
 using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients;
 using HitoBit.Net.Objects.Options;
-using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.Objects.Sockets;
 using CryptoExchange.Net.OrderBook;
-using CryptoExchange.Net.Sockets;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace HitoBit.Net.SymbolOrderBooks
 {
@@ -50,9 +45,9 @@ namespace HitoBit.Net.SymbolOrderBooks
         public HitoBitFuturesCoinSymbolOrderBook(
             string symbol,
             Action<HitoBitOrderBookOptions>? optionsDelegate,
-            ILogger<HitoBitFuturesCoinSymbolOrderBook>? logger,
+            ILoggerFactory? logger,
             IHitoBitRestClient? restClient,
-            IHitoBitSocketClient? socketClient) : base(logger, "HitoBit", symbol)
+            IHitoBitSocketClient? socketClient) : base(logger, "HitoBit", "CoinFutures", symbol)
         {
             var options = HitoBitOrderBookOptions.Default.Copy();
             if (optionsDelegate != null)

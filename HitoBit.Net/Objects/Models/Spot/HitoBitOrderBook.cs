@@ -1,36 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Interfaces;
-using CryptoExchange.Net.Interfaces;
-using Newtonsoft.Json;
+﻿using HitoBit.Net.Interfaces;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// The order book for a asset
     /// </summary>
-    public class HitoBitOrderBook : IHitoBitOrderBook
+    public record HitoBitOrderBook : IHitoBitOrderBook
     {
         /// <summary>
         /// The symbol of the order book 
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// The ID of the last update
         /// </summary>
-        [JsonProperty("lastUpdateId")]
+        [JsonPropertyName("lastUpdateId")]
         public long LastUpdateId { get; set; }
         
         /// <summary>
         /// The list of bids
         /// </summary>
+        [JsonPropertyName("bids")]
         public IEnumerable<HitoBitOrderBookEntry> Bids { get; set; } = Array.Empty<HitoBitOrderBookEntry>();
 
         /// <summary>
         /// The list of asks
         /// </summary>
+        [JsonPropertyName("asks")]
         public IEnumerable<HitoBitOrderBookEntry> Asks { get; set; } = Array.Empty<HitoBitOrderBookEntry>();
     }
 }

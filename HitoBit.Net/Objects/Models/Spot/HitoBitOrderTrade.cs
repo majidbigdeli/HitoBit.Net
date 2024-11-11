@@ -1,35 +1,34 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot
+﻿namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// Trade info
     /// </summary>
-    public class HitoBitOrderTrade
+    public record HitoBitOrderTrade
     {
         /// <summary>
         /// The id of the trade
         /// </summary>
-        [JsonProperty("tradeId")]
+        [JsonPropertyName("tradeId")]
         public long Id { get; set; }
         /// <summary>
         /// Price of the trade
         /// </summary>
+        [JsonPropertyName("price")]
         public decimal Price { get; set; }
         /// <summary>
         /// Quantity of the trade
         /// </summary>
-        [JsonProperty("qty")]
+        [JsonPropertyName("qty")]
         public decimal Quantity { get; set; }
         /// <summary>
         /// Fee paid over this trade
         /// </summary>
-        [JsonProperty("commission")]
+        [JsonPropertyName("commission")]
         public decimal Fee { get; set; }
         /// <summary>
         /// The asset the fee is paid in
         /// </summary>
-        [JsonProperty("commissionAsset")]
+        [JsonPropertyName("commissionAsset")]
         public string FeeAsset { get; set; } = string.Empty;
     }
 }

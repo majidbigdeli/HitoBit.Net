@@ -1,41 +1,40 @@
 ﻿using HitoBit.Net.Interfaces;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot.Socket
 {
     /// <summary>
     /// MiniTick info
     /// </summary>
-    public abstract class HitoBitStreamMiniTickBase : HitoBitStreamEvent, IHitoBitMiniTick
+    public abstract record HitoBitStreamMiniTickBase : HitoBitStreamEvent, IHitoBitMiniTick
     {
         /// <summary>
         /// The symbol this data is for
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// The current day close price. This is the latest price for this symbol.
         /// </summary>
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public decimal LastPrice { get; set; }
 
         /// <summary>
         /// Todays open price
         /// </summary>
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public decimal OpenPrice { get; set; }
 
         /// <summary>
         /// Todays high price
         /// </summary>
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public decimal HighPrice { get; set; }
 
         /// <summary>
         /// Todays low price
         /// </summary>
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public decimal LowPrice { get; set; }
         
         /// <summary>
@@ -52,26 +51,32 @@ namespace HitoBit.Net.Objects.Models.Spot.Socket
     /// <summary>
     /// Stream mini tick
     /// </summary>
-    public class HitoBitStreamMiniTick: HitoBitStreamMiniTickBase
+    public record HitoBitStreamMiniTick: HitoBitStreamMiniTickBase
     {
         /// <inheritdoc/>
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public override decimal Volume { get; set; }
         /// <inheritdoc/>
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public override decimal QuoteVolume { get; set; }
     }
 
     /// <summary>
     /// Stream mini tick
     /// </summary>
-    public class HitoBitStreamCoinMiniTick : HitoBitStreamMiniTickBase
+    public record HitoBitStreamCoinMiniTick : HitoBitStreamMiniTickBase
     {
         /// <inheritdoc/>
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public override decimal Volume { get; set; }
         /// <inheritdoc/>
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public override decimal QuoteVolume { get; set; }
+
+        /// <summary>
+        /// The pair
+        /// </summary>
+        [JsonPropertyName("ps")]
+        public string Pair { get; set; } = string.Empty;
     }
 }

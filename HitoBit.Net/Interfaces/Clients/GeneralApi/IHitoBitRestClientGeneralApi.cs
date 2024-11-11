@@ -1,7 +1,4 @@
-﻿using CryptoExchange.Net.Interfaces;
-using System;
-
-namespace HitoBit.Net.Interfaces.Clients.GeneralApi
+﻿namespace HitoBit.Net.Interfaces.Clients.GeneralApi
 {
     /// <summary>
     /// HitoBit general API endpoints
@@ -19,14 +16,14 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
         public IHitoBitRestClientGeneralApiFutures Futures { get; }
 
         /// <summary>
-        /// Endpoints related to savings
-        /// </summary>
-        public IHitoBitRestClientGeneralApiSavings Savings { get; }
-
-        /// <summary>
         /// Endpoints related to crypto loans
         /// </summary>
         public IHitoBitRestClientGeneralApiLoans CryptoLoans { get; }
+
+        /// <summary>
+        /// Endpoints related to auto invest
+        /// </summary>
+        public IHitoBitRestClientGeneralApiAutoInvest AutoInvest { get; }
 
         /// <summary>
         /// Endpoints related to mining
@@ -37,5 +34,20 @@ namespace HitoBit.Net.Interfaces.Clients.GeneralApi
         /// Endpoints related to requesting data for and controlling sub accounts
         /// </summary>
         public IHitoBitRestClientGeneralApiSubAccount SubAccount { get; }
+
+        /// <summary>
+        /// Endpoints related to staking
+        /// </summary>
+        IHitoBitRestClientGeneralApiStaking Staking { get; }
+
+        /// <summary>
+        /// Endpoints related to HitoBit Simple Earn
+        /// </summary>
+        IHitoBitRestClientGeneralApiSimpleEarn SimpleEarn { get; }
+
+        /// <summary>
+        /// Endpoints related to HitoBit Copy Trading
+        /// </summary>
+        IHitoBitRestClientGeneralApiCopyTrading CopyTrading { get; }
     }
 }

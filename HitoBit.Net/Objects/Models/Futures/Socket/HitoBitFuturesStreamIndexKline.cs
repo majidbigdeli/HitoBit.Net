@@ -1,128 +1,124 @@
-﻿using System;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Futures.Socket
 {
     /// <summary>
     /// Wrapper for kline information for a symbol
     /// </summary>
-    public class HitoBitStreamIndexKlineData : HitoBitStreamEvent
+    public record HitoBitStreamIndexKlineData : HitoBitStreamEvent
     {
         /// <summary>
         /// The symbol the data is for
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// The data
         /// </summary>
-        [JsonProperty("k")]
+        [JsonPropertyName("k")]
         public HitoBitFuturesStreamIndexKline Data { get; set; } = default!;
     }
 
     /// <summary>
     /// Index kline
     /// </summary>
-    public class HitoBitFuturesStreamIndexKline
+    public record HitoBitFuturesStreamIndexKline
     {
         /// <summary>
         /// Open time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public DateTime OpenTime { get; set; }
         /// <summary>
         /// Close time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
-        [JsonProperty("T")]
+        [JsonPropertyName("T")]
         public DateTime CloseTime { get; set; }
 
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Ignore1 { get; set; } = string.Empty;
         /// <summary>
         /// Kline interval
         /// </summary>
-        [JsonProperty("i")]
-        [JsonConverter(typeof(KlineIntervalConverter))]
+        [JsonPropertyName("i")]
         public KlineInterval Interval { get; set; }
 
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("f")]
+        [JsonPropertyName("f")]
         public string Ignore2 { get; set; } = string.Empty;
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("L")]
+        [JsonPropertyName("L")]
         public string Ignore3 { get; set; } = string.Empty;
 
         /// <summary>
         /// Open price of the kline
         /// </summary>
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public decimal OpenPrice { get; set; }
         /// <summary>
         /// Close price of the kline
         /// </summary>
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public decimal ClosePrice { get; set; }
         /// <summary>
         /// High price of the kline
         /// </summary>
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public decimal HighPrice { get; set; }
         /// <summary>
         /// Low price of the kline
         /// </summary>
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public decimal LowPrice { get; set; }
 
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public string Ignore4 { get; set; } = string.Empty;
         
         /// <summary>
         /// Number of basic data
         /// </summary>
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int NumberOfBasicData { get; set; }
 
         /// <summary>
         /// Is the kline closed
         /// </summary>
-        [JsonProperty("x")]
+        [JsonPropertyName("x")]
         public bool Closed { get; set; }
 
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public string Ignore5 { get; set; } = string.Empty;
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("V")]
+        [JsonPropertyName("V")]
         public string Ignore6 { get; set; } = string.Empty;
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("Q")]
+        [JsonPropertyName("Q")]
         public string Ignore7 { get; set; } = string.Empty;
         /// <summary>
         /// Ignore
         /// </summary>
-        [JsonProperty("b")]
+        [JsonPropertyName("b")]
         public string Ignore8 { get; set; } = string.Empty;
     }
 }

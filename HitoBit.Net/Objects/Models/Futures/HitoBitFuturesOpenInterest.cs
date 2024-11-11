@@ -1,46 +1,46 @@
-﻿using System;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
     /// Open interest
     /// </summary>
-    public class HitoBitFuturesOpenInterest
+    public record HitoBitFuturesOpenInterest
     {
         /// <summary>
         /// The symbol the information is about
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// Open Interest info
         /// </summary>
+        [JsonPropertyName("openInterest")]
         public decimal OpenInterest { get; set; }
 
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("time"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("time"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime? Timestamp { get; set; }
     }
 
     /// <summary>
     /// Open interest
     /// </summary>
-    public class HitoBitFuturesCoinOpenInterest: HitoBitFuturesOpenInterest
+    public record HitoBitFuturesCoinOpenInterest: HitoBitFuturesOpenInterest
     {
         /// <summary>
         /// The pair
         /// </summary>
+        [JsonPropertyName("pair")]
         public string Pair { get; set; } = string.Empty;
         /// <summary>
         /// The contract type
         /// </summary>
-        [JsonConverter(typeof(ContractTypeConverter))]
+        [JsonPropertyName("contractType")]
         public ContractType ContractType { get; set; }
     }
 

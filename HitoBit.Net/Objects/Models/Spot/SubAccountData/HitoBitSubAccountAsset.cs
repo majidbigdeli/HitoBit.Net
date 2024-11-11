@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
 {
-    internal class HitoBitSubAccountAsset
+    internal record HitoBitSubAccountAsset
     {
+        [JsonPropertyName("success")]
         public bool Success { get; set; } = true;
-        [JsonProperty("msg")]
+        [JsonPropertyName("msg")]
         public string Message { get; set; } = string.Empty;
+        [JsonPropertyName("balances")]
         public IEnumerable<HitoBitBalance> Balances { get; set; } = Array.Empty<HitoBitBalance>();
     }
 }

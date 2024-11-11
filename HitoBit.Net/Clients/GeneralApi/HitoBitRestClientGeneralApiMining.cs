@@ -1,36 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.GeneralApi;
 using HitoBit.Net.Objects.Models;
 using HitoBit.Net.Objects.Models.Spot.Mining;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Clients.GeneralApi
 {
     /// <inheritdoc />
-    public class HitoBitRestClientGeneralApiMining : IHitoBitRestClientGeneralApiMining
+    internal class HitoBitRestClientGeneralApiMining : IHitoBitRestClientGeneralApiMining
     {
-        private const string coinListEndpoint = "mining/pub/coinList";
-        private const string algorithmEndpoint = "mining/pub/algoList";
-        private const string minerDetailsEndpoint = "mining/worker/detail";
-        private const string minerListEndpoint = "mining/worker/list";
-        private const string miningRevenueEndpoint = "mining/payment/list";
-        private const string miningOtherRevenueEndpoint = "mining/payment/other";
-        private const string miningStatisticsEndpoint = "mining/statistics/user/status";
-        private const string miningAccountListEndpoint = "mining/statistics/user/list";
-        private const string miningHashrateResaleListEndpoint = "mining/hash-transfer/config/details/list";
-        private const string miningHashrateResaleDetailsEndpoint = "mining/hash-transfer/profit/details";
-        private const string miningHashrateResaleRequest = "mining/hash-transfer/config";
-        private const string miningHashrateResaleCancel = "mining/hash-transfer/config/cancel";
+        private static readonly RequestDefinitionCache _definitions = new RequestDefinitionCache();
 
         private readonly HitoBitRestClientGeneralApi _baseClient;
 
@@ -44,8 +23,9 @@ namespace HitoBit.Net.Clients.GeneralApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitMiningCoin>>> GetMiningCoinListAsync(CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<IEnumerable<HitoBitMiningCoin>>>(_baseClient.GetUrl(coinListEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var parameters = new ParameterCollection();
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/pub/coinList", HitoBitExchange.RateLimiter.SpotRestIp);
+            var result = await _baseClient.SendAsync<HitoBitResult<IEnumerable<HitoBitMiningCoin>>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<IEnumerable<HitoBitMiningCoin>>(default);
 
@@ -61,8 +41,9 @@ namespace HitoBit.Net.Clients.GeneralApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitMiningAlgorithm>>> GetMiningAlgorithmListAsync(CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<IEnumerable<HitoBitMiningAlgorithm>>>(_baseClient.GetUrl(algorithmEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var parameters = new ParameterCollection();
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/pub/algoList", HitoBitExchange.RateLimiter.SpotRestIp);
+            var result = await _baseClient.SendAsync<HitoBitResult<IEnumerable<HitoBitMiningAlgorithm>>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<IEnumerable<HitoBitMiningAlgorithm>>(default);
 
@@ -83,14 +64,15 @@ namespace HitoBit.Net.Clients.GeneralApi
             userName.ValidateNotNull(nameof(userName));
             workerName.ValidateNotNull(nameof(workerName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"algo", algorithm},
                 {"userName", userName},
                 {"workerName", workerName}
             };
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<IEnumerable<HitoBitMinerDetails>>>(_baseClient.GetUrl(minerDetailsEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/worker/detail", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<IEnumerable<HitoBitMinerDetails>>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<IEnumerable<HitoBitMinerDetails>>(default);
 
@@ -109,7 +91,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             algorithm.ValidateNotNull(nameof(algorithm));
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"algo", algorithm},
                 {"userName", userName}
@@ -118,9 +100,10 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("page", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("sortAscending", sortAscending == null ? null : sortAscending == true ? "1" : "0");
             parameters.AddOptionalParameter("sortColumn", sortColumn);
-            parameters.AddOptionalParameter("workerStatus", workerStatus == null ? null : JsonConvert.SerializeObject(workerStatus, new MinerStatusConverter(false)));
+            parameters.AddOptionalEnum("workerStatus", workerStatus);
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitMinerList>>(_baseClient.GetUrl(minerListEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/worker/list", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitMinerList>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitMinerList>(default);
 
@@ -139,7 +122,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             algorithm.ValidateNotNull(nameof(algorithm));
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"algo", algorithm},
                 {"userName", userName}
@@ -151,7 +134,8 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("startDate", DateTimeConverter.ConvertToMilliseconds(startDate));
             parameters.AddOptionalParameter("endDate", DateTimeConverter.ConvertToMilliseconds(endDate));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitRevenueList>>(_baseClient.GetUrl(miningRevenueEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/payment/list", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitRevenueList>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitRevenueList>(default);
 
@@ -170,7 +154,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             algorithm.ValidateNotNull(nameof(algorithm));
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"algo", algorithm},
                 {"userName", userName}
@@ -182,7 +166,8 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("startDate", DateTimeConverter.ConvertToMilliseconds(startDate));
             parameters.AddOptionalParameter("endDate", DateTimeConverter.ConvertToMilliseconds(endDate));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitOtherRevenueList>>(_baseClient.GetUrl(miningOtherRevenueEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/payment/other", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitOtherRevenueList>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitOtherRevenueList>(default);
 
@@ -200,13 +185,14 @@ namespace HitoBit.Net.Clients.GeneralApi
             algorithm.ValidateNotNull(nameof(algorithm));
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"algo", algorithm},
                 {"userName", userName}
             };
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitMiningStatistic>>(_baseClient.GetUrl(miningStatisticsEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/statistics/user/status", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitMiningStatistic>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitMiningStatistic>(default);
 
@@ -224,13 +210,14 @@ namespace HitoBit.Net.Clients.GeneralApi
             algorithm.ValidateNotNull(nameof(algorithm));
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"algo", algorithm},
                 {"userName", userName}
             };
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<IEnumerable<HitoBitMiningAccount>>>(_baseClient.GetUrl(miningAccountListEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/statistics/user/list", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<IEnumerable<HitoBitMiningAccount>>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<IEnumerable<HitoBitMiningAccount>>(default);
 
@@ -245,11 +232,12 @@ namespace HitoBit.Net.Clients.GeneralApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitHashrateResaleList>> GetHashrateResaleListAsync(int? page = null, int? pageSize = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("pageIndex", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("pageSize", pageSize?.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitHashrateResaleList>>(_baseClient.GetUrl(miningHashrateResaleListEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/hash-transfer/config/details/list", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitHashrateResaleList>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitHashrateResaleList>(default);
 
@@ -267,7 +255,7 @@ namespace HitoBit.Net.Clients.GeneralApi
         {
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "configId", configId.ToString(CultureInfo.InvariantCulture) },
                 { "userName", userName }
@@ -276,7 +264,8 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("pageIndex", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("pageSize", pageSize?.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitHashrateResaleDetails>>(_baseClient.GetUrl(miningHashrateResaleDetailsEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/hash-transfer/profit/details", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitHashrateResaleDetails>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitHashrateResaleDetails>(default);
 
@@ -297,7 +286,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             algorithm.ValidateNotNull(nameof(algorithm));
             toUser.ValidateNotNull(nameof(toUser));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "userName", userName },
                 { "algo", algorithm },
@@ -307,7 +296,8 @@ namespace HitoBit.Net.Clients.GeneralApi
                 { "hashRate", hashRate }
             };
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<int>>(_baseClient.GetUrl(miningHashrateResaleRequest, "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/mining/hash-transfer/config", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<int>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<int>(default);
 
@@ -326,13 +316,14 @@ namespace HitoBit.Net.Clients.GeneralApi
         {
             userName.ValidateNotNull(nameof(userName));
 
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "configId", configId },
                 { "userName", userName }
             };
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<bool>>(_baseClient.GetUrl(miningHashrateResaleCancel, "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/mining/hash-transfer/config/cancel", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<bool>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<bool>(default);
 
@@ -343,5 +334,31 @@ namespace HitoBit.Net.Clients.GeneralApi
         }
 
         #endregion
+
+        #region Get Mining Account Earnings
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitMiningEarnings>> GetMiningAccountEarningsAsync(string algo, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? pageSize = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection()
+            {
+                { "algo", algo }
+            };
+            parameters.AddOptionalParameter("startDate", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddOptionalParameter("endDate", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("pageIndex", page?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("pageSize", pageSize?.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/mining/payment/uid", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitMiningEarnings>>(request, parameters, ct).ConfigureAwait(false);
+            if (!result.Success)
+                return result.As<HitoBitMiningEarnings>(default);
+
+            if (result.Data?.Code != 0)
+                return result.AsError<HitoBitMiningEarnings>(new ServerError(result.Data!.Code, result.Data!.Message));
+
+            return result.As(result.Data.Data);
+        }
+
+        #endregion Acquiring CoinName
     }
 }

@@ -1,35 +1,42 @@
 ﻿using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace HitoBit.Net.Objects.Models.Spot.PortfolioMargin
 {
     /// <summary>
     /// Portfolio margin account info
     /// </summary>
-    public class HitoBitPortfolioMarginInfo
+    public record HitoBitPortfolioMarginInfo
     {
         /// <summary>
         /// Portfolio margin account maintenance margin rate
         /// </summary>
-        [JsonProperty("uniMMR")]
+        [JsonPropertyName("uniMMR")]
         public decimal UniMaintenanceMarginRate { get; set; }
         /// <summary>
         /// Account equity, in USD
         /// </summary>
+        [JsonPropertyName("accountEquity")]
         public decimal AccountEquity { get; set; }
+        /// <summary>
+        /// Portfolio margin account actual equity, in USD
+        /// </summary>
+        [JsonPropertyName("actualEquity")]
+        public decimal ActualEquity { get; set; }
         /// <summary>
         /// Portfolio margin account maintenance margin, in USD
         /// </summary>
-        [JsonProperty("accountMaintMargin")]
+        [JsonPropertyName("accountMaintMargin")]
         public decimal AccountMaintenanceMargin { get; set; }
         /// <summary>
         /// Account status
         /// </summary>
         [JsonConverter(typeof(EnumConverter))]
+        [JsonPropertyName("accountStatus")]
         public PortfolioMarginAccountStatus AccountStatus { get; set; }
+        /// <summary>
+        /// Account type
+        /// </summary>
+        [JsonPropertyName("accountType")]
+        public string AccountType { get; set; } = string.Empty;
     }
 }

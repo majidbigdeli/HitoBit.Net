@@ -1,73 +1,75 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot.Mining
 {
     /// <summary>
     /// Revenue list
     /// </summary>
-    public class HitoBitRevenueList
+    public record HitoBitRevenueList
     {
         /// <summary>
         /// Total number of results
         /// </summary>
+        [JsonPropertyName("totalNum")]
         public int TotalNum { get; set; }
         /// <summary>
         /// Page size
         /// </summary>
+        [JsonPropertyName("pageSize")]
         public int PageSize { get; set; }
         /// <summary>
         /// Revenue items
         /// </summary>
+        [JsonPropertyName("accountProfits")]
         public IEnumerable<HitoBitRevenueItem> AccountProfits { get; set; } = Array.Empty<HitoBitRevenueItem>();
     }
 
     /// <summary>
     /// Revenue
     /// </summary>
-    public class HitoBitRevenueItem
+    public record HitoBitRevenueItem
     {
         /// <summary>
         /// Timestamp
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
-        [JsonProperty("time")]
+        [JsonPropertyName("time")]
         public DateTime Timestamp { get; set; }
         /// <summary>
         /// Coin
         /// </summary>
-        [JsonProperty("coinName")]
+        [JsonPropertyName("coinName")]
         public string Coin { get; set; } = string.Empty;
         /// <summary>
         /// Earning type
         /// </summary>
-        [JsonConverter(typeof(HitoBitEarningTypeConverter))]
-        public HitoBitEarningType Type { get; set; }
+        [JsonPropertyName("type")]
+        public EarningType Type { get; set; }
         /// <summary>
         /// Day hashrate
         /// </summary>
+        [JsonPropertyName("dayHashRate")]
         public decimal DayHashRate { get; set; }
         /// <summary>
         /// Profit quantity
         /// </summary>
-        [JsonProperty("profitAmount")]
+        [JsonPropertyName("profitAmount")]
         public decimal ProfitQuantity { get; set; }
         /// <summary>
         /// Hash transfer
         /// </summary>
+        [JsonPropertyName("hashTransfer")]
         public decimal? HashTransfer { get; set; }
         /// <summary>
         /// Transfer quantity
         /// </summary>
-        [JsonProperty("transferAmount")]
+        [JsonPropertyName("transferAmount")]
         public decimal? TransferQuantity { get; set; }
         /// <summary>
         /// Status
         /// </summary>
+        [JsonPropertyName("status")]
         public MinerStatus Status { get; set; }
     }
 }

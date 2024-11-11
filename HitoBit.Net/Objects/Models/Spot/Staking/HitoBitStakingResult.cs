@@ -3,22 +3,12 @@
     /// <summary>
     /// Staking result
     /// </summary>
-    public class HitoBitStakingResult 
+    public record HitoBitStakingResult 
     {
         /// <summary>
         /// Successful
         /// </summary>
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
-    }
-
-    /// <summary>
-    /// Staking result
-    /// </summary>
-    public class HitoBitStakingPositionResult: HitoBitStakingResult
-    {
-        /// <summary>
-        /// Id of the position
-        /// </summary>
-        public string? PositionId { get; set; }
     }
 }

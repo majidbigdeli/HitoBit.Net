@@ -7,16 +7,17 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using HitoBit.Net.Clients;
 using HitoBit.Net.Interfaces.Clients;
+using HitoBit.Net.Objects.Models.Futures;
 using HitoBit.Net.Objects.Options;
 using CryptoExchange.Net.Interfaces;
-using CryptoExchange.Net.Sockets;
+using CryptoExchange.Net.Objects.Sockets;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.UnitTests.TestImplementations
 {
@@ -96,7 +97,7 @@ namespace HitoBit.Net.UnitTests.TestImplementations
         public static IHitoBitRestClient CreateResponseClient<T>(T response, Action<HitoBitRestOptions> options = null)
         {
             var client = (HitoBitRestClient)CreateClient(options);
-            SetResponse(client, JsonConvert.SerializeObject(response));
+            SetResponse(client, JsonSerializer.Serialize(response));
             return client;
         }
 
@@ -203,6 +204,19 @@ namespace HitoBit.Net.UnitTests.TestImplementations
 
             if (type == typeof(IEnumerable<string>))
                 return new[] { "string" + i };
+
+            if (type == typeof(IEnumerable<HitoBitFuturesBatchEditOrder>))
+                return new HitoBitFuturesBatchEditOrder[1]
+                {
+                    new HitoBitFuturesBatchEditOrder
+                    {
+                        OrderId = 1,
+                        Price = 1,
+                        Quantity = 1,
+                        Side = Enums.OrderSide.Sell,
+                        Symbol = "1"
+                    }
+                };
 
             if (type.IsEnum)
             {

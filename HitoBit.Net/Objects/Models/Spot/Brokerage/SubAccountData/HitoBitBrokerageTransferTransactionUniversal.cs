@@ -1,66 +1,65 @@
-﻿using System;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Transfer Transaction Universal
     /// </summary>
-    public class HitoBitBrokerageTransferTransactionUniversal
+    public record HitoBitBrokerageTransferTransactionUniversal
     {
         /// <summary>
         /// Transaction Id
         /// </summary>
-        [JsonProperty("txnId")]
+        [JsonPropertyName("txnId")]
         public string Id { get; set; } = string.Empty;
         
         /// <summary>
         /// Client Transfer Id
         /// </summary>
-        [JsonProperty("clientTranId")]
+        [JsonPropertyName("clientTranId")]
         public string ClientTransferId { get; set; } = string.Empty;
         
         /// <summary>
         /// To id
         /// </summary>
+        [JsonPropertyName("toId")]
         public string ToId { get; set; } = string.Empty;
         
         /// <summary>
         /// From account type
         /// </summary>
-        [JsonConverter(typeof(BrokerageAccountTypeConverter))]
+        [JsonPropertyName("fromAccountType")]
         public BrokerageAccountType FromAccountType { get; set; }
         
         /// <summary>
         /// To account type
         /// </summary>
-        [JsonConverter(typeof(BrokerageAccountTypeConverter))]
+        [JsonPropertyName("toAccountType")]
         public BrokerageAccountType ToAccountType { get; set; }
-        
+
         /// <summary>
         /// Asset
         /// </summary>
+        [JsonPropertyName("asset")]
         public string Asset { get; set; } = string.Empty;
         
         /// <summary>
         /// Quantity
         /// </summary>
-        [JsonProperty("qty")]
+        [JsonPropertyName("qty")]
         public decimal Quantity { get; set; }
         
         /// <summary>
         /// Date
         /// </summary>
-        [JsonProperty("time"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("time"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime Date { get; set; }
         
         /// <summary>
         /// Status
         /// </summary>
-        [JsonConverter(typeof(BrokerageTransferTransactionStatusConverter))]
+        [JsonPropertyName("status")]
         public BrokerageTransferTransactionStatus Status { get; set; }
     }
 }

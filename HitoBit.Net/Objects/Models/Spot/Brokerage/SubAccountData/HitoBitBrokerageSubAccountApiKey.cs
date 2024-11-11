@@ -1,38 +1,38 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Sub Account Api Key
     /// </summary>
-    public class HitoBitBrokerageSubAccountApiKey
+    public record HitoBitBrokerageSubAccountApiKey
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Api Key
         /// </summary>
+        [JsonPropertyName("apikey")]
         public string ApiKey { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Is Spot Trading Enabled
         /// </summary>
-        [JsonProperty("canTrade")]
+        [JsonPropertyName("canTrade")]
         public bool IsSpotTradingEnabled { get; set; }
         
         /// <summary>
         /// Is Margin Trading Enabled
         /// </summary>
-        [JsonProperty("marginTrade")]
+        [JsonPropertyName("marginTrade")]
         public bool IsMarginTradingEnabled { get; set; }
         
         /// <summary>
         /// Is Futures Trading Enabled
         /// </summary>
-        [JsonProperty("futuresTrade")]
+        [JsonPropertyName("futuresTrade")]
         public bool IsFuturesTradingEnabled { get; set; }
     }
 }

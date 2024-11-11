@@ -2,9 +2,6 @@
 using HitoBit.Net.Interfaces.Clients.GeneralApi;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
-using HitoBit.Net.Objects;
-using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Interfaces;
 
 namespace HitoBit.Net.Interfaces.Clients
 {

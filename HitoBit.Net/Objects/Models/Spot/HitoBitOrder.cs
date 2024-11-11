@@ -3,7 +3,7 @@
     /// <summary>
     /// Information regarding a specific order
     /// </summary>
-    public class HitoBitOrder: HitoBitOrderBase
+    public record HitoBitOrder: HitoBitOrderBase
     {
     }
 }

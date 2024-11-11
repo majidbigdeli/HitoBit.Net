@@ -1,16 +1,9 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Clients;
+﻿using HitoBit.Net.Clients;
 using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients;
-using HitoBit.Net.Objects;
 using HitoBit.Net.Objects.Options;
-using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.Objects.Sockets;
 using CryptoExchange.Net.OrderBook;
-using CryptoExchange.Net.Sockets;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace HitoBit.Net.SymbolOrderBooks
 {
@@ -48,9 +41,9 @@ namespace HitoBit.Net.SymbolOrderBooks
         public HitoBitSpotSymbolOrderBook(
             string symbol,
             Action<HitoBitOrderBookOptions>? optionsDelegate,
-            ILogger<HitoBitSpotSymbolOrderBook>? logger,
+            ILoggerFactory? logger,
             IHitoBitRestClient? restClient,
-            IHitoBitSocketClient? socketClient) : base(logger, "HitoBit", symbol)
+            IHitoBitSocketClient? socketClient) : base(logger, "HitoBit", "Spot", symbol)
         {
             var options = HitoBitOrderBookOptions.Default.Copy();
             if (optionsDelegate != null)
@@ -94,7 +87,7 @@ namespace HitoBit.Net.SymbolOrderBooks
                 var bookResult = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(Symbol, Levels ?? 5000).ConfigureAwait(false);
                 if (!bookResult)
                 {
-                    _logger.Log(Microsoft.Extensions.Logging.LogLevel.Debug, $"{Id} order book {Symbol} failed to retrieve initial order book");
+                    _logger.Log(Microsoft.Extensions.Logging.LogLevel.Debug, $"{Api} order book {Symbol} failed to retrieve initial order book");
                     await _socketClient.UnsubscribeAsync(subResult.Data).ConfigureAwait(false);
                     return new CallResult<UpdateSubscription>(bookResult.Error!);
                 }

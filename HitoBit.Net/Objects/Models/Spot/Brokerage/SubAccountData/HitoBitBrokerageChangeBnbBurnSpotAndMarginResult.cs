@@ -1,21 +1,20 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Enable Or Disable BNB Burn Spot And Margin Result
     /// </summary>
-    public class HitoBitBrokerageChangeBnbBurnSpotAndMarginResult
+    public record HitoBitBrokerageChangeBnbBurnSpotAndMarginResult
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Is Spot BNB Burn
         /// </summary>
-        [JsonProperty("spotBNBBurn")]
+        [JsonPropertyName("spotBNBBurn")]
         public bool IsSpotBnbBurn { get; set; }
     }
 }

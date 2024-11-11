@@ -1,5 +1,4 @@
 ﻿using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
@@ -7,7 +6,7 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// Candlestick information for symbol
     /// </summary>
     [JsonConverter(typeof(ArrayConverter))]
-    public class HitoBitSpotKline: HitoBitKlineBase
+    public record HitoBitSpotKline: HitoBitKlineBase
     {
         /// <summary>
         /// The volume traded during this candlestick

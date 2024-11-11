@@ -1,26 +1,27 @@
-﻿using System;
-using HitoBit.Net.Objects.Models.Spot.Socket;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using HitoBit.Net.Objects.Models.Spot.Socket;
 
 namespace HitoBit.Net.Objects.Models.Futures.Socket
 {
     /// <summary>
     /// Futures book price
     /// </summary>
-    public class HitoBitFuturesStreamBookPrice : HitoBitStreamBookPrice
+    public record HitoBitFuturesStreamBookPrice : HitoBitStreamBookPrice
     {
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("T"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("T"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime? TransactionTime { get; set; }
         /// <summary>
         /// The time the event happened
         /// </summary>
-        [JsonProperty("E"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("E"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime EventTime { get; set; }
 
-        [JsonProperty("e")] private string Event { get; set; } = string.Empty;
+        /// <summary>
+        /// The type of the event
+        /// </summary>
+        [JsonPropertyName("e")] 
+        public string Event { get; set; } = string.Empty;
     }
 }

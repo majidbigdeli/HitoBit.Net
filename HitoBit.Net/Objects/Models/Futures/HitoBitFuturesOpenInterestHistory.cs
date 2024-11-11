@@ -1,33 +1,32 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Futures
+﻿namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
     /// Open Interest History info
     /// </summary>
-    public class HitoBitFuturesOpenInterestHistory
+    public record HitoBitFuturesOpenInterestHistory
     {
         /// <summary>
         /// The symbol the information is about
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// Total open interest
         /// </summary>
+        [JsonPropertyName("sumOpenInterest")]
         public decimal SumOpenInterest { get; set; }
 
         /// <summary>
         /// Total open interest value
         /// </summary>
+        [JsonPropertyName("sumOpenInterestValue")]
         public decimal SumOpenInterestValue { get; set; }
 
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("timestamp"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("timestamp"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime? Timestamp { get; set; }
     }
 }

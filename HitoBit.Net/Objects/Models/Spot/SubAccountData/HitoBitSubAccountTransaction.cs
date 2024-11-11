@@ -1,16 +1,14 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
 {
     /// <summary>
     /// Transaction
     /// </summary>
-    public class HitoBitSubAccountTransaction
+    public record HitoBitSubAccountTransaction
     {
         /// <summary>
         /// The transaction id
         /// </summary>
-        [JsonProperty("txnId")]
+        [JsonPropertyName("txnId"), JsonConverter(typeof(NumberStringConverter))]
         public string TransactionId { get; set; } = string.Empty;
     }
 }

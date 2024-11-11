@@ -1,58 +1,59 @@
-﻿using System;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// Fiat payment info
     /// </summary>
-    public class HitoBitFiatWithdrawDeposit
+    public record HitoBitFiatWithdrawDeposit
     {
         /// <summary>
         /// Order number
         /// </summary>
-        [JsonProperty("orderNo")]
+        [JsonPropertyName("orderNo")]
         public string OrderNumber { get; set; } = string.Empty;
         /// <summary>
         /// The used asset
         /// </summary>
-        [JsonProperty("fiatCurrency")]
+        [JsonPropertyName("fiatCurrency")]
         public string FiatAsset { get; set; } = string.Empty;
         /// <summary>
         /// The quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
         /// <summary>
         /// The indicated quantity
         /// </summary>
-        [JsonProperty("indicatedAmount")]
+        [JsonPropertyName("indicatedAmount")]
         public decimal IndicatedQuantity { get; set; }
         /// <summary>
         /// The method
         /// </summary>
+        [JsonPropertyName("method")]
         public string Method { get; set; } = string.Empty;
         /// <summary>
         /// The total fee of the order
         /// </summary>
+        [JsonPropertyName("totalFee")]
         public decimal TotalFee { get; set; }
         /// <summary>
         /// The status 
         /// </summary>
-        [JsonConverter(typeof(FiatWithdrawDepositStatusConverter))]
+        [JsonPropertyName("status")]
         public FiatWithdrawDepositStatus Status { get; set; }
         /// <summary>
         /// Creation time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("createTime")]
         public DateTime CreateTime { get; set; }
         /// <summary>
         /// Last update time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("updateTime")]
         public DateTime UpdateTime { get; set; }
     }
 }

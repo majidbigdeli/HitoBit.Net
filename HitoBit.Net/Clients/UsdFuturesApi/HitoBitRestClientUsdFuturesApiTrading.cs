@@ -1,51 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using HitoBit.Net.Objects.Models.Futures;
 using HitoBit.Net.Objects.Models.Futures.AlgoOrders;
-using CryptoExchange.Net;
 using CryptoExchange.Net.CommonObjects;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System.Drawing;
+using System.Text.Json;
 
 namespace HitoBit.Net.Clients.UsdFuturesApi
 {
     /// <inheritdoc />
-    public class HitoBitRestClientUsdFuturesApiTrading : IHitoBitRestClientUsdFuturesApiTrading
+    internal class HitoBitRestClientUsdFuturesApiTrading : IHitoBitRestClientUsdFuturesApiTrading
     {
-        private const string newOrderEndpoint = "order";
-        private const string multipleNewOrdersEndpoint = "batchOrders";
-        private const string queryOrderEndpoint = "order";
-        private const string cancelOrderEndpoint = "order";
-        private const string cancelMultipleOrdersEndpoint = "batchOrders";
-        private const string cancelAllOrdersEndpoint = "allOpenOrders";
-        private const string openOrderEndpoint = "openOrder";
-        private const string openOrdersEndpoint = "openOrders";
-        private const string allOrdersEndpoint = "allOrders";
-        private const string countDownCancelAllEndpoint = "countdownCancelAll";
-        private const string forceOrdersEndpoint = "forceOrders";
-        private const string myFuturesTradesEndpoint = "userTrades";
-
-        // Futures algo 
-        private const string placeVpOrderEndpoint = "algo/futures/newOrderVp";
-        private const string placeTwapOrderEndpoint = "algo/futures/newOrderTwap";
-        private const string cancelAlgoOrderEndpoint = "algo/futures/order";
-        private const string getAlgoOpenOrdersEndpoint = "algo/futures/openOrders";
-        private const string getAlgoHistoricalOrdersEndpoint = "algo/futures/historicalOrders";
-        private const string getAlgoSubOrdersEndpoint = "algo/futures/subOrders";
-
-        private const string api = "fapi";
-
         private readonly ILogger _logger;
+        private static readonly RequestDefinitionCache _definitions = new();
 
         private readonly HitoBitRestClientUsdFuturesApi _baseClient;
         private readonly string _spotBaseAddress; 
@@ -54,13 +22,13 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             _logger = logger;
             _baseClient = baseClient;
-            _spotBaseAddress = ((HitoBitEnvironment)_baseClient.ClientOptions.Environment).SpotRestAddress;
+            _spotBaseAddress = _baseClient.ClientOptions.Environment.SpotRestAddress;
         }
 
         #region New Order
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitFuturesPlacedOrder>> PlaceOrderAsync(
+        public async Task<WebCallResult<HitoBitUsdFuturesOrder>> PlaceOrderAsync(
             string symbol,
             Enums.OrderSide side,
             FuturesOrderType type,
@@ -77,6 +45,9 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             bool? closePosition = null,
             OrderResponseType? orderResponseType = null,
             bool? priceProtect = null,
+            PriceMatch? priceMatch = null,
+            SelfTradePreventionMode? selfTradePreventionMode = null,
+            DateTime? goodTillDate = null,
             int? receiveWindow = null,
             CancellationToken ct = default)
         {
@@ -95,35 +66,41 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             if (!rulesCheck.Passed)
             {
                 _logger.Log(LogLevel.Warning, rulesCheck.ErrorMessage!);
-                return new WebCallResult<HitoBitFuturesPlacedOrder>(new ArgumentError(rulesCheck.ErrorMessage!));
+                return new WebCallResult<HitoBitUsdFuturesOrder>(new ArgumentError(rulesCheck.ErrorMessage!));
             }
 
             quantity = rulesCheck.Quantity;
             price = rulesCheck.Price;
             stopPrice = rulesCheck.StopPrice;
 
-            var parameters = new Dictionary<string, object>
+            string clientOrderId = newClientOrderId ?? ExchangeHelpers.AppendRandomString(_baseClient._brokerId, 32);
+
+            var parameters = new ParameterCollection()
             {
-                { "symbol", symbol },
-                { "side", JsonConvert.SerializeObject(side, new OrderSideConverter(false)) },
-                { "type", JsonConvert.SerializeObject(type, new FuturesOrderTypeConverter(false)) }
+                { "symbol", symbol }
             };
+            parameters.AddEnum("side", side);
+            parameters.AddEnum("type", type);
             parameters.AddOptionalParameter("quantity", quantity?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("newClientOrderId", newClientOrderId);
+            parameters.AddOptionalParameter("newClientOrderId", clientOrderId);
             parameters.AddOptionalParameter("price", price?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("timeInForce", timeInForce == null ? null : JsonConvert.SerializeObject(timeInForce, new TimeInForceConverter(false)));
-            parameters.AddOptionalParameter("positionSide", positionSide == null ? null : JsonConvert.SerializeObject(positionSide, new PositionSideConverter(false)));
+            parameters.AddOptionalEnum("timeInForce", timeInForce);
+            parameters.AddOptionalEnum("positionSide", positionSide);
             parameters.AddOptionalParameter("stopPrice", stopPrice?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("activationPrice", activationPrice?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("callbackRate", callbackRate?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("workingType", workingType == null ? null : JsonConvert.SerializeObject(workingType, new WorkingTypeConverter(false)));
+            parameters.AddOptionalEnum("workingType", workingType);
             parameters.AddOptionalParameter("reduceOnly", reduceOnly?.ToString().ToLower());
             parameters.AddOptionalParameter("closePosition", closePosition?.ToString().ToLower());
-            parameters.AddOptionalParameter("newOrderRespType", orderResponseType == null ? null : JsonConvert.SerializeObject(orderResponseType, new OrderResponseTypeConverter(false)));
+            parameters.AddOptionalEnum("newOrderRespType", orderResponseType);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("priceProtect", priceProtect?.ToString().ToUpper());
+            parameters.AddOptionalEnum("priceMatch", priceMatch);
+            parameters.AddOptionalEnum("selfTradePreventionMode", selfTradePreventionMode);
+            parameters.AddOptionalMilliseconds("goodTillDate", goodTillDate);
 
-            var result = await _baseClient.SendRequestInternal<HitoBitFuturesPlacedOrder>(_baseClient.GetUrl(newOrderEndpoint, api, "1"), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "fapi/v1/order", HitoBitExchange.RateLimiter.FuturesRest, 0, true);
+            var result = await _baseClient.SendAsync<HitoBitUsdFuturesOrder>(request, parameters, ct).ConfigureAwait(false);
             if (result)
                 _baseClient.InvokeOrderPlaced(new OrderId
                 {
@@ -133,20 +110,16 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             return result;
         }
 
-
         #endregion
 
         #region Multiple New Orders
 
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<CallResult<HitoBitFuturesPlacedOrder>>>> PlaceMultipleOrdersAsync(
-            HitoBitFuturesBatchOrder[] orders,
+        public async Task<WebCallResult<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>> PlaceMultipleOrdersAsync(
+            IEnumerable<HitoBitFuturesBatchOrder> orders,
             int? receiveWindow = null,
             CancellationToken ct = default)
         {
-            if (orders.Length <= 0 || orders.Length > 5)
-                throw new ArgumentException("Order list should be at least 1 and max 5 orders");
-
             if (_baseClient.ApiOptions.TradeRulesBehaviour != TradeRulesBehaviour.None)
             {
                 foreach (var order in orders)
@@ -155,7 +128,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
                     if (!rulesCheck.Passed)
                     {
                         _logger.Log(LogLevel.Warning, rulesCheck.ErrorMessage!);
-                        return new WebCallResult<IEnumerable<CallResult<HitoBitFuturesPlacedOrder>>>(new ArgumentError(rulesCheck.ErrorMessage!));
+                        return new WebCallResult<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(new ArgumentError(rulesCheck.ErrorMessage!));
                     }
 
                     order.Quantity = rulesCheck.Quantity;
@@ -164,50 +137,54 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
                 }
             }
 
-            var parameters = new Dictionary<string, object>();
-            var parameterOrders = new Dictionary<string, object>[orders.Length];
+            var parameters = new ParameterCollection();
+            var parameterOrders = new List<Dictionary<string, object>>();
             int i = 0;
             foreach (var order in orders)
             {
-                var orderParameters = new Dictionary<string, object>()
+                string clientOrderId = order.NewClientOrderId ?? ExchangeHelpers.AppendRandomString(_baseClient._brokerId, 32);
+
+                var orderParameters = new ParameterCollection()
                 {
                     { "symbol", order.Symbol },
-                    { "side", JsonConvert.SerializeObject(order.Side, new OrderSideConverter(false)) },
-                    { "type", JsonConvert.SerializeObject(order.Type, new FuturesOrderTypeConverter(false)) },
                     { "newOrderRespType", "RESULT" }
                 };
-
+                orderParameters.AddEnum("side", order.Side);
+                orderParameters.AddEnum("type", order.Type);
                 orderParameters.AddOptionalParameter("quantity", order.Quantity?.ToString(CultureInfo.InvariantCulture));
-                orderParameters.AddOptionalParameter("newClientOrderId", order.NewClientOrderId);
+                orderParameters.AddOptionalParameter("newClientOrderId", clientOrderId);
+                orderParameters.AddOptionalEnum("timeInForce", order.TimeInForce);
+                orderParameters.AddOptionalEnum("positionSide", order.PositionSide);
                 orderParameters.AddOptionalParameter("price", order.Price?.ToString(CultureInfo.InvariantCulture));
-                orderParameters.AddOptionalParameter("timeInForce", order.TimeInForce == null ? null : JsonConvert.SerializeObject(order.TimeInForce, new TimeInForceConverter(false)));
-                orderParameters.AddOptionalParameter("positionSide", order.PositionSide == null ? null : JsonConvert.SerializeObject(order.PositionSide, new PositionSideConverter(false)));
                 orderParameters.AddOptionalParameter("stopPrice", order.StopPrice?.ToString(CultureInfo.InvariantCulture));
                 orderParameters.AddOptionalParameter("activationPrice", order.ActivationPrice?.ToString(CultureInfo.InvariantCulture));
                 orderParameters.AddOptionalParameter("callbackRate", order.CallbackRate?.ToString(CultureInfo.InvariantCulture));
-                orderParameters.AddOptionalParameter("workingType", order.WorkingType == null ? null : JsonConvert.SerializeObject(order.WorkingType, new WorkingTypeConverter(false)));
+                orderParameters.AddOptionalEnum("workingType", order.WorkingType);
                 orderParameters.AddOptionalParameter("reduceOnly", order.ReduceOnly?.ToString().ToLower());
                 orderParameters.AddOptionalParameter("priceProtect", order.PriceProtect?.ToString().ToUpper());
-                parameterOrders[i] = orderParameters;
+                orderParameters.AddOptionalEnum("priceMatch", order.PriceMatch);
+                orderParameters.AddOptionalEnum("selfTradePreventionMode", order.SelfTradePreventionMode);
+                parameterOrders.Add(orderParameters);
                 i++;
             }
 
-            parameters.Add("batchOrders", JsonConvert.SerializeObject(parameterOrders));
+            parameters.Add("batchOrders", JsonSerializer.Serialize(parameterOrders));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var response = await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesMultipleOrderPlaceResult>>(_baseClient.GetUrl(multipleNewOrdersEndpoint, api, "1"), HttpMethod.Post, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "fapi/v1/batchOrders", HitoBitExchange.RateLimiter.FuturesRest, 5, true);
+            var response = await _baseClient.SendAsync<IEnumerable<HitoBitUsdFuturesMultipleOrderPlaceResult>>(request, parameters, ct).ConfigureAwait(false);
             if (!response.Success)
-                return response.As<IEnumerable<CallResult<HitoBitFuturesPlacedOrder>>>(default);
+                return response.As<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(default);
 
-            var result = new List<CallResult<HitoBitFuturesPlacedOrder>>();
+            var result = new List<CallResult<HitoBitUsdFuturesOrder>>();
             foreach (var item in response.Data)
             {
                 result.Add(item.Code != 0
-                    ? new CallResult<HitoBitFuturesPlacedOrder>(new ServerError(item.Code, item.Message))
-                    : new CallResult<HitoBitFuturesPlacedOrder>(item));
+                    ? new CallResult<HitoBitUsdFuturesOrder>(new ServerError(item.Code, item.Message))
+                    : new CallResult<HitoBitUsdFuturesOrder>(item));
             }
 
-            return response.As<IEnumerable<CallResult<HitoBitFuturesPlacedOrder>>>(result);
+            return response.As<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(result);
         }
 
         #endregion
@@ -215,12 +192,12 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region Query Order
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitFuturesOrder>> GetOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitUsdFuturesOrder>> GetOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             if (orderId == null && origClientOrderId == null)
                 throw new ArgumentException("Either orderId or origClientOrderId must be sent");
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
@@ -228,7 +205,30 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             parameters.AddOptionalParameter("origClientOrderId", origClientOrderId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitFuturesOrder>(_baseClient.GetUrl(queryOrderEndpoint, api, "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/order", HitoBitExchange.RateLimiter.FuturesRest, 1, true);
+            return await _baseClient.SendAsync<HitoBitUsdFuturesOrder>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Query Order Edit History
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitFuturesOrderEditHistory>>> GetOrderEditHistoryAsync(string symbol, long? orderId = null, string? clientOrderId = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection
+            {
+                { "symbol", symbol }
+            };
+            parameters.AddOptionalParameter("orderId", orderId?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("origClientOrderId", clientOrderId?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/orderAmendment", HitoBitExchange.RateLimiter.FuturesRest, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesOrderEditHistory>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -236,12 +236,12 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region Cancel Order
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitFuturesCancelOrder>> CancelOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitUsdFuturesOrder>> CancelOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             if (!orderId.HasValue && string.IsNullOrEmpty(origClientOrderId))
                 throw new ArgumentException("Either orderId or origClientOrderId must be sent");
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
@@ -249,8 +249,8 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             parameters.AddOptionalParameter("origClientOrderId", origClientOrderId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitFuturesCancelOrder>(_baseClient.GetUrl(cancelOrderEndpoint, api, "1"), HttpMethod.Delete, ct, parameters, true).ConfigureAwait(false);
-
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "fapi/v1/order", HitoBitExchange.RateLimiter.FuturesRest, 1, true);
+            var result = await _baseClient.SendAsync<HitoBitUsdFuturesOrder>(request, parameters, ct).ConfigureAwait(false);
             if (result)
             {
                 _baseClient.InvokeOrderCanceled(new OrderId
@@ -269,13 +269,86 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitFuturesCancelAllOrders>> CancelAllOrdersAsync(string symbol, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitFuturesCancelAllOrders>(_baseClient.GetUrl(cancelAllOrdersEndpoint, api, "1"), HttpMethod.Delete, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "fapi/v1/allOpenOrders", HitoBitExchange.RateLimiter.FuturesRest, 1, true);
+            return await _baseClient.SendAsync<HitoBitFuturesCancelAllOrders>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Edit Order
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitUsdFuturesOrder>> EditOrderAsync(string symbol, OrderSide side, decimal quantity, decimal price, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            if (!orderId.HasValue && string.IsNullOrEmpty(origClientOrderId))
+                throw new ArgumentException("Either orderId or origClientOrderId must be sent");
+
+            var parameters = new ParameterCollection
+            {
+                { "symbol", symbol },
+                { "side", EnumConverter.GetString(side) },
+                { "quantity", quantity.ToString(CultureInfo.InvariantCulture) },
+                { "price", price.ToString(CultureInfo.InvariantCulture) },
+            };
+            parameters.AddOptionalParameter("orderId", orderId?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("origClientOrderId", origClientOrderId);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Put, "fapi/v1/order", HitoBitExchange.RateLimiter.FuturesRest, 1, true);
+            return await _baseClient.SendAsync<HitoBitUsdFuturesOrder>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Edit Multiple Orders
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>> EditMultipleOrdersAsync(
+            IEnumerable<HitoBitFuturesBatchEditOrder> orders,
+            int? receiveWindow = null,
+            CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            var parameterOrders = new List<Dictionary<string, object>>();
+            int i = 0;
+            foreach (var order in orders)
+            {
+                var orderParameters = new ParameterCollection()
+                {
+                    { "symbol", order.Symbol },
+                    { "quantity", order.Quantity.ToString(CultureInfo.InvariantCulture) },
+                    { "price", order.Price.ToString(CultureInfo.InvariantCulture) },
+                };
+                orderParameters.AddEnum("side", order.Side);
+                orderParameters.AddOptionalParameter("orderId", order.OrderId?.ToString(CultureInfo.InvariantCulture));
+                orderParameters.AddOptionalParameter("origClientOrderId", order.ClientOrderId);
+                parameterOrders.Add(orderParameters);
+                i++;
+            }
+
+            parameters.Add("batchOrders", JsonSerializer.Serialize(parameterOrders));
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Put, "fapi/v1/batchOrders", HitoBitExchange.RateLimiter.FuturesRest, 5, true);
+            var response = await _baseClient.SendAsync<IEnumerable<HitoBitUsdFuturesMultipleOrderPlaceResult>>(request, parameters, ct).ConfigureAwait(false);
+            if (!response.Success)
+                return response.As<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(default);
+
+            var result = new List<CallResult<HitoBitUsdFuturesOrder>>();
+            foreach (var item in response.Data)
+            {
+                result.Add(item.Code != 0
+                    ? new CallResult<HitoBitUsdFuturesOrder>(new ServerError(item.Code, item.Message))
+                    : new CallResult<HitoBitUsdFuturesOrder>(item));
+            }
+
+            return response.As<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(result);
         }
 
         #endregion
@@ -285,14 +358,15 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitFuturesCountDownResult>> CancelAllOrdersAfterTimeoutAsync(string symbol, TimeSpan countDownTime, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol },
                 { "countdownTime", (int)countDownTime.TotalMilliseconds }
             };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitFuturesCountDownResult>(_baseClient.GetUrl(countDownCancelAllEndpoint, api, "1"), HttpMethod.Post, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "fapi/v1/countdownCancelAll", HitoBitExchange.RateLimiter.FuturesRest, 10, true);
+            return await _baseClient.SendAsync<HitoBitFuturesCountDownResult>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -300,7 +374,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region Cancel Multiple Orders
 
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<CallResult<HitoBitFuturesCancelOrder>>>> CancelMultipleOrdersAsync(string symbol, List<long>? orderIdList = null, List<string>? origClientOrderIdList = null, long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>> CancelMultipleOrdersAsync(string symbol, List<long>? orderIdList = null, List<string>? origClientOrderIdList = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             if (orderIdList == null && origClientOrderIdList == null)
                 throw new ArgumentException("Either orderIdList or origClientOrderIdList must be sent");
@@ -311,7 +385,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             if (origClientOrderIdList?.Count > 10)
                 throw new ArgumentException("origClientOrderIdList cannot contain more than 10 items");
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
@@ -324,20 +398,21 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
 
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var response = await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesMultipleOrderCancelResult>>(_baseClient.GetUrl(cancelMultipleOrdersEndpoint, api, "1"), HttpMethod.Delete, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "fapi/v1/batchOrders", HitoBitExchange.RateLimiter.FuturesRest, 10, true);
+            var response = await _baseClient.SendAsync<IEnumerable<HitoBitUsdFuturesMultipleOrderCancelResult>>(request, parameters, ct).ConfigureAwait(false);
 
             if (!response.Success)
-                return response.As<IEnumerable<CallResult<HitoBitFuturesCancelOrder>>>(default);
+                return response.As<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(default);
 
-            var result = new List<CallResult<HitoBitFuturesCancelOrder>>();
+            var result = new List<CallResult<HitoBitUsdFuturesOrder>>();
             foreach (var item in response.Data)
             {
                 result.Add(item.Code != 0
-                    ? new CallResult<HitoBitFuturesCancelOrder>(new ServerError(item.Code, item.Message))
-                    : new CallResult<HitoBitFuturesCancelOrder>(item));
+                    ? new CallResult<HitoBitUsdFuturesOrder>(new ServerError(item.Code, item.Message))
+                    : new CallResult<HitoBitUsdFuturesOrder>(item));
             }
 
-            return response.As<IEnumerable<CallResult<HitoBitFuturesCancelOrder>>>(result);
+            return response.As<IEnumerable<CallResult<HitoBitUsdFuturesOrder>>>(result);
         }
 
         #endregion
@@ -345,12 +420,12 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region Query Current Open Order
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitFuturesOrder>> GetOpenOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitUsdFuturesOrder>> GetOpenOrderAsync(string symbol, long? orderId = null, string? origClientOrderId = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             if (orderId == null && origClientOrderId == null)
                 throw new ArgumentException("Either orderId or origClientOrderId must be sent");
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
@@ -358,7 +433,8 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             parameters.AddOptionalParameter("origClientOrderId", origClientOrderId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitFuturesOrder>(_baseClient.GetUrl(openOrderEndpoint, api, "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/openOrder", HitoBitExchange.RateLimiter.FuturesRest, 1, true);
+            return await _baseClient.SendAsync<HitoBitUsdFuturesOrder>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -366,13 +442,15 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region Current All Open Orders
 
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitFuturesOrder>>> GetOpenOrdersAsync(string? symbol = null, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<IEnumerable<HitoBitUsdFuturesOrder>>> GetOpenOrdersAsync(string? symbol = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("symbol", symbol);
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesOrder>>(_baseClient.GetUrl(openOrdersEndpoint, api, "1"), HttpMethod.Get, ct, parameters, true, weight: symbol == null ? 40 : 1).ConfigureAwait(false);
+            var weight = symbol == null ? 40 : 1;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/openOrders", HitoBitExchange.RateLimiter.FuturesRest, weight, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitUsdFuturesOrder>>(request, parameters, ct, weight).ConfigureAwait(false);
         }
 
         #endregion
@@ -380,11 +458,11 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region All Orders
 
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitFuturesOrder>>> GetOrdersAsync(string symbol, long? orderId = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<IEnumerable<HitoBitUsdFuturesOrder>>> GetOrdersAsync(string symbol, long? orderId = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1000);
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
@@ -394,7 +472,8 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesOrder>>(_baseClient.GetUrl(allOrdersEndpoint, api, "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/allOrders", HitoBitExchange.RateLimiter.FuturesRest, 5, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitUsdFuturesOrder>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -402,16 +481,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         #region User's Force Orders
 
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitFuturesOrder>>> GetForcedOrdersAsync(string? symbol = null, AutoCloseType? closeType = null, DateTime? startTime = null, DateTime? endTime = null, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<IEnumerable<HitoBitUsdFuturesOrder>>> GetForcedOrdersAsync(string? symbol = null, AutoCloseType? closeType = null, DateTime? startTime = null, DateTime? endTime = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("symbol", symbol);
-            parameters.AddOptionalParameter("autoCloseType", closeType.HasValue ? JsonConvert.SerializeObject(closeType, new AutoCloseTypeConverter(false)) : null);
+            parameters.AddOptionalEnum("autoCloseType", closeType);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesOrder>>(_baseClient.GetUrl(forceOrdersEndpoint, api, "1"), HttpMethod.Get, ct, parameters, true, weight: symbol == null ? 50 : 20).ConfigureAwait(false);
+            var weight = symbol == null ? 50 : 20;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/forceOrders", HitoBitExchange.RateLimiter.FuturesRest, weight, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitUsdFuturesOrder>>(request, parameters, ct, weight).ConfigureAwait(false);
         }
 
         #endregion
@@ -423,7 +504,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1000);
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
@@ -434,12 +515,13 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesUsdtTrade>>(_baseClient.GetUrl(myFuturesTradesEndpoint, api, "1"), HttpMethod.Get, ct, parameters, true, weight: 5).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/userTrades", HitoBitExchange.RateLimiter.FuturesRest, 5, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesUsdtTrade>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
-        #region futures algo
+        #region Futures Algo
 
         #region Place VP Order
         /// <inheritdoc />
@@ -455,21 +537,23 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             long? receiveWindow = null,
             CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            clientOrderId ??= ExchangeHelpers.AppendRandomString(_baseClient._brokerId, 32);
+
+            var parameters = new ParameterCollection()
             {
                 { "symbol", symbol },
-                { "side", JsonConvert.SerializeObject(side, new OrderSideConverter(false)) },
                 { "quantity", quantity.ToString(CultureInfo.InvariantCulture) },
                 { "urgency", EnumConverter.GetString(urgency) },
             };
-            parameters.AddOptionalParameter("positionSide", positionSide == null ? null : JsonConvert.SerializeObject(positionSide, new PositionSideConverter(false)));
+            parameters.AddEnum("side", side);
+            parameters.AddOptionalEnum("positionSide", positionSide);
             parameters.AddOptionalParameter("clientAlgoId", clientOrderId);
             parameters.AddOptionalParameter("reduceOnly", reduceOnly);
             parameters.AddOptionalParameter("limitPrice", limitPrice);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var url = _spotBaseAddress.AppendPath("sapi", "v1", placeVpOrderEndpoint);
-            return await _baseClient.SendRequestInternal<HitoBitAlgoOrderResult>(new Uri(url), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/algo/futures/newOrderVp", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendToAddressAsync<HitoBitAlgoOrderResult>(_spotBaseAddress, request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -487,21 +571,23 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             long? receiveWindow = null,
             CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            clientOrderId ??= ExchangeHelpers.AppendRandomString(_baseClient._brokerId, 32);
+
+            var parameters = new ParameterCollection()
             {
                 { "symbol", symbol },
-                { "side", JsonConvert.SerializeObject(side, new OrderSideConverter(false)) },
                 { "quantity", quantity.ToString(CultureInfo.InvariantCulture) },
                 { "duration", duration },
             };
-            parameters.AddOptionalParameter("positionSide", positionSide == null ? null : JsonConvert.SerializeObject(positionSide, new PositionSideConverter(false)));
+            parameters.AddEnum("side", side);
+            parameters.AddOptionalEnum("positionSide", positionSide);
             parameters.AddOptionalParameter("clientAlgoId", clientOrderId);
             parameters.AddOptionalParameter("reduceOnly", reduceOnly);
             parameters.AddOptionalParameter("limitPrice", limitPrice);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var url = _spotBaseAddress.AppendPath("sapi", "v1", placeTwapOrderEndpoint);
-            return await _baseClient.SendRequestInternal<HitoBitAlgoOrderResult>(new Uri(url), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/algo/futures/newOrderTwap", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendToAddressAsync<HitoBitAlgoOrderResult>(_spotBaseAddress, request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -509,14 +595,14 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAlgoResult>> CancelAlgoOrderAsync(long algoOrderId, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "algoId", algoOrderId },
             };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var url = _spotBaseAddress.AppendPath("sapi", "v1", cancelAlgoOrderEndpoint);
-            return await _baseClient.SendRequestInternal<HitoBitAlgoResult>(new Uri(url), HttpMethod.Delete, ct, parameters, true, weight: 1).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "sapi/v1/algo/futures/order", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendToAddressAsync<HitoBitAlgoResult>(_spotBaseAddress, request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -524,11 +610,11 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAlgoOrders>> GetOpenAlgoOrdersAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var url = _spotBaseAddress.AppendPath("sapi", "v1", getAlgoOpenOrdersEndpoint);
-            return await _baseClient.SendRequestInternal<HitoBitAlgoOrders>(new Uri(url), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/algo/futures/openOrders", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendToAddressAsync<HitoBitAlgoOrders>(_spotBaseAddress, request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -536,17 +622,17 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAlgoOrders>> GetClosedAlgoOrdersAsync(string? symbol = null, OrderSide? side = null, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null,long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("symbol", symbol);
-            parameters.AddOptionalParameter("side", side == null? null: JsonConvert.SerializeObject(side, new OrderSideConverter(false)));
+            parameters.AddOptionalEnum("side", side);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("page", page);
             parameters.AddOptionalParameter("pageSize", limit);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var url = _spotBaseAddress.AppendPath("sapi", "v1", getAlgoHistoricalOrdersEndpoint);
-            return await _baseClient.SendRequestInternal<HitoBitAlgoOrders>(new Uri(url), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/algo/futures/historicalOrders", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendToAddressAsync<HitoBitAlgoOrders>(_spotBaseAddress, request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -554,7 +640,7 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAlgoSubOrderList>> GetAlgoSubOrdersAsync(long algoId, int? page = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "algoId", algoId }
             };
@@ -562,10 +648,78 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             parameters.AddOptionalParameter("pageSize", limit);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var url = _spotBaseAddress.AppendPath("sapi", "v1", getAlgoSubOrdersEndpoint);
-            return await _baseClient.SendRequestInternal<HitoBitAlgoSubOrderList>(new Uri(url), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/algo/futures/subOrders", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendToAddressAsync<HitoBitAlgoSubOrderList>(_spotBaseAddress, request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
+
         #endregion
+
+        #region Get Positions
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitPositionV3>>> GetPositionsAsync(string? symbol = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptional("symbol", symbol);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "/fapi/v3/positionRisk", HitoBitExchange.RateLimiter.FuturesRest, 5, true);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitPositionV3>>(request, parameters, ct).ConfigureAwait(false);
+            return result;
+        }
+
+        #endregion
+
+        #region Convert Quote Request
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitFuturesConvertQuote>> ConvertQuoteRequestAsync(string fromAsset, string toAsset, decimal? fromQuantity = null, decimal? toQuantity = null, ValidTime? validTime = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.Add("fromAsset", fromAsset);
+            parameters.Add("toAsset", toAsset);
+            parameters.AddOptional("fromAmount", fromQuantity);
+            parameters.AddOptional("toAmount", toQuantity);
+            if (validTime != null)
+            {
+                var time = validTime == ValidTime.TenSeconds ? "10s" : validTime == ValidTime.ThirtySeconds ? "30s" : validTime == ValidTime.OneMinute ? "1m" : "2m";
+                parameters.Add("validTime", time);
+            }
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "/fapi/v1/convert/getQuote", HitoBitExchange.RateLimiter.FuturesRest, 50, true);
+            var result = await _baseClient.SendAsync<HitoBitFuturesConvertQuote>(request, parameters, ct).ConfigureAwait(false);
+            return result;
+        }
+
+        #endregion
+
+        #region Convert Accept Quote
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitFuturesQuoteResult>> ConvertAcceptQuoteAsync(string quoteId, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.Add("quoteId", quoteId);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "/fapi/v1/convert/acceptQuote", HitoBitExchange.RateLimiter.FuturesRest, 200, true);
+            var result = await _baseClient.SendAsync<HitoBitFuturesQuoteResult>(request, parameters, ct).ConfigureAwait(false);
+            return result;
+        }
+
+        #endregion
+
+        #region Get Convert Order Status
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitFuturesConvertStatus>> GetConvertOrderStatusAsync(string? quoteId = null, string? orderId = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptional("quoteId", quoteId);
+            parameters.AddOptional("orderId", orderId);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "/fapi/v1/convert/orderStatus", HitoBitExchange.RateLimiter.FuturesRest, 50, true);
+            var result = await _baseClient.SendAsync<HitoBitFuturesConvertStatus>(request, parameters, ct).ConfigureAwait(false);
+            return result;
+        }
+
+        #endregion
+
     }
 }

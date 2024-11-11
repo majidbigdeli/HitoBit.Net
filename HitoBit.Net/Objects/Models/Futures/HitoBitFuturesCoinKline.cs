@@ -1,5 +1,4 @@
 ﻿using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Futures
 {
@@ -7,7 +6,7 @@ namespace HitoBit.Net.Objects.Models.Futures
     /// Candlestick information for symbol
     /// </summary>
     [JsonConverter(typeof(ArrayConverter))]
-    public class HitoBitFuturesCoinKline: HitoBitKlineBase
+    public record HitoBitFuturesCoinKline: HitoBitKlineBase
     {
         /// <inheritdoc/>
         [ArrayProperty(7)]

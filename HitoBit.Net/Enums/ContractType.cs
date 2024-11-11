@@ -13,6 +13,11 @@ namespace HitoBit.Net.Enums
         [Map("PERPETUAL")]
         Perpetual,
         /// <summary>
+        /// Perpetual delivering
+        /// </summary>
+        [Map("PERPETUAL DELIVERING")]
+        PerpetualDelivering,
+        /// <summary>
         /// Current month
         /// </summary>
         [Map("CURRENT_MONTH")]
@@ -25,6 +30,7 @@ namespace HitoBit.Net.Enums
         /// <summary>
         /// Current quarter delivering
         /// </summary>
+        [Map("CURRENT_QUARTER DELIVERING")]
         CurrentQuarterDelivering,
         /// <summary>
         /// Next quarter
@@ -34,6 +40,7 @@ namespace HitoBit.Net.Enums
         /// <summary>
         /// Next quarter delivering
         /// </summary>
+        [Map("NEXT_QUARTER DELIVERING")]
         NextQuarterDelivering,
         /// <summary>
         /// Next month
@@ -43,6 +50,7 @@ namespace HitoBit.Net.Enums
         /// <summary>
         /// Unknown
         /// </summary>
+        [Map("")]
         Unknown
     }
 }

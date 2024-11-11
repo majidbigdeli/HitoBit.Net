@@ -1,145 +1,152 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using HitoBit.Net.Enums;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// HitoBit pay trade
     /// </summary>
-    public class HitoBitPayTrade
+    public record HitoBitPayTrade
     {
+        /// <summary>
+        /// Uid
+        /// </summary>
+        [JsonPropertyName("uid")]
+        public long? Uid { get; set; }
+        /// <summary>
+        /// Counter party id
+        /// </summary>
+        [JsonPropertyName("counterpartyId")]
+        public long? CounterPartyId { get; set; }
+        /// <summary>
+        /// Order id
+        /// </summary>
+        [JsonPropertyName("orderId")]
+        public string OrderId { get; set; } = string.Empty;
+        /// <summary>
+        /// Note
+        /// </summary>
+        [JsonPropertyName("note")]
+        public string? Note { get; set; }
         /// <summary>
         /// Order type
         /// </summary>
         [JsonConverter(typeof(EnumConverter))]
+        [JsonPropertyName("orderType")]
         public PayOrderType OrderType { get; set; }
         /// <summary>
         /// Transaction id
         /// </summary>
+        [JsonPropertyName("transactionId")]
         public string TransactionId { get; set; } = string.Empty;
         /// <summary>
         /// Transaction time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("transactionTime")]
         public DateTime TransactionTime { get; set; }
         /// <summary>
         /// Quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
+        /// <summary>
+        /// Total fee
+        /// </summary>
+        [JsonPropertyName("totalPaymentFee")]
+        public decimal TotalPaymentFee { get; set; }
         /// <summary>
         /// Asset
         /// </summary>
-        [JsonProperty("currency")]
+        [JsonPropertyName("currency")]
         public string Asset { get; set; } = string.Empty;
+        /// <summary>
+        /// Main wallet type
+        /// </summary>
+        [JsonPropertyName("walletType"), JsonConverter(typeof(EnumConverter))]
+        public PayWalletType WalletType { get; set; }
         /// <summary>
         /// Fund details
         /// </summary>
-        [JsonProperty("fundsDetail")]
+        [JsonPropertyName("fundsDetail")]
         public IEnumerable<HitoBitPayTradeDetails> Details { get; set; } = Array.Empty<HitoBitPayTradeDetails>();
         /// <summary>
         /// Payer info
         /// </summary>
-        [JsonProperty("payerInfo")]
-        public HitoBitPayTradePayerInfo PayerInfo { get; set; } = new HitoBitPayTradePayerInfo();
+        [JsonPropertyName("payerInfo")]
+        public HitoBitPayTradeParticipantInfo PayerInfo { get; set; } = new HitoBitPayTradeParticipantInfo();
         /// <summary>
         /// Receiver info
         /// </summary>
-        [JsonProperty("receiverInfo")]
-        public HitoBitPayTradeReceiverInfo ReceiverInfo { get; set; } = new HitoBitPayTradeReceiverInfo();
+        [JsonPropertyName("receiverInfo")]
+        public HitoBitPayTradeParticipantInfo ReceiverInfo { get; set; } = new HitoBitPayTradeParticipantInfo();
     }
 
     /// <summary>
     /// Pay trade funds details
     /// </summary>
-    public class HitoBitPayTradeDetails
+    public record HitoBitPayTradeDetails
     {
         /// <summary>
         /// Asset
         /// </summary>
-        [JsonProperty("currency")]
+        [JsonPropertyName("currency")]
         public string Asset { get; set; } = string.Empty;
         /// <summary>
         /// Quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
-    }
-
-    /// <summary>
-    /// Pay trade payer info
-    /// </summary>
-    public class HitoBitPayTradePayerInfo
-    {
-        /// <summary>
-        /// Nickname or merchant name
-        /// </summary>
-        [JsonProperty("name")]
-        public string Name { get; set; } = string.Empty;
-        /// <summary>
-        /// Account type，USER for personal，MERCHANT for merchant
-        /// </summary>
-        [JsonProperty("type")]
-        public string Type { get; set; } = string.Empty;
-        /// <summary>
-        /// HitoBit uid
-        /// </summary>
-        [JsonProperty("HitoBitId")]
-        public string HitoBitId { get; set; } = string.Empty;
-        /// <summary>
-        /// HitoBit pay id
-        /// </summary>
-        [JsonProperty("accountId")]
-        public string AccountId { get; set; } = string.Empty;
     }
 
     /// <summary>
     /// Pay trade receiver info
     /// </summary>
-    public class HitoBitPayTradeReceiverInfo
+    public record HitoBitPayTradeParticipantInfo
     {
         /// <summary>
         /// Nickname or merchant name
         /// </summary>
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
         /// <summary>
         /// Account type，USER for personal，MERCHANT for merchant
         /// </summary>
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
         /// <summary>
         /// Email
         /// </summary>
-        [JsonProperty("email")]
+        [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
         /// <summary>
         /// HitoBit uid
         /// </summary>
-        [JsonProperty("HitoBitId")]
-        public string HitoBitId { get; set; } = string.Empty;
+        [JsonPropertyName("hitobitId")]
+        public long HitoBitId { get; set; }
         /// <summary>
         /// HitoBit pay id
         /// </summary>
-        [JsonProperty("accountId")]
-        public string AccountId { get; set; } = string.Empty;
+        [JsonPropertyName("accountId")]
+        public long AccountId { get; set; }
         /// <summary>
         /// International area code
         /// </summary>
-        [JsonProperty("countryCode")]
-        public string CountryCode { get; set; } = string.Empty;
+        [JsonPropertyName("countryCode")]
+        public long CountryCode { get; set; }
         /// <summary>
         /// Phone number
         /// </summary>
-        [JsonProperty("phoneNumber")]
+        [JsonPropertyName("phoneNumber")]
         public string PhoneNumber { get; set; } = string.Empty;
         /// <summary>
         /// Country code
         /// </summary>
-        [JsonProperty("mobileCode")]
+        [JsonPropertyName("mobileCode")]
         public string MobileCode { get; set; } = string.Empty;
+        /// <summary>
+        /// Unmask data
+        /// </summary>
+        [JsonPropertyName("unmaskData")]
+        public bool? UnmaskData { get; set; }
     }
 }

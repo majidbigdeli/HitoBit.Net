@@ -11,6 +11,9 @@ using HitoBit.Net.Objects.Models.Spot.Socket;
 using Microsoft.Extensions.Logging;
 using HitoBit.Net.Objects.Models.Futures.Socket;
 using HitoBit.Net.Objects.Options;
+using HitoBit.Net.Objects.Sockets;
+using CryptoExchange.Net;
+using NUnit.Framework.Legacy;
 
 namespace HitoBit.Net.UnitTests
 {
@@ -18,14 +21,16 @@ namespace HitoBit.Net.UnitTests
     public class HitoBitNetTest
     {
         [TestCase()]
-        public void SubscribingToKlineStream_Should_TriggerWhenKlineStreamMessageIsReceived()
+        public async Task SubscribingToKlineStream_Should_TriggerWhenKlineStreamMessageIsReceived()
         {
             // arrange
             var socket = new TestSocket();
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitStreamKlineData result = null;
-            client.SpotApi.ExchangeData.SubscribeToKlineUpdatesAsync("ETHBTC", KlineInterval.OneMinute, (test) => result = test.Data);
+            var subTask = client.SpotApi.ExchangeData.SubscribeToKlineUpdatesAsync("ETHBTC", KlineInterval.OneMinute, (test) => result = test.Data);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamKlineData>()
             {
@@ -61,20 +66,22 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result, "Data"));
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data.Data, result.Data));
+            ClassicAssert.NotNull(result, null);
+            Assert.That(TestHelpers.AreEqual(data.Data, result, "Data"));
+            Assert.That(TestHelpers.AreEqual(data.Data.Data, result.Data));
         }
 
         [TestCase()]
-        public void SubscribingToContinuousKlineStream_Should_TriggerWhenContinuousKlineStreamMessageIsReceived()
+        public async Task SubscribingToContinuousKlineStream_Should_TriggerWhenContinuousKlineStreamMessageIsReceived()
         {
             // arrange
             var socket = new TestSocket();
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitStreamKlineData result = null;
-            client.UsdFuturesApi.SubscribeToContinuousContractKlineUpdatesAsync("ETHBTC", ContractType.Perpetual, KlineInterval.OneMinute, (test) => result = test.Data);
+            var subTask = client.UsdFuturesApi.ExchangeData.SubscribeToContinuousContractKlineUpdatesAsync("ETHBTC", ContractType.Perpetual, KlineInterval.OneMinute, (test) => result = test.Data);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamContinuousKlineData>()
             {
@@ -111,9 +118,9 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result, "Data"));
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data.Data, result.Data));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data, result, "Data"));
+            Assert.That(TestHelpers.AreEqual(data.Data.Data, result.Data));
         }
 
         [TestCase()]
@@ -124,7 +131,9 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitTick result = null;
-            await client.SpotApi.ExchangeData.SubscribeToTickerUpdatesAsync("ETHBTC", (test) => result = test.Data);
+            var subTask = client.SpotApi.ExchangeData.SubscribeToTickerUpdatesAsync("ETHBTC", (test) => result = test.Data);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamTick>()
             {
@@ -148,8 +157,8 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data, result));
         }
 
         [TestCase()]
@@ -160,7 +169,9 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             IHitoBitTick[] result = null;
-            await client.SpotApi.ExchangeData.SubscribeToAllTickerUpdatesAsync((test) => result = test.Data.ToArray());
+            var subTask = client.SpotApi.ExchangeData.SubscribeToAllTickerUpdatesAsync((test) => result = test.Data.ToArray());
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamTick[]>
             {
@@ -188,8 +199,8 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data[0], result[0]));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data[0], result[0]));
         }
 
         [TestCase()]
@@ -200,7 +211,9 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamTrade result = null;
-            await client.SpotApi.ExchangeData.SubscribeToTradeUpdatesAsync("ETHBTC", (test) => result = test.Data);
+            var subTask = client.SpotApi.ExchangeData.SubscribeToTradeUpdatesAsync("ETHBTC", (test) => result = test.Data);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamTrade>()
             {
@@ -223,8 +236,8 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data, result));
         }
 
         [TestCase()]
@@ -235,7 +248,9 @@ namespace HitoBit.Net.UnitTests
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamBalanceUpdate result = null;
-            await client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", null, null, null, (test) => result = test.Data);
+            var subTask = client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", null, null, null, (test) => result = test.Data);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamBalanceUpdate>
             {
@@ -254,19 +269,21 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result, "ListenKey"));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data, result, "ListenKey"));
         }
 
         [TestCase()]
-        public void SubscribingToUserStream_Should_TriggerWhenOcoOrderUpdateStreamMessageIsReceived()
+        public async Task SubscribingToUserStream_Should_TriggerWhenOcoOrderUpdateStreamMessageIsReceived()
         {
             // arrange
             var socket = new TestSocket();
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamOrderList result = null;
-            client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", null, (test) => result = test.Data, null, null);
+            var subTask = client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", null, (test) => result = test.Data, null, null);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamOrderList>
             {
@@ -304,21 +321,23 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result, "Orders", "ListenKey"));
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data.Orders.ToList()[0], result.Orders.ToList()[0]));
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data.Orders.ToList()[1], result.Orders.ToList()[1]));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data, result, "Orders", "ListenKey"));
+            Assert.That(TestHelpers.AreEqual(data.Data.Orders.ToList()[0], result.Orders.ToList()[0]));
+            Assert.That(TestHelpers.AreEqual(data.Data.Orders.ToList()[1], result.Orders.ToList()[1]));
         }
 
         [TestCase()]
-        public void SubscribingToUserStream_Should_TriggerWhenOrderUpdateStreamMessageIsReceived()
+        public async Task SubscribingToUserStream_Should_TriggerWhenOrderUpdateStreamMessageIsReceived()
         {
             // arrange
             var socket = new TestSocket();
             var client = TestHelpers.CreateSocketClient(socket);
 
             HitoBitStreamOrderUpdate result = null;
-            client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", (test) => result = test.Data, null, null, null);
+            var subTask = client.SpotApi.Account.SubscribeToUserDataUpdatesAsync("test", (test) => result = test.Data, null, null, null);
+            socket.InvokeMessage(new HitoBitSocketQueryResponse { Id = ExchangeHelpers.LastId() - 1 });
+            await subTask;
 
             var data = new HitoBitCombinedStream<HitoBitStreamOrderUpdate>
             {
@@ -354,8 +373,8 @@ namespace HitoBit.Net.UnitTests
             socket.InvokeMessage(data);
 
             // assert
-            Assert.IsNotNull(result);
-            Assert.IsTrue(TestHelpers.AreEqual(data.Data, result, "Balances", "ListenKey"));
+            ClassicAssert.IsNotNull(result);
+            Assert.That(TestHelpers.AreEqual(data.Data, result, "Balances", "ListenKey"));
         }
     }
 }

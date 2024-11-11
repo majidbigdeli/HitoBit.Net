@@ -1,29 +1,20 @@
 ﻿using HitoBit.Net.Enums;
 using HitoBit.Net.Objects;
-using CryptoExchange.Net.Authentication;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using HitoBit.Net.Objects.Internal;
 using HitoBit.Net.Objects.Models.Futures;
-using CryptoExchange.Net;
 using HitoBit.Net.Interfaces.Clients.CoinFuturesApi;
 using CryptoExchange.Net.CommonObjects;
-using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Interfaces.CommonClients;
-using Newtonsoft.Json.Linq;
 using HitoBit.Net.Objects.Options;
-using HitoBit.Net.Enums;
+using CryptoExchange.Net.Converters.MessageParsing;
+using CryptoExchange.Net.Clients;
+using CryptoExchange.Net.RateLimiting.Interfaces;
+using CryptoExchange.Net.SharedApis;
 
 namespace HitoBit.Net.Clients.CoinFuturesApi
 {
     /// <inheritdoc cref="IHitoBitRestClientCoinFuturesApi" />
-    public class HitoBitRestClientCoinFuturesApi : RestApiClient, IHitoBitRestClientCoinFuturesApi, IFuturesClient
+    internal partial class HitoBitRestClientCoinFuturesApi : RestApiClient, IHitoBitRestClientCoinFuturesApi, IFuturesClient
     {
         #region fields 
         /// <inheritdoc />
@@ -68,9 +59,9 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             ExchangeData = new HitoBitRestClientCoinFuturesApiExchangeData(logger, this);
             Trading = new HitoBitRestClientCoinFuturesApiTrading(logger, this);
 
-            requestBodyEmptyContent = "";
-            requestBodyFormat = RequestBodyFormat.FormData;
-            arraySerialization = ArrayParametersSerialization.MultipleValues;
+            RequestBodyEmptyContent = "";
+            RequestBodyFormat = RequestBodyFormat.FormData;
+            ArraySerialization = ArrayParametersSerialization.MultipleValues;
 
             _brokerId = !string.IsNullOrEmpty(options.CoinFuturesOptions.BrokerId) ? options.CoinFuturesOptions.BrokerId! : "x-d63tKbx3";
         }
@@ -79,6 +70,14 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         /// <inheritdoc />
         protected override AuthenticationProvider CreateAuthenticationProvider(ApiCredentials credentials)
             => new HitoBitAuthenticationProvider(credentials);
+
+        protected override IStreamMessageAccessor CreateAccessor() => new SystemTextJsonStreamMessageAccessor();
+
+        protected override IMessageSerializer CreateSerializer() => new SystemTextJsonMessageSerializer();
+
+        /// <inheritdoc />
+        public override string FormatSymbol(string baseAsset, string quoteAsset, TradingMode tradingMode, DateTime? deliverTime = null)
+                => HitoBitExchange.FormatSymbol(baseAsset, quoteAsset, tradingMode, deliverTime);
 
         internal Uri GetUrl(string endpoint, string api, string? version = null)
         {
@@ -220,11 +219,23 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
             return HitoBitTradeRuleResult.CreatePassed(outputQuantity, outputQuoteQuantity, outputPrice, outputStopPrice);
         }
 
-        internal async Task<WebCallResult<T>> SendRequestInternal<T>(Uri uri, HttpMethod method, CancellationToken cancellationToken,
-            Dictionary<string, object>? parameters = null, bool signed = false, HttpMethodParameterPosition? postPosition = null,
-            ArrayParametersSerialization? arraySerialization = null, int weight = 1, bool ignoreRateLimit = false) where T : class
+        internal async Task<WebCallResult> SendAsync(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null)
         {
-            var result = await SendRequestAsync<T>(uri, method, cancellationToken, parameters, signed, postPosition, arraySerialization, weight, ignoreRatelimit: ignoreRateLimit).ConfigureAwait(false);
+            var result = await base.SendAsync(BaseAddress, definition, parameters, cancellationToken, null, weight).ConfigureAwait(false);
+            if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
+            {
+                _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
+                _timeSyncState.LastSyncTime = DateTime.MinValue;
+            }
+            return result;
+        }
+
+        internal Task<WebCallResult<T>> SendAsync<T>(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null) where T : class
+            => SendToAddressAsync<T>(BaseAddress, definition, parameters, cancellationToken, weight);
+
+        internal async Task<WebCallResult<T>> SendToAddressAsync<T>(string baseAddress, RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null) where T : class
+        {
+            var result = await base.SendAsync<T>(baseAddress, definition, parameters, cancellationToken, null, weight).ConfigureAwait(false);
             if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
             {
                 _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
@@ -247,6 +258,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
 
         /// <inheritdoc />
         public IFuturesClient CommonFuturesClient => this;
+        public IHitoBitRestClientCoinFuturesApiShared SharedClient => this;
 
         /// <inheritdoc />
         public string GetSymbolName(string baseAsset, string quoteAsset) =>
@@ -514,7 +526,7 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
                 SourceObject = orderbook.Data,
                 Asks = orderbook.Data.Asks.Select(a => new OrderBookEntry { Price = a.Price, Quantity = a.Quantity }),
                 Bids = orderbook.Data.Bids.Select(b => new OrderBookEntry { Price = b.Price, Quantity = b.Quantity })
-            });
+            }); 
         }
 
         async Task<WebCallResult<IEnumerable<Trade>>> IBaseRestClient.GetRecentTradesAsync(string symbol, CancellationToken ct)
@@ -608,22 +620,58 @@ namespace HitoBit.Net.Clients.CoinFuturesApi
         }
 
         /// <inheritdoc />
-        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, string data)
+        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, IMessageAccessor accessor)
         {
-            var errorData = ValidateJson(data);
-            if (!errorData)
-                return new ServerError(data);
+            if (!accessor.IsJson)
+                return new ServerError(accessor.GetOriginalString());
 
-            if (!errorData.Data.HasValues)
-                return new ServerError(errorData.Data.ToString());
+            var code = accessor.GetValue<int?>(MessagePath.Get().Property("code"));
+            var msg = accessor.GetValue<string>(MessagePath.Get().Property("msg"));
+            if (msg == null)
+                return new ServerError(accessor.GetOriginalString());
 
-            if (errorData.Data["msg"] == null && errorData.Data["code"] == null)
-                return new ServerError(errorData.Data.ToString());
+            if (code == null)
+                return new ServerError(msg);
 
-            if (errorData.Data["msg"] != null && errorData.Data["code"] == null)
-                return new ServerError((string)errorData.Data["msg"]!);
+            return new ServerError(code.Value, msg);
+        }
 
-            return new ServerError((int)errorData.Data["code"]!, (string)errorData.Data["msg"]!);
+        /// <inheritdoc />
+        protected override ServerRateLimitError ParseRateLimitResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, IMessageAccessor accessor)
+        {
+            var error = GetRateLimitError(accessor);
+            var retryAfterHeader = responseHeaders.SingleOrDefault(r => r.Key.Equals("Retry-After", StringComparison.InvariantCultureIgnoreCase));
+            if (retryAfterHeader.Value?.Any() != true)
+                return error;
+
+            var value = retryAfterHeader.Value.First();
+            if (!int.TryParse(value, out var seconds))
+                return error;
+
+            if (seconds == 0)
+            {
+                var now = DateTime.UtcNow;
+                seconds = (int)(new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc).AddMinutes(1) - now).TotalSeconds + 1;
+            }
+
+            error.RetryAfter = DateTime.UtcNow.AddSeconds(seconds);
+            return error;
+        }
+
+        private HitoBitRateLimitError GetRateLimitError(IMessageAccessor accessor)
+        {
+            if (!accessor.IsJson)
+                return new HitoBitRateLimitError(accessor.GetOriginalString());
+
+            var code = accessor.GetValue<int?>(MessagePath.Get().Property("code"));
+            var msg = accessor.GetValue<string>(MessagePath.Get().Property("msg"));
+            if (msg == null)
+                return new HitoBitRateLimitError(accessor.GetOriginalString());
+
+            if (code == null)
+                return new HitoBitRateLimitError(msg);
+
+            return new HitoBitRateLimitError(code.Value, msg, null);
         }
     }
 }

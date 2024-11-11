@@ -1,32 +1,26 @@
-﻿using System;
-using HitoBit.Net.Converters;
-using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Futures.Socket
+﻿namespace HitoBit.Net.Objects.Models.Futures.Socket
 {
     /// <summary>
     /// Information about leverage of symbol changed
     /// </summary>
-    public class HitoBitFuturesStreamConfigUpdate : HitoBitStreamEvent
+    public record HitoBitFuturesStreamConfigUpdate : HitoBitStreamEvent
     {
         /// <summary>
         /// Leverage Update data
         /// </summary>
-        [JsonProperty("ac")]
-        public HitoBitFuturesStreamLeverageUpdateData LeverageUpdateData { get; set; } = new HitoBitFuturesStreamLeverageUpdateData();
+        [JsonPropertyName("ac")]
+        public HitoBitFuturesStreamLeverageUpdateData? LeverageUpdateData { get; set; }
 
         /// <summary>
         /// Position mode Update data
         /// </summary>
-        [JsonProperty("ai")]
-        public HitoBitFuturesStreamConfigUpdateData ConfigUpdateData { get; set; } = new HitoBitFuturesStreamConfigUpdateData();
+        [JsonPropertyName("ai")]
+        public HitoBitFuturesStreamConfigUpdateData? ConfigUpdateData { get; set; }
 
         /// <summary>
         /// Transaction time
         /// </summary>
-        [JsonProperty("T"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("T"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime TransactionTime { get; set; }
         /// <summary>
         /// The listen key the update was for
@@ -37,30 +31,30 @@ namespace HitoBit.Net.Objects.Models.Futures.Socket
     /// <summary>
     /// Config update data
     /// </summary>
-    public class HitoBitFuturesStreamLeverageUpdateData
+    public record HitoBitFuturesStreamLeverageUpdateData
     {
         /// <summary>
         /// The symbol this balance is for
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string? Symbol { get; set; }
 
         /// <summary>
         /// The symbol this leverage is for
         /// </summary>
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public int Leverage { get; set; }
     }
 
     /// <summary>
     /// Position mode update data
     /// </summary>
-    public class HitoBitFuturesStreamConfigUpdateData
+    public record HitoBitFuturesStreamConfigUpdateData
     {
         /// <summary>
         /// Multi-Assets Mode
         /// </summary>
-        [JsonProperty("j")]
+        [JsonPropertyName("j")]
         public bool MultiAssetMode { get; set; }
     }
 }

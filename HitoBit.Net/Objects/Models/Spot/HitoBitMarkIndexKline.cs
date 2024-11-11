@@ -1,14 +1,12 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using CryptoExchange.Net.Converters;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
-    /// Kline for mark or index price
+    /// Kline for mark or index price or Premium index
     /// </summary>
     [JsonConverter(typeof(ArrayConverter))]
-    public class HitoBitMarkIndexKline
+    public record HitoBitMarkIndexKline
     {
         /// <summary>
         /// The time this candlestick opened

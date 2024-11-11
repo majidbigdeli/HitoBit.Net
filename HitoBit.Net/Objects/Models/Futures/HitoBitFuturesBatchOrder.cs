@@ -5,7 +5,7 @@ namespace HitoBit.Net.Objects.Models.Futures
     /// <summary>
     /// Parameters for a new futures batch order
     /// </summary>
-    public class HitoBitFuturesBatchOrder
+    public record HitoBitFuturesBatchOrder
     {
         /// <summary>
         /// Symbol of the order
@@ -63,5 +63,13 @@ namespace HitoBit.Net.Objects.Models.Futures
         /// Used with Stop/StopMarket or TakeProfit/TakeProfitMarket orders.
         /// </summary>
         public bool? PriceProtect { get; set; }
+        /// <summary>
+        /// Price match
+        /// </summary>
+        public PriceMatch? PriceMatch { get; set; }
+        /// <summary>
+        /// Self trade prevention mode
+        /// </summary>
+        public SelfTradePreventionMode? SelfTradePreventionMode { get; set; }
     }
 }

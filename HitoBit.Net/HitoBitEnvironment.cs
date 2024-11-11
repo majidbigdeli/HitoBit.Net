@@ -1,5 +1,4 @@
 ﻿using HitoBit.Net.Objects;
-using CryptoExchange.Net.Objects;
 
 namespace HitoBit.Net
 {
@@ -39,6 +38,11 @@ namespace HitoBit.Net
         public string? UsdFuturesSocketAddress { get; }
 
         /// <summary>
+        /// Usd futures Socket address for the request API
+        /// </summary>
+        public string? UsdFuturesSocketApiAddress { get; }
+
+        /// <summary>
         /// Coin futures Rest address
         /// </summary>
         public string? CoinFuturesRestAddress { get; }
@@ -56,6 +60,7 @@ namespace HitoBit.Net
             string? blvtSocketAddress, 
             string? usdFuturesRestAddress, 
             string? usdFuturesSocketAddress,
+            string? usdFuturesSocketApiAddress,
             string? coinFuturesRestAddress,
             string? coinFuturesSocketAddress) :
             base(name)
@@ -66,6 +71,7 @@ namespace HitoBit.Net
             BlvtSocketAddress = blvtSocketAddress;
             UsdFuturesRestAddress = usdFuturesRestAddress;
             UsdFuturesSocketAddress = usdFuturesSocketAddress;
+            UsdFuturesSocketApiAddress = usdFuturesSocketApiAddress;
             CoinFuturesRestAddress = coinFuturesRestAddress;
             CoinFuturesSocketAddress = coinFuturesSocketAddress;
         }
@@ -81,6 +87,7 @@ namespace HitoBit.Net
                                      HitoBitApiAddresses.Default.BlvtSocketClientAddress,
                                      HitoBitApiAddresses.Default.UsdFuturesRestClientAddress,
                                      HitoBitApiAddresses.Default.UsdFuturesSocketClientAddress,
+                                     HitoBitApiAddresses.Default.UsdFuturesSocketApiClientAddress,
                                      HitoBitApiAddresses.Default.CoinFuturesRestClientAddress,
                                      HitoBitApiAddresses.Default.CoinFuturesSocketClientAddress);
 
@@ -95,6 +102,7 @@ namespace HitoBit.Net
                                      HitoBitApiAddresses.TestNet.BlvtSocketClientAddress,
                                      HitoBitApiAddresses.TestNet.UsdFuturesRestClientAddress,
                                      HitoBitApiAddresses.TestNet.UsdFuturesSocketClientAddress,
+                                     HitoBitApiAddresses.TestNet.UsdFuturesSocketApiClientAddress,
                                      HitoBitApiAddresses.TestNet.CoinFuturesRestClientAddress,
                                      HitoBitApiAddresses.TestNet.CoinFuturesSocketClientAddress);
 
@@ -110,21 +118,12 @@ namespace HitoBit.Net
                                      null,
                                      null,
                                      null,
+                                     null,
                                      null);
 
         /// <summary>
         /// Create a custom environment
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="spotRestAddress"></param>
-        /// <param name="spotSocketStreamsAddress"></param>
-        /// <param name="spotSocketApiAddress"></param>
-        /// <param name="blvtSocketAddress"></param>
-        /// <param name="usdFuturesRestAddress"></param>
-        /// <param name="usdFuturesSocketAddress"></param>
-        /// <param name="coinFuturesRestAddress"></param>
-        /// <param name="coinFuturesSocketAddress"></param>
-        /// <returns></returns>
         public static HitoBitEnvironment CreateCustom(
                         string name,
                         string spotRestAddress,
@@ -133,8 +132,9 @@ namespace HitoBit.Net
                         string? blvtSocketAddress,
                         string? usdFuturesRestAddress,
                         string? usdFuturesSocketAddress,
+                        string? usdFuturesSocketApiAddress,
                         string? coinFuturesRestAddress,
                         string? coinFuturesSocketAddress)
-            => new HitoBitEnvironment(name, spotRestAddress, spotSocketStreamsAddress, spotSocketApiAddress, blvtSocketAddress, usdFuturesRestAddress, usdFuturesSocketAddress, coinFuturesRestAddress, coinFuturesSocketAddress);
+            => new HitoBitEnvironment(name, spotRestAddress, spotSocketStreamsAddress, spotSocketApiAddress, blvtSocketAddress, usdFuturesRestAddress, usdFuturesSocketAddress, usdFuturesSocketApiAddress, coinFuturesRestAddress, coinFuturesSocketAddress);
     }
 }

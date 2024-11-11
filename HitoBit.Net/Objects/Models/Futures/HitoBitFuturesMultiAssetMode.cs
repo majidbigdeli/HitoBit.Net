@@ -1,16 +1,14 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Futures
+﻿namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
     /// Multi asset mode info
     /// </summary>
-    public class HitoBitFuturesMultiAssetMode
+    public record HitoBitFuturesMultiAssetMode
     {
         /// <summary>
         /// Is multi assets mode enabled
         /// </summary>
-        [JsonProperty("multiAssetsMargin")]
+        [JsonPropertyName("multiAssetsMargin")]
         public bool MultiAssetMode { get; set; }
     }
 }

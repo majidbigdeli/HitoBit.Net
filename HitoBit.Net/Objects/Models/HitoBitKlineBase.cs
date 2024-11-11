@@ -1,14 +1,12 @@
-﻿using System;
-using HitoBit.Net.Interfaces;
+﻿using HitoBit.Net.Interfaces;
 using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models
 {
     /// <summary>
     /// Candlestick information for symbol
     /// </summary>
-    public abstract class HitoBitKlineBase : IHitoBitKline
+    public abstract record HitoBitKlineBase : IHitoBitKline
     {
         /// <summary>
         /// The time this candlestick opened

@@ -1,33 +1,32 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Add IP Restriction Result
     /// </summary>
-    public class HitoBitBrokerageAddIpRestrictionResult
+    public record HitoBitBrokerageAddIpRestrictionResult
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
 
         /// <summary>
         /// Api key
         /// </summary>
+        [JsonPropertyName("apikey")]
         public string ApiKey { get; set; } = string.Empty;
 
         /// <summary>
         /// IP
         /// </summary>
+        [JsonPropertyName("ip")]
         public string Ip { get; set; } = string.Empty;
 
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("updateTime"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("updateTime"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime UpdateDate { get; set; }
     }
 }

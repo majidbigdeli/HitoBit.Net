@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// The direction to change futures margin
@@ -8,10 +10,12 @@
         /// <summary>
         /// Add margin
         /// </summary>
+        [Map("1")]
         Add,
         /// <summary>
         /// Reduce Margin
         /// </summary>
+        [Map("2")]
         Reduce
     }
 }

@@ -1,54 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot
+﻿namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// Dust log response details
     /// </summary>
-    public class HitoBitDustLogList
+    public record HitoBitDustLogList
     {
         /// <summary>
         /// Total counts of exchange
         /// </summary>
+        [JsonPropertyName("total")]
         public int Total { get; set; }
         /// <summary>
         /// Rows
         /// </summary>
+        [JsonPropertyName("userAssetDribblets")]
         public IEnumerable<HitoBitDustLog> UserAssetDribblets { get; set; } = Array.Empty<HitoBitDustLog>();
     }
 
     /// <summary>
     /// Dust log details
     /// </summary>
-    public class HitoBitDustLog
+    public record HitoBitDustLog
     {
         /// <summary>
         /// Total transferred
         /// </summary>
-        [JsonProperty("totalTransferedAmount")]
+        [JsonPropertyName("totalTransferedAmount")]
         public decimal TransferredTotal { get; set; }
         /// <summary>
         /// Total service charge
         /// </summary>
-        [JsonProperty("totalServiceChargeAmount")]
+        [JsonPropertyName("totalServiceChargeAmount")]
         public decimal ServiceChargeTotal { get; set; }
         /// <summary>
         /// Transaction id
         /// </summary>
-        [JsonProperty("transId")]
+        [JsonPropertyName("transId")]
         public long TransactionId { get; set; }
         /// <summary>
         /// Detail logs
         /// </summary>
-        [JsonProperty("userAssetDribbletDetails")]
+        [JsonPropertyName("userAssetDribbletDetails")]
         public IEnumerable<HitoBitDustLogDetails> Logs { get; set; } = Array.Empty<HitoBitDustLogDetails>();
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("operateTime")]
+        [JsonPropertyName("operateTime")]
         [JsonConverter(typeof(DateTimeConverter))]
         public DateTime OperateTime { get; set; }
     }
@@ -56,38 +53,38 @@ namespace HitoBit.Net.Objects.Models.Spot
     /// <summary>
     /// Dust log entry details
     /// </summary>
-    public class HitoBitDustLogDetails
+    public record HitoBitDustLogDetails
     {
         /// <summary>
         /// Transaction id
         /// </summary>
-        [JsonProperty("transId")]
+        [JsonPropertyName("transId")]
         public long TransactionId { get; set; }
         /// <summary>
         /// Service charge
         /// </summary>
-        [JsonProperty("serviceChargeAmount")]
+        [JsonPropertyName("serviceChargeAmount")]
         public decimal ServiceChargeQuantity { get; set; }
         /// <summary>
         /// Quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("operateTime")]
+        [JsonPropertyName("operateTime")]
         [JsonConverter(typeof(DateTimeConverter))]
         public DateTime OperateTime { get; set; }
         /// <summary>
         /// Transferred quantity
         /// </summary>
-        [JsonProperty("transferedAmount")]
+        [JsonPropertyName("transferedAmount")]
         public decimal TransferredQuantity { get; set; }
         /// <summary>
         /// Asset
         /// </summary>
-        [JsonProperty("fromAsset")]
+        [JsonPropertyName("fromAsset")]
         public string FromAsset { get; set; } = string.Empty;
     }
 }

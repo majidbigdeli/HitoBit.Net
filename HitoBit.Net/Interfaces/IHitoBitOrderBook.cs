@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Objects.Models;
+﻿using HitoBit.Net.Objects.Models;
 
 namespace HitoBit.Net.Interfaces
 {

@@ -1,7 +1,4 @@
-﻿using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Objects.Internal;
@@ -11,95 +8,14 @@ using HitoBit.Net.Objects.Models.Spot.Blvt;
 using HitoBit.Net.Objects.Models.Spot.IsolatedMargin;
 using HitoBit.Net.Objects.Models.Spot.Margin;
 using HitoBit.Net.Objects.Models.Spot.PortfolioMargin;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+using CryptoExchange.Net.RateLimiting.Guards;
 
 namespace HitoBit.Net.Clients.SpotApi
 {
     /// <inheritdoc />
-    public class HitoBitRestClientSpotApiAccount : IHitoBitRestClientSpotApiAccount
+    internal class HitoBitRestClientSpotApiAccount : IHitoBitRestClientSpotApiAccount
     {
-        private const string accountInfoEndpoint = "account";
-        private const string fiatDepositWithdrawHistoryEndpoint = "fiat/orders";
-        private const string fiatPaymentHistoryEndpoint = "fiat/payments";
-        private const string withdrawEndpoint = "capital/withdraw/apply";
-        private const string withdrawHistoryEndpoint = "capital/withdraw/history";
-        private const string depositHistoryEndpoint = "capital/deposit/hisrec";
-        private const string depositAddressEndpoint = "capital/deposit/address";
-        private const string accountSnapshotEndpoint = "accountSnapshot";
-        private const string accountStatusEndpoint = "account/status";
-        private const string fundingWalletEndpoint = "asset/get-funding-asset";
-        private const string apiRestrictionsEndpoint = "account/apiRestrictions";
-        private const string dividendRecordsEndpoint = "asset/assetDividend";
-        private const string userCoinsEndpoint = "capital/config/getall";
-        private const string disableFastWithdrawSwitchEndpoint = "account/disableFastWithdrawSwitch";
-        private const string enableFastWithdrawSwitchEndpoint = "account/enableFastWithdrawSwitch";
-        private const string dustLogEndpoint = "asset/dribblet";
-        private const string balancesEndpoint = "asset/getUserAsset";
-        private const string dustTransferEndpoint = "asset/dust";
-        private const string dustElligableEndpoint = "asset/dust-btc";
-        private const string toggleBnbBurnEndpoint = "bnbBurn";
-        private const string getBnbBurnEndpoint = "bnbBurn";
-        private const string universalTransferEndpoint = "asset/transfer";
-        private const string tradingStatusEndpoint = "account/apiTradingStatus";
-        private const string orderRateLimitEndpoint = "rateLimit/order";
-
-        // Margin
-        private const string marginTransferEndpoint = "margin/transfer";
-        private const string marginBorrowEndpoint = "margin/loan";
-        private const string marginRepayEndpoint = "margin/repay";
-        private const string getLoanEndpoint = "margin/loan";
-        private const string getRepayEndpoint = "margin/repay";
-        private const string marginDustLogEndpoint = "margin/dribblet";
-        private const string marginAccountInfoEndpoint = "margin/account";
-        private const string maxBorrowableEndpoint = "margin/maxBorrowable";
-        private const string maxTransferableEndpoint = "margin/maxTransferable";
-        private const string transferHistoryEndpoint = "margin/transfer";
-        private const string interestHistoryEndpoint = "margin/interestHistory";
-        private const string interestRateHistoryEndpoint = "margin/interestRateHistory";
-        private const string interestMarginDataEndpoint = "margin/crossMarginData";
-        private const string forceLiquidationHistoryEndpoint = "margin/forceLiquidationRec";
-        private const string marginLevelInformation = "margin/tradeCoeff";
-
-        private const string isolatedMargingTierEndpoint = "margin/isolatedMarginTier";
-
-        private const string isolatedMarginTransferHistoryEndpoint = "margin/isolated/transfer";
-        private const string isolatedMarginAccountEndpoint = "margin/isolated/account";
-        private const string isolatedMarginAccountLimitEndpoint = "margin/isolated/accountLimit";
-        private const string transferIsolatedMarginAccountEndpoint = "margin/isolated/transfer";
-
-        private const string marginOrderRateLimitEndpoint = "margin/rateLimit/order";
-
-        private const string getListenKeyEndpoint = "userDataStream";
-        private const string keepListenKeyAliveEndpoint = "userDataStream";
-        private const string closeListenKeyEndpoint = "userDataStream";
-
-        private const string getListenKeyIsolatedEndpoint = "userDataStream/isolated";
-        private const string keepListenKeyAliveIsolatedEndpoint = "userDataStream/isolated";
-        private const string closeListenKeyIsolatedEndpoint = "userDataStream/isolated";
-
-
-        // Blvt
-        private const string blvtUserLimitEndpoint = "blvt/userLimit";
-
-        // Rebate
-        private const string rebateHistoryEndpoint = "rebate/taxQuery";
-
-        // Portfolio Margin
-        private const string portfolioMarginAccountEndpoint = "portfolio/account";
-        private const string portfolioMarginCollateralRateEndpoint = "portfolio/collateralRate";
-        private const string portfolioMarginLoanEndpoint = "portfolio/pmLoan";
-        private const string portfolioMarginRepayEndpoint = "portfolio/repay";
-
-
-        private const string marginApi = "sapi";
-        private const string marginVersion = "1";
+        private static readonly RequestDefinitionCache _definitions = new RequestDefinitionCache();
 
         private readonly HitoBitRestClientSpotApi _baseClient;
 
@@ -110,12 +26,14 @@ namespace HitoBit.Net.Clients.SpotApi
 
         #region Account info
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitAccountInfo>> GetAccountInfoAsync(long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitAccountInfo>> GetAccountInfoAsync(bool? omitZeroBalances = null, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
+            parameters.AddOptional("omitZeroBalances", omitZeroBalances?.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitAccountInfo>(_baseClient.GetUrl(accountInfoEndpoint, "api", "3"), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "api/v3/account", HitoBitExchange.RateLimiter.SpotRestIp, 20, true);
+            return await _baseClient.SendAsync<HitoBitAccountInfo>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -123,7 +41,7 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitFiatPayment>>> GetFiatPaymentHistoryAsync(OrderSide side, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection()
             {
                 { "transactionType", side == OrderSide.Buy ? "0": "1" }
             };
@@ -133,8 +51,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<IEnumerable<HitoBitFiatPayment>>>(_baseClient.GetUrl(fiatPaymentHistoryEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/fiat/payments", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<IEnumerable<HitoBitFiatPayment>>>(request, parameters, ct).ConfigureAwait(false);
             return result.As(result.Data?.Data!);
         }
 
@@ -144,7 +62,7 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitFiatWithdrawDeposit>>> GetFiatDepositWithdrawHistoryAsync(TransactionType side, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "transactionType", side == TransactionType.Deposit ? "0": "1" }
             };
@@ -154,8 +72,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<IEnumerable<HitoBitFiatWithdrawDeposit>>>(_baseClient.GetUrl(fiatDepositWithdrawHistoryEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 90000).ConfigureAwait(false);
-
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/fiat/orders", HitoBitExchange.RateLimiter.SpotRestUid, 9000, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<IEnumerable<HitoBitFiatWithdrawDeposit>>>(request, parameters, ct).ConfigureAwait(false);
             return result.As(result.Data?.Data!);
         }
 
@@ -168,7 +86,7 @@ namespace HitoBit.Net.Clients.SpotApi
             asset.ValidateNotNull(nameof(asset));
             address.ValidateNotNull(nameof(address));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "coin", asset },
                 { "address", address },
@@ -179,11 +97,11 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("network", network);
             parameters.AddOptionalParameter("transactionFeeFlag", transactionFeeFlag);
             parameters.AddOptionalParameter("addressTag", addressTag);
-            parameters.AddOptionalParameter("walletType", walletType != null ? JsonConvert.SerializeObject(walletType, new WalletTypeConverter(false)) : null);
+            parameters.AddOptionalEnum("walletType", walletType);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitWithdrawalPlaced>(_baseClient.GetUrl(withdrawEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters, true, HttpMethodParameterPosition.InUri).ConfigureAwait(false);
-            return result;
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/capital/withdraw/apply", HitoBitExchange.RateLimiter.SpotRestUid, 600, true, parameterPosition: HttpMethodParameterPosition.InUri);
+            return await _baseClient.SendAsync<HitoBitWithdrawalPlaced>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -192,38 +110,53 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitWithdrawal>>> GetWithdrawalHistoryAsync(string? asset = null, string? withdrawOrderId = null, WithdrawalStatus? status = null, DateTime? startTime = null, DateTime? endTime = null, int? receiveWindow = null, int? limit = null, int? offset = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("coin", asset);
             parameters.AddOptionalParameter("withdrawOrderId", withdrawOrderId);
-            parameters.AddOptionalParameter("status", status != null ? JsonConvert.SerializeObject(status, new WithdrawalStatusConverter(false)) : null);
+            parameters.AddOptionalEnum("status", status);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("limit", limit);
             parameters.AddOptionalParameter("offset", offset);
 
-            var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBitWithdrawal>>(_baseClient.GetUrl(withdrawHistoryEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-            return result;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/capital/withdraw/history", HitoBitExchange.RateLimiter.SpotRestUid, 18000, true,
+                limitGuard: new SingleLimitGuard(10, TimeSpan.FromSeconds(1), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitWithdrawal>>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Withdrawal Addresses
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitWithdrawalAddress>>> GetWithdrawalAddressesAsync(int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/capital/withdraw/address/list", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitWithdrawalAddress>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Deposit history        
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitDeposit>>> GetDepositHistoryAsync(string? asset = null, DepositStatus? status = null, DateTime? startTime = null, DateTime? endTime = null, int? offset = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<IEnumerable<HitoBitDeposit>>> GetDepositHistoryAsync(string? asset = null, DepositStatus? status = null, DateTime? startTime = null, DateTime? endTime = null, int? offset = null, int? limit = null, int? receiveWindow = null, bool includeSource = false, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("coin", asset);
             parameters.AddOptionalParameter("offset", offset?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("status", status != null ? JsonConvert.SerializeObject(status, new DepositStatusConverter(false)) : null);
+            parameters.AddOptionalEnum("status", status);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("includeSource", includeSource.ToString());
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitDeposit>>(
-                    _baseClient.GetUrl(depositHistoryEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true)
-                .ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/capital/deposit/hisrec", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitDeposit>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -234,14 +167,15 @@ namespace HitoBit.Net.Clients.SpotApi
         {
             asset.ValidateNotNull(nameof(asset));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "coin", asset }
             };
             parameters.AddOptionalParameter("network", network);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitDepositAddress>(_baseClient.GetUrl(depositAddressEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/capital/deposit/address", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitDepositAddress> (request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -270,9 +204,9 @@ namespace HitoBit.Net.Clients.SpotApi
         private async Task<WebCallResult<T>> GetDailyAccountSnapshot<T>(AccountType accountType, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, long? receiveWindow = null,
             CancellationToken ct = default) where T : class
         {
-            limit?.ValidateIntBetween(nameof(limit), 5, 30);
+            limit?.ValidateIntBetween(nameof(limit), 7, 30);
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "type", EnumConverter.GetString(accountType) }
             };
@@ -281,7 +215,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitSnapshotWrapper<T>>(_baseClient.GetUrl(accountSnapshotEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 2400).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/accountSnapshot", HitoBitExchange.RateLimiter.SpotRestIp, 2400, true);
+            var result = await _baseClient.SendAsync<HitoBitSnapshotWrapper<T>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<T>(default);
 
@@ -296,11 +231,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAccountStatus>> GetAccountStatusAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitAccountStatus>(_baseClient.GetUrl(accountStatusEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-            return result;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/account/status", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitAccountStatus>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -308,12 +243,13 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitFundingAsset>>> GetFundingWalletAsync(string? asset = null, bool? needBtcValuation = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("asset", asset);
             parameters.AddOptionalParameter("needBtcValuation", needBtcValuation?.ToString());
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFundingAsset>>(_baseClient.GetUrl(fundingWalletEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/asset/get-funding-asset", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFundingAsset>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -321,10 +257,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAPIKeyPermissions>> GetAPIKeyPermissionsAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitAPIKeyPermissions>(_baseClient.GetUrl(apiRestrictionsEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/account/apiRestrictions", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitAPIKeyPermissions>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -332,11 +269,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitUserAsset>>> GetUserAssetsAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitUserAsset>>(_baseClient.GetUrl(userCoinsEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/capital/config/getall", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitUserAsset>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -344,11 +281,25 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitUserBalance>>> GetBalancesAsync(string? asset = null, bool? needBtcValuation = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("asset", asset);
             parameters.AddOptionalParameter("needBtcValuation", needBtcValuation);
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitUserBalance>>(_baseClient.GetUrl(balancesEndpoint, "sapi", "3"), HttpMethod.Post, ct, parameters, true, weight: 5).ConfigureAwait(false);
+
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v3/asset/getUserAsset", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitUserBalance>>(request, parameters, ct).ConfigureAwait(false);
+        }
+        #endregion
+
+        #region Get Wallet Balances
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitWalletBalance>>> GetWalletBalancesAsync(int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/wallet/balance", HitoBitExchange.RateLimiter.SpotRestIp, 60, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitWalletBalance>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -356,57 +307,62 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitQueryRecords<HitoBitDividendRecord>>> GetAssetDividendRecordsAsync(string? asset = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("asset", asset);
             parameters.AddOptionalParameter("limit", limit);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitDividendRecord>>(_baseClient.GetUrl(dividendRecordsEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/assetDividend", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitDividendRecord>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
         #region Disable Fast Withdraw Switch
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> DisableFastWithdrawSwitchAsync(int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult> DisableFastWithdrawSwitchAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(disableFastWithdrawSwitchEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/account/disableFastWithdrawSwitch", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Enable Fast Withdraw Switch
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> EnableFastWithdrawSwitchAsync(int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult> EnableFastWithdrawSwitchAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(enableFastWithdrawSwitchEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/account/enableFastWithdrawSwitch", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
         #region DustLog
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitDustLogList>> GetDustLogAsync(DateTime? startTime = null, DateTime? endTime = null, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitDustLogList>> GetDustLogAsync(DateTime? startTime = null, DateTime? endTime = null, AccountType? accountType = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalEnum("accountType", accountType);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
-            var result = await _baseClient.SendRequestInternal<HitoBitDustLogList>(_baseClient.GetUrl(dustLogEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-            return result;
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/dribblet", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitDustLogList>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Dust Transfer
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitDustTransferResult>> DustTransferAsync(IEnumerable<string> assets, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitDustTransferResult>> DustTransferAsync(IEnumerable<string> assets, AccountType? accountType = null, int? receiveWindow = null, CancellationToken ct = default)
         {
             var assetsArray = assets.ToArray();
 
@@ -414,25 +370,29 @@ namespace HitoBit.Net.Clients.SpotApi
             foreach (var asset in assetsArray)
                 asset.ValidateNotNull(nameof(asset));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection()
             {
                 { "asset", assetsArray }
             };
+            parameters.AddOptionalEnum("accountType", accountType);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitDustTransferResult>(_baseClient.GetUrl(dustTransferEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/asset/dust", HitoBitExchange.RateLimiter.SpotRestUid, 10, true);
+            return await _baseClient.SendAsync<HitoBitDustTransferResult>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Dust Elligable
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitElligableDusts>> GetAssetsForDustTransferAsync(int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitElligableDusts>> GetAssetsForDustTransferAsync(AccountType? accountType = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalEnum("accountType", accountType);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitElligableDusts>(_baseClient.GetUrl(dustElligableEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/asset/dust-btc", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitElligableDusts>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -441,10 +401,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitBnbBurnStatus>> GetBnbBurnStatusAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBnbBurnStatus>(_baseClient.GetUrl(getBnbBurnEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/bnbBurn", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitBnbBurnStatus>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -455,12 +416,13 @@ namespace HitoBit.Net.Clients.SpotApi
             if (spotTrading == null && marginInterest == null)
                 throw new ArgumentException("SpotTrading or MarginInterest should be provided");
 
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("spotBNBBurn", spotTrading);
             parameters.AddOptionalParameter("interestBNBBurn", marginInterest);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBnbBurnStatus>(_baseClient.GetUrl(toggleBnbBurnEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/bnbBurn", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitBnbBurnStatus>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -468,18 +430,19 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitTransaction>> TransferAsync(UniversalTransferType type, string asset, decimal quantity, string? fromSymbol = null, string? toSymbol = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
-                { "type", JsonConvert.SerializeObject(type, new UniversalTransferTypeConverter(false)) },
                 { "asset", asset },
                 { "amount", quantity.ToString(CultureInfo.InvariantCulture) }
             };
 
+            parameters.AddEnum("type", type);
             parameters.AddOptionalParameter("fromSymbol", fromSymbol);
             parameters.AddOptionalParameter("toSymbol", toSymbol);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitTransaction>(_baseClient.GetUrl(universalTransferEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/asset/transfer", HitoBitExchange.RateLimiter.SpotRestUid, 900, true);
+            return await _baseClient.SendAsync<HitoBitTransaction>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -487,17 +450,16 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitQueryRecords<HitoBitTransfer>>> GetTransfersAsync(UniversalTransferType type, DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? pageSize = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
-            {
-                { "type", JsonConvert.SerializeObject(type, new UniversalTransferTypeConverter(false)) }
-            };
+            var parameters = new ParameterCollection();
+            parameters.AddEnum("type", type);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("current", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("size", pageSize?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitTransfer>>(_baseClient.GetUrl(universalTransferEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/transfer", HitoBitExchange.RateLimiter.SpotRestUid, 1, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitTransfer>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -505,7 +467,8 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<string>> StartUserStreamAsync(CancellationToken ct = default)
         {
-            var result = await _baseClient.SendRequestInternal<HitoBitListenKey>(_baseClient.GetUrl(getListenKeyEndpoint, "api", "3"), HttpMethod.Post, ct).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "api/v3/userDataStream", HitoBitExchange.RateLimiter.SpotRestIp, 2);
+            var result = await _baseClient.SendAsync<HitoBitListenKey>(request, null, ct).ConfigureAwait(false);
             return result.As(result.Data?.ListenKey!);
         }
 
@@ -514,32 +477,34 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Ping/Keep-alive a ListenKey
 
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> KeepAliveUserStreamAsync(string listenKey, CancellationToken ct = default)
+        public async Task<WebCallResult> KeepAliveUserStreamAsync(string listenKey, CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "listenKey", listenKey }
             };
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(keepListenKeyAliveEndpoint, "api", "3"), HttpMethod.Put, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Put, "api/v3/userDataStream", HitoBitExchange.RateLimiter.SpotRestIp, 2);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Invalidate a ListenKey
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> StopUserStreamAsync(string listenKey, CancellationToken ct = default)
+        public async Task<WebCallResult> StopUserStreamAsync(string listenKey, CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "listenKey", listenKey }
             };
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(closeListenKeyEndpoint, "api", "3"), HttpMethod.Delete, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "api/v3/userDataStream", HitoBitExchange.RateLimiter.SpotRestIp, 2);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -547,37 +512,13 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Margin Level Information
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitMarginLevel>> GetMarginLevelInformationAsync(string email, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitMarginLevel>> GetMarginLevelInformationAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            email.ValidateNotNull(nameof(email));
-
-            var parameters = new Dictionary<string, object>
-            {
-                { "email", email },
-            };
-
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitMarginLevel>(_baseClient.GetUrl(marginLevelInformation, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
-        }
-
-        #endregion
-
-        #region Margin Account Transfer
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitTransaction>> CrossMarginTransferAsync(string asset, decimal quantity, TransferDirectionType type, int? receiveWindow = null, CancellationToken ct = default)
-        {
-            asset.ValidateNotNull(nameof(asset));
-            var parameters = new Dictionary<string, object>
-            {
-                { "asset", asset },
-                { "amount", quantity.ToString(CultureInfo.InvariantCulture) },
-                { "type", JsonConvert.SerializeObject(type, new TransferDirectionTypeConverter(false)) }
-            };
-            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient.SendRequestInternal<HitoBitTransaction>(_baseClient.GetUrl(marginTransferEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 600).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/tradeCoeff", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitMarginLevel>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -591,16 +532,18 @@ namespace HitoBit.Net.Clients.SpotApi
             if (isIsolated == true && symbol == null)
                 throw new ArgumentException("Symbol should be specified when using isolated margin");
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "asset", asset },
+                { "type", "BORROW" },
                 { "amount", quantity.ToString(CultureInfo.InvariantCulture) }
             };
             parameters.AddOptionalParameter("isIsolated", isIsolated?.ToString().ToLower());
             parameters.AddOptionalParameter("symbol", symbol);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitTransaction>(_baseClient.GetUrl(marginBorrowEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/margin/borrow-repay", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendAsync<HitoBitTransaction>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -611,32 +554,35 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<HitoBitTransaction>> MarginRepayAsync(string asset, decimal quantity, bool? isIsolated = null, string? symbol = null, int? receiveWindow = null, CancellationToken ct = default)
         {
             asset.ValidateNotNull(nameof(asset));
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "asset", asset },
+                { "type", "REPAY" },
                 { "amount", quantity.ToString(CultureInfo.InvariantCulture) }
             };
             parameters.AddOptionalParameter("isIsolated", isIsolated?.ToString().ToLower());
             parameters.AddOptionalParameter("symbol", symbol);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitTransaction>(_baseClient.GetUrl(marginRepayEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/margin/borrow-repay", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendAsync<HitoBitTransaction>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
+        #region Cross Margin Adjust Max Leverage
 
-
-        #region Margin DustLog
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitDustLogList>> GetMarginDustLogAsync(DateTime? startTime = null, DateTime? endTime = null, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitCrossMarginLeverageResult>> CrossMarginAdjustMaxLeverageAsync(int maxLeverage, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection
+            {
+                { "maxLeverage", maxLeverage },
+            };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
-            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
-            var result = await _baseClient.SendRequestInternal<HitoBitDustLogList>(_baseClient.GetUrl(marginDustLogEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
-            return result;
+
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/margin/max-leverage", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendAsync<HitoBitCrossMarginLeverageResult>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -644,21 +590,21 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Get Transfer History
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitTransferHistory>>> GetCrossMarginTransferHistoryAsync(TransferDirection direction, int? page = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitTransferHistory>>> GetMarginTransferHistoryAsync(TransferDirection direction, int? page = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, string? isolatedSymbol = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 100);
 
-            var parameters = new Dictionary<string, object>
-            {
-                { "direction", JsonConvert.SerializeObject(direction, new TransferDirectionConverter(false)) }
-            };
+            var parameters = new ParameterCollection();
+            parameters.AddEnum("direction", direction);
+            parameters.AddOptionalParameter("isolatedSymbol", isolatedSymbol);
             parameters.AddOptionalParameter("size", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("current", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitTransferHistory>>(_baseClient.GetUrl(transferHistoryEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/transfer", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitTransferHistory>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -670,11 +616,13 @@ namespace HitoBit.Net.Clients.SpotApi
         {
             asset.ValidateNotNull(nameof(asset));
             limit?.ValidateIntBetween(nameof(limit), 1, 100);
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
-                { "asset", asset }
+                { "asset", asset },
+                { "type", "BORROW" }
             };
             parameters.AddOptionalParameter("txId", transactionId?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("isolatedSymbol", isolatedSymbol);
 
             // TxId or startTime must be sent. txId takes precedence.
             if (!transactionId.HasValue)
@@ -692,7 +640,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("archived", archived);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitLoan>>(_baseClient.GetUrl(getLoanEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/borrow-repay", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitLoan>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -703,9 +652,10 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<HitoBitQueryRecords<HitoBitRepay>>> GetMarginRepaysAsync(string asset, long? transactionId = null, DateTime? startTime = null, DateTime? endTime = null, int? current = null, int? size = null, string? isolatedSymbol = null, bool? archived = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             asset.ValidateNotNull(nameof(asset));
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
-                { "asset", asset }
+                { "asset", asset },
+                { "type", "REPAY" }
             };
             parameters.AddOptionalParameter("txId", transactionId?.ToString(CultureInfo.InvariantCulture));
 
@@ -726,7 +676,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("archived", archived);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitRepay>>(_baseClient.GetUrl(getRepayEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/borrow-repay", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitRepay>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -738,13 +689,15 @@ namespace HitoBit.Net.Clients.SpotApi
         {
             asset?.ValidateNotNull(nameof(asset));
 
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
 
             parameters.AddOptionalParameter("coin", asset);
             parameters.AddOptionalParameter("vipLevel", vipLevel?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitInterestMarginData>>(_baseClient.GetUrl(interestMarginDataEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var weight = asset == null ? 5 : 1;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/crossMarginData", HitoBitExchange.RateLimiter.SpotRestIp, weight, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitInterestMarginData>>(request, parameters, ct, weight).ConfigureAwait(false);
         }
 
         #endregion
@@ -755,7 +708,7 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<HitoBitQueryRecords<HitoBitInterestHistory>>> GetMarginInterestHistoryAsync(string? asset = null, int? page = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, string? isolatedSymbol = null, bool? archived = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 100);
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("asset", asset);
             parameters.AddOptionalParameter("size", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("current", page?.ToString(CultureInfo.InvariantCulture));
@@ -765,7 +718,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitInterestHistory>>(_baseClient.GetUrl(interestHistoryEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/interestHistory", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitInterestHistory>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -778,7 +732,7 @@ namespace HitoBit.Net.Clients.SpotApi
             asset?.ValidateNotNull(nameof(asset));
             limit?.ValidateIntBetween(nameof(limit), 1, 100);
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "asset", asset! }
             };
@@ -788,7 +742,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitInterestRateHistory>>(_baseClient.GetUrl(interestRateHistoryEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/interestRateHistory", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitInterestRateHistory>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -799,7 +754,7 @@ namespace HitoBit.Net.Clients.SpotApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 100);
 
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("size", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("page", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("isolatedSymbol", isolatedSymbol);
@@ -807,7 +762,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitQueryRecords<HitoBitForcedLiquidation>>(_baseClient.GetUrl(forceLiquidationHistoryEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/forceLiquidationRec", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitForcedLiquidation>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -816,14 +772,15 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitIsolatedMarginTierData>>> GetIsolatedMarginTierDataAsync(string symbol, int? tier = null, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "symbol", symbol }
             };
             parameters.AddOptionalParameter("tier", tier);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitIsolatedMarginTierData>>(_baseClient.GetUrl(isolatedMargingTierEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/isolatedMarginTier", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitIsolatedMarginTierData>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -833,10 +790,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitMarginAccount>> GetMarginAccountInfoAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitMarginAccount>(_baseClient.GetUrl(marginAccountInfoEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/account", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitMarginAccount>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -848,7 +806,7 @@ namespace HitoBit.Net.Clients.SpotApi
         {
             asset.ValidateNotNull(nameof(asset));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "asset", asset }
             };
@@ -856,7 +814,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("isolatedSymbol", isolatedSymbol);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitMarginAmount>(_baseClient.GetUrl(maxBorrowableEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 50).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/maxBorrowable", HitoBitExchange.RateLimiter.SpotRestIp, 50, true);
+            return await _baseClient.SendAsync<HitoBitMarginAmount>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -867,7 +826,7 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<decimal>> GetMarginMaxTransferAmountAsync(string asset, string? isolatedSymbol = null, long? receiveWindow = null, CancellationToken ct = default)
         {
             asset.ValidateNotNull(nameof(asset));
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "asset", asset }
             };
@@ -875,7 +834,8 @@ namespace HitoBit.Net.Clients.SpotApi
             parameters.AddOptionalParameter("isolatedSymbol", isolatedSymbol);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitMarginAmount>(_baseClient.GetUrl(maxTransferableEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 50).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/maxTransferable", HitoBitExchange.RateLimiter.SpotRestIp, 50, true);
+            var result = await _baseClient.SendAsync<HitoBitMarginAmount>(request, parameters, ct).ConfigureAwait(false);
 
             if (!result)
                 return result.As<decimal>(default);
@@ -885,61 +845,20 @@ namespace HitoBit.Net.Clients.SpotApi
 
         #endregion
 
-        #region Query isolated margin transfer history
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitIsolatedMarginTransfer>>>
-            GetIsolatedMarginAccountTransferHistoryAsync(string symbol, string? asset = null,
-                IsolatedMarginTransferDirection? from = null, IsolatedMarginTransferDirection? to = null,
-                DateTime? startTime = null, DateTime? endTime = null, int? current = 1, int? limit = 10,
-                int? receiveWindow = null, CancellationToken ct = default)
-        {
-            symbol.ValidateHitoBitSymbol();
-
-            var parameters = new Dictionary<string, object>
-            {
-                {"symbol", symbol}
-            };
-
-            parameters.AddOptionalParameter("asset", asset);
-            parameters.AddOptionalParameter("from",
-                !from.HasValue
-                    ? null
-                    : JsonConvert.SerializeObject(from, new IsolatedMarginTransferDirectionConverter(false)));
-            parameters.AddOptionalParameter("to",
-                !to.HasValue
-                    ? null
-                    : JsonConvert.SerializeObject(to, new IsolatedMarginTransferDirectionConverter(false)));
-            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime)?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime)?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("current", current?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("size", limit?.ToString(CultureInfo.InvariantCulture));
-            parameters.AddOptionalParameter("recvWindow",
-                receiveWindow?.ToString(CultureInfo.InvariantCulture) ??
-                _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient
-                .SendRequestInternal<HitoBitQueryRecords<HitoBitIsolatedMarginTransfer>>(
-                    _baseClient.GetUrl(isolatedMarginTransferHistoryEndpoint, "sapi", "1"), HttpMethod.Get, ct,
-                    parameters, true, weight: 600).ConfigureAwait(false);
-        }
-        #endregion
-
         #region Query isolated margin account
 
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitIsolatedMarginAccount>> GetIsolatedMarginAccountAsync(
             int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
 
             parameters.AddOptionalParameter("recvWindow",
                 receiveWindow?.ToString(CultureInfo.InvariantCulture) ??
                 _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient
-                .SendRequestInternal<HitoBitIsolatedMarginAccount>(
-                    _baseClient.GetUrl(isolatedMarginAccountEndpoint, "sapi", "1"), HttpMethod.Get, ct,
-                    parameters, true, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/isolated/account", HitoBitExchange.RateLimiter.SpotRestIp, 10, true);
+            return await _baseClient.SendAsync<HitoBitIsolatedMarginAccount>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -950,7 +869,7 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<CreateIsolatedMarginAccountResult>> DisableIsolatedMarginAccountAsync(string symbol,
             int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 {"symbol", symbol}
             };
@@ -959,10 +878,8 @@ namespace HitoBit.Net.Clients.SpotApi
                 receiveWindow?.ToString(CultureInfo.InvariantCulture) ??
                 _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient
-                .SendRequestInternal<CreateIsolatedMarginAccountResult>(
-                    _baseClient.GetUrl(isolatedMarginAccountEndpoint, "sapi", "1"), HttpMethod.Delete, ct,
-                    parameters, true, weight: 300).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "sapi/v1/margin/isolated/account", HitoBitExchange.RateLimiter.SpotRestUid, 300, true);
+            return await _baseClient.SendAsync<CreateIsolatedMarginAccountResult>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -973,7 +890,7 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<CreateIsolatedMarginAccountResult>> EnableIsolatedMarginAccountAsync(string symbol,
             int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 {"symbol", symbol}
             };
@@ -982,10 +899,8 @@ namespace HitoBit.Net.Clients.SpotApi
                 receiveWindow?.ToString(CultureInfo.InvariantCulture) ??
                 _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient
-                .SendRequestInternal<CreateIsolatedMarginAccountResult>(
-                    _baseClient.GetUrl(isolatedMarginAccountEndpoint, "sapi", "1"), HttpMethod.Post, ct,
-                    parameters, true, weight: 300).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/margin/isolated/account", HitoBitExchange.RateLimiter.SpotRestUid, 300, true);
+            return await _baseClient.SendAsync<CreateIsolatedMarginAccountResult>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -996,57 +911,26 @@ namespace HitoBit.Net.Clients.SpotApi
         public async Task<WebCallResult<IsolatedMarginAccountLimit>> GetEnabledIsolatedMarginAccountLimitAsync(
             int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
 
             parameters.AddOptionalParameter("recvWindow",
                 receiveWindow?.ToString(CultureInfo.InvariantCulture) ??
                 _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient
-                .SendRequestInternal<IsolatedMarginAccountLimit>(
-                    _baseClient.GetUrl(isolatedMarginAccountLimitEndpoint, "sapi", "1"), HttpMethod.Get, ct,
-                    parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/isolated/accountLimit", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IsolatedMarginAccountLimit>(request, parameters, ct).ConfigureAwait(false);
         }
-        #endregion
-
-        #region Isolated margin account transfer
-
-        /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitTransaction>> IsolatedMarginAccountTransferAsync(string asset,
-            string symbol, IsolatedMarginTransferDirection from, IsolatedMarginTransferDirection to, decimal quantity,
-            int? receiveWindow = null, CancellationToken ct = default)
-        {
-            asset.ValidateNotNull(nameof(asset));
-            symbol.ValidateNotNull(nameof(symbol));
-
-            var parameters = new Dictionary<string, object>
-            {
-                {"asset", asset},
-                {"symbol", symbol},
-                {"transFrom", JsonConvert.SerializeObject(from, new IsolatedMarginTransferDirectionConverter(false))},
-                {"transTo", JsonConvert.SerializeObject(to, new IsolatedMarginTransferDirectionConverter(false))},
-                {"amount", quantity.ToString(CultureInfo.InvariantCulture)}
-            };
-            parameters.AddOptionalParameter("recvWindow",
-                receiveWindow?.ToString(CultureInfo.InvariantCulture) ??
-                _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-
-            return await _baseClient
-                .SendRequestInternal<HitoBitTransaction>(
-                    _baseClient.GetUrl(transferIsolatedMarginAccountEndpoint, "sapi", "1"), HttpMethod.Post, ct,
-                    parameters, true).ConfigureAwait(false);
-        }
-
         #endregion
 
         #region Margin order rate limit
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitCurrentRateLimit>>> GetMarginOrderRateLimitStatusAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitCurrentRateLimit>>(_baseClient.GetUrl(marginOrderRateLimitEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 20).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/rateLimit/order", HitoBitExchange.RateLimiter.SpotRestIp, 20, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitCurrentRateLimit>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -1055,7 +939,8 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<string>> StartMarginUserStreamAsync(CancellationToken ct = default)
         {
-            var result = await _baseClient.SendRequestInternal<HitoBitListenKey>(_baseClient.GetUrl(getListenKeyEndpoint, "sapi", "1"), HttpMethod.Post, ct).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/userDataStream", HitoBitExchange.RateLimiter.SpotRestIp, 1);
+            var result = await _baseClient.SendAsync<HitoBitListenKey>(request, null, ct).ConfigureAwait(false);
             return result.As(result.Data?.ListenKey!);
         }
 
@@ -1064,16 +949,17 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Ping/Keep-alive a ListenKey
 
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> KeepAliveMarginUserStreamAsync(string listenKey, CancellationToken ct = default)
+        public async Task<WebCallResult> KeepAliveMarginUserStreamAsync(string listenKey, CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "listenKey", listenKey },
             };
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(keepListenKeyAliveEndpoint, "sapi", "1"), HttpMethod.Put, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Put, "sapi/v1/userDataStream", HitoBitExchange.RateLimiter.SpotRestIp, 1);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -1081,15 +967,16 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Invalidate a ListenKey
 
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> StopMarginUserStreamAsync(string listenKey, CancellationToken ct = default)
+        public async Task<WebCallResult> StopMarginUserStreamAsync(string listenKey, CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "listenKey", listenKey }
             };
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(closeListenKeyEndpoint, "sapi", "1"), HttpMethod.Delete, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "sapi/v1/userDataStream", HitoBitExchange.RateLimiter.SpotRestIp, 1);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -1099,14 +986,13 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<string>> StartIsolatedMarginUserStreamAsync(string symbol, CancellationToken ct = default)
         {
-            symbol.ValidateHitoBitSymbol();
-
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 {"symbol", symbol}
             };
 
-            var result = await _baseClient.SendRequestInternal<HitoBitListenKey>(_baseClient.GetUrl(getListenKeyIsolatedEndpoint, "sapi", "1"), HttpMethod.Post, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/userDataStream/isolated", HitoBitExchange.RateLimiter.SpotRestIp, 1);
+            var result = await _baseClient.SendAsync<HitoBitListenKey>(request, parameters, ct).ConfigureAwait(false);
             return result.As(result.Data?.ListenKey!);
         }
 
@@ -1115,32 +1001,34 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Ping/Keep-alive a ListenKey
 
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> KeepAliveIsolatedMarginUserStreamAsync(string symbol, string listenKey, CancellationToken ct = default)
+        public async Task<WebCallResult> KeepAliveIsolatedMarginUserStreamAsync(string symbol, string listenKey, CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "listenKey", listenKey },
                 {"symbol", symbol}
             };
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(keepListenKeyAliveIsolatedEndpoint, "sapi", "1"), HttpMethod.Put, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Put, "sapi/v1/userDataStream/isolated", HitoBitExchange.RateLimiter.SpotRestIp, 1);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Invalidate a ListenKey
         /// <inheritdoc />
-        public async Task<WebCallResult<object>> CloseIsolatedMarginUserStreamAsync(string symbol, string listenKey, CancellationToken ct = default)
+        public async Task<WebCallResult> CloseIsolatedMarginUserStreamAsync(string symbol, string listenKey, CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "listenKey", listenKey },
                 {"symbol", symbol}
             };
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(closeListenKeyIsolatedEndpoint, "sapi", "1"), HttpMethod.Delete, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "sapi/v1/userDataStream/isolated", HitoBitExchange.RateLimiter.SpotRestIp, 1);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -1149,10 +1037,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitTradingStatus>> GetTradingStatusAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitTradingStatus>>(_baseClient.GetUrl(tradingStatusEndpoint, "sapi", "1"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/account/apiTradingStatus", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitTradingStatus>>(request, parameters, ct).ConfigureAwait(false);
             if (!result)
                 return result.As<HitoBitTradingStatus>(default);
 
@@ -1164,10 +1053,11 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitCurrentRateLimit>>> GetOrderRateLimitStatusAsync(int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitCurrentRateLimit>>(_baseClient.GetUrl(orderRateLimitEndpoint, "api", "3"), HttpMethod.Get, ct, parameters, true, weight: 20).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "api/v3/rateLimit/order", HitoBitExchange.RateLimiter.SpotRestIp, 40, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitCurrentRateLimit>>(request, parameters, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -1176,13 +1066,14 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitRebateWrapper>> GetRebateHistoryAsync(DateTime? startTime = null, DateTime? endTime = null, int? page = null, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("page", page);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<HitoBitResult<HitoBitRebateWrapper>>(_baseClient.GetUrl(rebateHistoryEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/rebate/taxQuery", HitoBitExchange.RateLimiter.SpotRestUid, 12000, true);
+            var result = await _baseClient.SendAsync<HitoBitResult<HitoBitRebateWrapper>>(request, parameters, ct).ConfigureAwait(false);
             if (!result.Success)
                 return result.As<HitoBitRebateWrapper>(default);
 
@@ -1199,11 +1090,12 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitBlvtUserLimit>>> GetLeveragedTokensUserLimitAsync(string? tokenName = null, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("tokenName", tokenName);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBlvtUserLimit>>(_baseClient.GetUrl(blvtUserLimitEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/blvt/userLimit", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitBlvtUserLimit>>(request, parameters, ct).ConfigureAwait(false);       
         }
 
         #endregion
@@ -1211,36 +1103,41 @@ namespace HitoBit.Net.Clients.SpotApi
         #region Portfolio margin
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitPortfolioMarginInfo>> GetPortfolioMarginAccountInfoAsync(long? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult<HitoBitPortfolioMarginInfo>> GetPortfolioMarginAccountInfoAsync (long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            return await _baseClient.SendRequestInternal<HitoBitPortfolioMarginInfo>(_baseClient.GetUrl(portfolioMarginAccountEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 1).ConfigureAwait(false);
-        }
 
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/portfolio/account", HitoBitExchange.RateLimiter.SpotRestIp, 5, true);
+            return await _baseClient.SendAsync<HitoBitPortfolioMarginInfo>(request, parameters, ct).ConfigureAwait(false);
+        }
+        
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitPortfolioMarginCollateralRate>>> GetPortfolioMarginCollateralRateAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitPortfolioMarginCollateralRate>>(_baseClient.GetUrl(portfolioMarginCollateralRateEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 50).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/portfolio/collateralRate", HitoBitExchange.RateLimiter.SpotRestIp, 50, false);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitPortfolioMarginCollateralRate>>(request, parameters, ct).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitPortfolioMarginLoan>> GetPortfolioMarginBankruptcyLoanAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            return await _baseClient.SendRequestInternal<HitoBitPortfolioMarginLoan>(_baseClient.GetUrl(portfolioMarginLoanEndpoint, marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 500).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/portfolio/pmLoan", HitoBitExchange.RateLimiter.SpotRestUid, 500, true);
+            return await _baseClient.SendAsync<HitoBitPortfolioMarginLoan>(request, parameters, ct).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitTransaction>> PortfolioMarginBankruptcyLoanRepayAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            return await _baseClient.SendRequestInternal<HitoBitTransaction>(_baseClient.GetUrl(portfolioMarginRepayEndpoint, marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/portfolio/repay", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendAsync<HitoBitTransaction>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -1250,9 +1147,10 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitAutoConversionSettings>> GetAutoConvertStableCoinConfigAsync(long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            return await _baseClient.SendRequestInternal<HitoBitAutoConversionSettings>(_baseClient.GetUrl("capital/contract/convertible-coins", marginApi, marginVersion), HttpMethod.Get, ct, parameters, true, weight: 600).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/capital/contract/convertible-coins", HitoBitExchange.RateLimiter.SpotRestUid, 600, true);
+            return await _baseClient.SendAsync<HitoBitAutoConversionSettings>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -1262,44 +1160,185 @@ namespace HitoBit.Net.Clients.SpotApi
         /// <inheritdoc />
         public async Task<WebCallResult> SetAutoConvertStableCoinConfigAsync(string asset, bool enable, long? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "coin", asset },
                 { "enable", enable }
             };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
-            return await _baseClient.SendRequestInternal(_baseClient.GetUrl("capital/contract/convertible-coins", marginApi, marginVersion), HttpMethod.Post, ct, parameters, true, weight: 600).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/capital/contract/convertible-coins", HitoBitExchange.RateLimiter.SpotRestUid, 600, true);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
+        #region Convert BUSD
 
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitBusdConvertResult>> ConvertBusdAsync(string clientTransferId, string asset, decimal quantity, string targetAsset, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection()
+            {
+                { "clientTranId", clientTransferId },
+                { "asset", asset },
+                { "amount", quantity },
+                { "targetAsset", targetAsset }
+            };
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/asset/convert-transfer", HitoBitExchange.RateLimiter.SpotRestUid, 5, true);
+            return await _baseClient.SendAsync<HitoBitBusdConvertResult>(request, parameters, ct).ConfigureAwait(false);
+        }
 
+        #endregion
 
+        #region Convert BUSD history
 
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitBusdHistory>>> GetBusdConvertHistoryAsync(DateTime startTime, DateTime endTime, long? transferId = null, string? clientTransferId = null, string? asset = null, int? page = null, int? pageSize = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("tranId", transferId);
+            parameters.AddOptionalParameter("clientTranId", clientTransferId);
+            parameters.AddOptionalParameter("asset", asset);
+            parameters.AddOptionalParameter("current", page);
+            parameters.AddOptionalParameter("size", pageSize);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/convert-transfer/queryByPage", HitoBitExchange.RateLimiter.SpotRestUid, 5, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitBusdHistory>>(request, parameters, ct).ConfigureAwait(false);
+        }
 
+        #endregion
 
+        #region Get Cloud Mining History
 
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitCloudMiningHistory>>> GetCloudMiningHistoryAsync(DateTime startTime, DateTime endTime, long ? transferId = null, string? clientTransferId = null, string? asset = null, int? page = null, int? pageSize = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptional("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddOptional("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("tranId", transferId);
+            parameters.AddOptionalParameter("clientTranId", clientTransferId);
+            parameters.AddOptionalParameter("asset", asset);
+            parameters.AddOptionalParameter("current", page);
+            parameters.AddOptionalParameter("size", pageSize);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/ledger-transfer/cloud-mining/queryByPage", HitoBitExchange.RateLimiter.SpotRestUid, 600, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitCloudMiningHistory>>(request, parameters, ct).ConfigureAwait(false);
+        }
 
+        #endregion
 
+        #region Get Isolated Margin Fee Data
 
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitIsolatedMarginFeeData>>> GetIsolatedMarginFeeDataAsync(string? symbol = null, int? vipLevel = null, long? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("symbol", symbol);
+            parameters.AddOptionalParameter("vipLevel", vipLevel);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var weight = symbol == null ? 10 : 1;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/isolatedMarginData", HitoBitExchange.RateLimiter.SpotRestIp, weight, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitIsolatedMarginFeeData>>(request, parameters, ct, weight).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Small Liability Exchange Assets
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitSmallLiabilityAsset>>> GetCrossMarginSmallLiabilityExchangeAssetsAsync(int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/exchange-small-liability", HitoBitExchange.RateLimiter.SpotRestIp, 100, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitSmallLiabilityAsset>>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
 
         #region Small Liability Exchange Assets
 
         /// <inheritdoc />
         public async Task<WebCallResult> CrossMarginSmallLiabilityExchangeAsync(IEnumerable<string> assets, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "assetNames", string.Join(",", assets) }
             };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal(_baseClient.GetUrl("margin/exchange-small-liability", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 3000).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "sapi/v1/margin/exchange-small-liability", HitoBitExchange.RateLimiter.SpotRestUid, 3000, true);
+            return await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
 
+        #region Get Small Liability Exchange History
 
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitQueryRecords<HitoBitSmallLiabilityHistory>>> GetCrossMarginSmallLiabilityExchangeHistoryAsync(DateTime? startTime = null, DateTime? endTime = null, int? page = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("current", page?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("size", limit?.ToString(CultureInfo.InvariantCulture));
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/margin/exchange-small-liability-history", HitoBitExchange.RateLimiter.SpotRestUid, 100, true);
+            return await _baseClient.SendAsync<HitoBitQueryRecords<HitoBitSmallLiabilityHistory>>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Trade Fee
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitTradeFee>>> GetTradeFeeAsync(string? symbol = null, int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("symbol", symbol);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/asset/tradeFee", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitTradeFee>>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Account VIP level and margin/futures enabled status
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitVipLevelAndStatus>> GetAccountVipLevelAndStatusAsync(int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "sapi/v1/account/info", HitoBitExchange.RateLimiter.SpotRestIp, 1, true);
+            return await _baseClient.SendAsync<HitoBitVipLevelAndStatus>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Trade Fee
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<HitoBitCommissions>> GetCommissionRatesAsync(string symbol, int? receiveWindow = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.Add("symbol", symbol);
+            parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "api/v3/account/commission", HitoBitExchange.RateLimiter.SpotRestIp, 20, true);
+            return await _baseClient.SendAsync<HitoBitCommissions>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
     }
 }

@@ -1,26 +1,24 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Margin
+﻿namespace HitoBit.Net.Objects.Models.Spot.Margin
 {
     /// <summary>
     /// Price index for a symbol
     /// </summary>
-    public class HitoBitMarginPriceIndex
+    public record HitoBitMarginPriceIndex
     {
         /// <summary>
         /// Symbol
         /// </summary>
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; } = string.Empty;
         /// <summary>
         /// Price
         /// </summary>
+        [JsonPropertyName("price")]
         public decimal Price { get; set; }
         /// <summary>
         /// Time of calculation
         /// </summary>
-        [JsonProperty("calcTime"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("calcTime"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime CalculationTime { get; set; }
     }
 }

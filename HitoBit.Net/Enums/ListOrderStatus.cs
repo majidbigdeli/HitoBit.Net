@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// List order status
@@ -8,14 +10,17 @@
         /// <summary>
         /// Executing
         /// </summary>
+        [Map("EXECUTING")]
         Executing,
         /// <summary>
         /// Executed
         /// </summary>
+        [Map("REJECT")]
         Done,
         /// <summary>
         /// Rejected
         /// </summary>
+        [Map("ALL_DONE")]
         Rejected
     }
 }

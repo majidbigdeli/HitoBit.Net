@@ -1,12 +1,8 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot
+﻿namespace HitoBit.Net.Objects.Models.Spot
 {
-    internal class HitoBitCheckTime
+    internal record HitoBitCheckTime
     {
-        [JsonProperty("serverTime"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("serverTime"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime ServerTime { get; set; }
     }
 }

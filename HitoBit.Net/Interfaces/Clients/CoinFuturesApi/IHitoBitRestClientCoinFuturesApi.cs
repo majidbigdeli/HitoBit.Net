@@ -1,6 +1,5 @@
-﻿using CryptoExchange.Net.Interfaces;
+﻿using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using CryptoExchange.Net.Interfaces.CommonClients;
-using System;
 
 namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
 {
@@ -25,9 +24,14 @@ namespace HitoBit.Net.Interfaces.Clients.CoinFuturesApi
         public IHitoBitRestClientCoinFuturesApiTrading Trading { get; }
 
         /// <summary>
-        /// Get the IFuturesClient for this client. This is a common interface which allows for some basic operations without knowing any details of the exchange.
+        /// DEPRECATED; use <see cref="CryptoExchange.Net.SharedApis.ISharedClient" /> instead for common/shared functionality. See <see href="https://majidbigdeli.github.io/CryptoExchange.Net/docs/index.html#shared" /> for more info.
         /// </summary>
-        /// <returns></returns>
         public IFuturesClient CommonFuturesClient { get; }
+
+        /// <summary>
+        /// Get the shared rest requests client. This interface is shared with other exhanges to allow for a common implementation for different exchanges.
+        /// </summary>
+        public IHitoBitRestClientCoinFuturesApiShared SharedClient { get; }
+
     }
 }

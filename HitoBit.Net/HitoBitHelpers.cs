@@ -1,21 +1,6 @@
-﻿using HitoBit.Net.Clients;
-using HitoBit.Net.Enums;
-using HitoBit.Net.Interfaces.Clients;
-using HitoBit.Net.Objects;
+﻿using HitoBit.Net.Enums;
 using HitoBit.Net.Objects.Internal;
 using HitoBit.Net.Objects.Models.Spot;
-using HitoBit.Net.Objects.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
-using System.Net;
-using System.Text.RegularExpressions;
-using HitoBit.Net.SymbolOrderBooks;
-using HitoBit.Net.Interfaces;
 
 namespace HitoBit.Net
 {
@@ -24,38 +9,6 @@ namespace HitoBit.Net
     /// </summary>
     public static class HitoBitHelpers
     {
-        /// <summary>
-        /// Get the used weight from the response headers
-        /// </summary>
-        /// <param name="headers"></param>
-        /// <returns></returns>
-        public static int? UsedWeight(this IEnumerable<KeyValuePair<string, IEnumerable<string>>>? headers)
-        {
-            if (headers == null)
-                return null;
-
-            var headerValues = headers.SingleOrDefault(s => s.Key.StartsWith("X-MBX-USED-WEIGHT-", StringComparison.InvariantCultureIgnoreCase)).Value;
-            if (headerValues != null && int.TryParse(headerValues.First(), out var value))
-                return value;
-            return null;
-        }
-
-        /// <summary>
-        /// Get the used weight from the response headers
-        /// </summary>
-        /// <param name="headers"></param>
-        /// <returns></returns>
-        public static int? UsedOrderCount(this IEnumerable<KeyValuePair<string, IEnumerable<string>>>? headers)
-        {
-            if (headers == null)
-                return null;
-
-            var headerValues = headers.SingleOrDefault(s => s.Key.StartsWith("X-MBX-ORDER-COUNT-", StringComparison.InvariantCultureIgnoreCase)).Value;
-            if (headerValues != null && int.TryParse(headerValues.First(), out var value))
-                return value;
-            return null;
-        }
-
         /// <summary>
         /// Clamp a quantity between a min and max quantity and floor to the closest step
         /// </summary>
@@ -112,69 +65,6 @@ namespace HitoBit.Net
             return Math.Floor(number * 100000000) / 100000000;
         }
 
-        /// <summary>
-        /// Add the IHitoBitClient and IHitoBitSocketClient to the sevice collection so they can be injected
-        /// </summary>
-        /// <param name="services">The service collection</param>
-        /// <param name="defaultRestOptionsDelegate">Set default options for the rest client</param>
-        /// <param name="defaultSocketOptionsDelegate">Set default options for the socket client</param>
-        /// <param name="socketClientLifeTime">The lifetime of the IHitoBitSocketClient for the service collection. Defaults to Singleton.</param>
-        /// <returns></returns>
-        public static IServiceCollection AddHitoBit(
-            this IServiceCollection services,
-            Action<HitoBitRestOptions>? defaultRestOptionsDelegate = null,
-            Action<HitoBitSocketOptions>? defaultSocketOptionsDelegate = null,
-            ServiceLifetime? socketClientLifeTime = null)
-        {
-            var restOptions = HitoBitRestOptions.Default.Copy();
-
-            if (defaultRestOptionsDelegate != null)
-            {
-                defaultRestOptionsDelegate(restOptions);
-                HitoBitRestClient.SetDefaultOptions(defaultRestOptionsDelegate);
-            }
-
-            if (defaultSocketOptionsDelegate != null)
-                HitoBitSocketClient.SetDefaultOptions(defaultSocketOptionsDelegate);
-
-            services.AddHttpClient<IHitoBitRestClient, HitoBitRestClient>(options =>
-            {
-                options.Timeout = restOptions.RequestTimeout;
-            }).ConfigurePrimaryHttpMessageHandler(() => {
-                var handler = new HttpClientHandler();
-                if (restOptions.Proxy != null)
-                {
-                    handler.Proxy = new WebProxy
-                    {
-                        Address = new Uri($"{restOptions.Proxy.Host}:{restOptions.Proxy.Port}"),
-                        Credentials = restOptions.Proxy.Password == null ? null : new NetworkCredential(restOptions.Proxy.Login, restOptions.Proxy.Password)
-                    };
-                }
-                return handler;
-            });
-
-            services.AddSingleton<IHitoBitOrderBookFactory, HitoBitOrderBookFactory>();
-            services.AddTransient<IHitoBitRestClient, HitoBitRestClient>();
-            if (socketClientLifeTime == null)
-                services.AddSingleton<IHitoBitSocketClient, HitoBitSocketClient>();
-            else
-                services.Add(new ServiceDescriptor(typeof(IHitoBitSocketClient), typeof(HitoBitSocketClient), socketClientLifeTime.Value));
-            return services;
-        }
-
-        /// <summary>
-        /// Validate the string is a valid HitoBit symbol.
-        /// </summary>
-        /// <param name="symbolString">string to validate</param> 
-        public static void ValidateHitoBitSymbol(this string symbolString)
-        {
-            if (string.IsNullOrEmpty(symbolString))
-                throw new ArgumentException("Symbol is not provided");
-
-            if(!Regex.IsMatch(symbolString, "^([A-Z|a-z|0-9]{5,})$"))
-                throw new ArgumentException($"{symbolString} is not a valid HitoBit symbol. Should be [BaseAsset][QuoteAsset], e.g. BTCUSDT");
-        }
-
         internal static HitoBitTradeRuleResult ValidateTradeRules(ILogger logger, TradeRulesBehaviour tradeRulesBehaviour, HitoBitExchangeInfo exchangeInfo, string symbol, decimal? quantity, decimal? quoteQuantity, decimal? price, decimal? stopPrice, SpotOrderType? type)
         {
             var outputQuantity = quantity;
@@ -212,7 +102,7 @@ namespace HitoBit.Net
 
                 if (minQty.HasValue && quantity.HasValue)
                 {
-                    outputQuantity = HitoBitHelpers.ClampQuantity(minQty.Value, maxQty!.Value, stepSize!.Value, quantity.Value);
+                    outputQuantity = ClampQuantity(minQty.Value, maxQty!.Value, stepSize!.Value, quantity.Value);
                     if (outputQuantity != quantity.Value)
                     {
                         if (tradeRulesBehaviour == TradeRulesBehaviour.ThrowError)
@@ -247,7 +137,7 @@ namespace HitoBit.Net
             {
                 if (symbolData.PriceFilter.MaxPrice != 0 && symbolData.PriceFilter.MinPrice != 0)
                 {
-                    outputPrice = HitoBitHelpers.ClampPrice(symbolData.PriceFilter.MinPrice, symbolData.PriceFilter.MaxPrice, price.Value);
+                    outputPrice = ClampPrice(symbolData.PriceFilter.MinPrice, symbolData.PriceFilter.MaxPrice, price.Value);
                     if (outputPrice != price)
                     {
                         if (tradeRulesBehaviour == TradeRulesBehaviour.ThrowError)
@@ -258,7 +148,7 @@ namespace HitoBit.Net
 
                     if (stopPrice != null)
                     {
-                        outputStopPrice = HitoBitHelpers.ClampPrice(symbolData.PriceFilter.MinPrice,
+                        outputStopPrice = ClampPrice(symbolData.PriceFilter.MinPrice,
                             symbolData.PriceFilter.MaxPrice, stopPrice.Value);
                         if (outputStopPrice != stopPrice)
                         {
@@ -277,7 +167,7 @@ namespace HitoBit.Net
                 if (symbolData.PriceFilter.TickSize != 0)
                 {
                     var beforePrice = outputPrice;
-                    outputPrice = HitoBitHelpers.FloorPrice(symbolData.PriceFilter.TickSize, price.Value);
+                    outputPrice = FloorPrice(symbolData.PriceFilter.TickSize, price.Value);
                     if (outputPrice != beforePrice)
                     {
                         if (tradeRulesBehaviour == TradeRulesBehaviour.ThrowError)
@@ -289,7 +179,7 @@ namespace HitoBit.Net
                     if (stopPrice != null)
                     {
                         var beforeStopPrice = outputStopPrice;
-                        outputStopPrice = HitoBitHelpers.FloorPrice(symbolData.PriceFilter.TickSize, stopPrice.Value);
+                        outputStopPrice = FloorPrice(symbolData.PriceFilter.TickSize, stopPrice.Value);
                         if (outputStopPrice != beforeStopPrice)
                         {
                             if (tradeRulesBehaviour == TradeRulesBehaviour.ThrowError)
@@ -323,7 +213,7 @@ namespace HitoBit.Net
 
                 var minQuantity = symbolData.MinNotionalFilter.MinNotional / outputPrice.Value;
                 var stepSize = symbolData.LotSizeFilter!.StepSize;
-                outputQuantity = HitoBitHelpers.Floor(minQuantity + (stepSize - minQuantity % stepSize));
+                outputQuantity = Floor(minQuantity + (stepSize - minQuantity % stepSize));
                 logger.Log(LogLevel.Information, $"Quantity clamped from {currentQuantity} to {outputQuantity} based on min notional filter");
             }
 

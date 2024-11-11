@@ -1,6 +1,4 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using CryptoExchange.Net.Converters;
 
 namespace HitoBit.Net.Objects.Models.Spot.Blvt
 {
@@ -8,7 +6,7 @@ namespace HitoBit.Net.Objects.Models.Spot.Blvt
     /// Blvt kline
     /// </summary>
     [JsonConverter(typeof(ArrayConverter))]
-    public class HitoBitBlvtKline
+    public record HitoBitBlvtKline
     {
         /// <summary>
         /// The time this candlestick opened

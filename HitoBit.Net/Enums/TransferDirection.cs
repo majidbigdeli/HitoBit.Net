@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// Direction of a transfer
@@ -8,10 +10,12 @@
         /// <summary>
         /// Roll-in
         /// </summary>
+        [Map("ROLL_IN")]
         RollIn,
         /// <summary>
         /// Roll-out
         /// </summary>
+        [Map("ROLL_OUT")]
         RollOut
     }
 }

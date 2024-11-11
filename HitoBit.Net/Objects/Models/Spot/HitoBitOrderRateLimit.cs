@@ -3,11 +3,12 @@
     /// <summary>
     /// Rate limit info
     /// </summary>
-    public class HitoBitCurrentRateLimit: HitoBitRateLimit
+    public record HitoBitCurrentRateLimit: HitoBitRateLimit
     {
         /// <summary>
         /// The current used amount
         /// </summary>
+        [JsonPropertyName("count")]
         public int Count { get; set; }
     }
 }

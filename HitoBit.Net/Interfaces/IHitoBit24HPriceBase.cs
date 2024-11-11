@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HitoBit.Net.Interfaces
+﻿namespace HitoBit.Net.Interfaces
 {
     /// <summary>
     /// 24 hour price stats

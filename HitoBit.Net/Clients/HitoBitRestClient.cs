@@ -1,6 +1,4 @@
-﻿using HitoBit.Net.Objects;
-using CryptoExchange.Net;
-using HitoBit.Net.Interfaces.Clients;
+﻿using HitoBit.Net.Interfaces.Clients;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Interfaces.Clients.GeneralApi;
@@ -9,11 +7,8 @@ using HitoBit.Net.Clients.GeneralApi;
 using HitoBit.Net.Clients.SpotApi;
 using HitoBit.Net.Clients.UsdFuturesApi;
 using HitoBit.Net.Clients.CoinFuturesApi;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
-using System;
 using HitoBit.Net.Objects.Options;
-using CryptoExchange.Net.Authentication;
+using CryptoExchange.Net.Clients;
 
 namespace HitoBit.Net.Clients
 {
@@ -39,14 +34,7 @@ namespace HitoBit.Net.Clients
         /// Create a new instance of the HitoBitRestClient using provided options
         /// </summary>
         /// <param name="optionsDelegate">Option configuration delegate</param>
-        public HitoBitRestClient(Action<HitoBitRestOptions> optionsDelegate) : this(null, null, optionsDelegate)
-        {
-        }
-
-        /// <summary>
-        /// Create a new instance of the HitoBitRestClient using provided options
-        /// </summary>
-        public HitoBitRestClient(ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null) : this(httpClient, loggerFactory, null)
+        public HitoBitRestClient(Action<HitoBitRestOptions>? optionsDelegate = null) : this(null, null, optionsDelegate)
         {
         }
 

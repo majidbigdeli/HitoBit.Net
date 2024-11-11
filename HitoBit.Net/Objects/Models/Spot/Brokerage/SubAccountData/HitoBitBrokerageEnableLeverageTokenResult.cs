@@ -1,21 +1,20 @@
-﻿using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Enable Leverage Token Result
     /// </summary>
-    public class HitoBitBrokerageEnableLeverageTokenResult
+    public record HitoBitBrokerageEnableLeverageTokenResult
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Is Leverage Token Enabled
         /// </summary>
-        [JsonProperty("enableBlvt")]
+        [JsonPropertyName("enableBlvt")]
         public bool IsLeverageTokenEnabled { get; set; }
     }
 }

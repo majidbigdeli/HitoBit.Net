@@ -1,7 +1,5 @@
 ﻿using HitoBit.Net.Enums;
 using CryptoExchange.Net.Objects.Options;
-using HitoBit.Net.Enums;
-using System;
 
 namespace HitoBit.Net.Objects.Options
 {

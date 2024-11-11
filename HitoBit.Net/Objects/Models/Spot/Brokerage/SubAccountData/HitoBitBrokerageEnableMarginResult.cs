@@ -1,29 +1,26 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Enable Margin Result
     /// </summary>
-    public class HitoBitBrokerageEnableMarginResult
+    public record HitoBitBrokerageEnableMarginResult
     {
         /// <summary>
         /// Sub Account Id
         /// </summary>
+        [JsonPropertyName("subaccountId")]
         public string SubAccountId { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Is Margin Enabled
         /// </summary>
-        [JsonProperty("enableMargin")]
+        [JsonPropertyName("enableMargin")]
         public bool IsMarginEnabled { get; set; }
         
         /// <summary>
         /// Update Date
         /// </summary>
-        [JsonProperty("updateTime"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("updateTime"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime UpdateDate { get; set; }
     }
 }

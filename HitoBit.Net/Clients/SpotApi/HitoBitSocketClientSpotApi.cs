@@ -1,28 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Enums;
+﻿using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.SpotApi;
 using HitoBit.Net.Objects;
 using HitoBit.Net.Objects.Internal;
 using HitoBit.Net.Objects.Models.Spot;
 using HitoBit.Net.Objects.Options;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
+using HitoBit.Net.Objects.Sockets;
+using HitoBit.Net.Objects.Sockets.Subscriptions;
+using CryptoExchange.Net.Clients;
+using CryptoExchange.Net.Converters.MessageParsing;
+using CryptoExchange.Net.Objects.Sockets;
+using CryptoExchange.Net.SharedApis;
 using CryptoExchange.Net.Sockets;
-using HitoBit.Net.Enums;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace HitoBit.Net.Clients.SpotApi
 {
     /// <inheritdoc />
-    public class HitoBitSocketClientSpotApi : SocketApiClient, IHitoBitSocketClientSpotApi
+    internal partial class HitoBitSocketClientSpotApi : SocketApiClient, IHitoBitSocketClientSpotApi
     {
         #region fields
         /// <inheritdoc />
@@ -34,6 +27,8 @@ namespace HitoBit.Net.Clients.SpotApi
         internal DateTime? _lastExchangeInfoUpdate;
         internal readonly string _brokerId;
 
+        private static readonly MessagePath _idPath = MessagePath.Get().Property("id");
+        private static readonly MessagePath _streamPath = MessagePath.Get().Property("stream");
         #endregion
 
         /// <inheritdoc />
@@ -48,33 +43,59 @@ namespace HitoBit.Net.Clients.SpotApi
         internal HitoBitSocketClientSpotApi(ILogger logger, HitoBitSocketOptions options) :
             base(logger, options.Environment.SpotSocketStreamAddress, options, options.SpotOptions)
         {
-            SetDataInterpreter((data) => string.Empty, null);
-
             Account = new HitoBitSocketClientSpotApiAccount(logger, this);
             ExchangeData = new HitoBitSocketClientSpotApiExchangeData(logger, this);
             Trading = new HitoBitSocketClientSpotApiTrading(logger, this);
 
             _brokerId = !string.IsNullOrEmpty(options.SpotOptions.BrokerId) ? options.SpotOptions.BrokerId! : "x-VICEW9VV";
+
+            // When sending more than 4000 bytes the server responds very delayed (somehow connected to the websocket keep alive interval)
+            // See https://dev.hitobit.vision/t/socket-live-subscribing-server-delay/9645/2
+            // To prevent issues we keep below this
+            MessageSendSizeLimit = 4000;
+
+            RateLimiter = HitoBitExchange.RateLimiter.SpotSocket;
+
+            SetDedicatedConnection(ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), true);
         }
         #endregion
+
+        public IHitoBitSocketClientSpotApiShared SharedClient => this;
+
+        /// <inheritdoc />
+        public override string FormatSymbol(string baseAsset, string quoteAsset, TradingMode tradingMode, DateTime? deliverTime = null)
+                => HitoBitExchange.FormatSymbol(baseAsset, quoteAsset, tradingMode, deliverTime);
 
         /// <inheritdoc />
         protected override AuthenticationProvider CreateAuthenticationProvider(ApiCredentials credentials)
             => new HitoBitAuthenticationProvider(credentials);
 
-        internal Task<CallResult<UpdateSubscription>> SubscribeAsync<T>(string url, IEnumerable<string> topics, Action<DataEvent<T>> onData, CancellationToken ct)
-        {
-            var request = new HitoBitSocketRequest
-            {
-                Method = "SUBSCRIBE",
-                Params = topics.ToArray(),
-                Id = ExchangeHelpers.NextId()
-            };
+        protected override IMessageSerializer CreateSerializer() => new SystemTextJsonMessageSerializer();
 
-            return SubscribeAsync(url.AppendPath("stream"), request, null, false, onData, ct);
+        protected override IByteMessageAccessor CreateAccessor() => new SystemTextJsonByteMessageAccessor();
+
+        /// <inheritdoc />
+        public override string? GetListenerIdentifier(IMessageAccessor message)
+        {
+            var id = message.GetValue<int?>(_idPath);
+            if (id != null)
+                return id.ToString();
+
+            return message.GetValue<string>(_streamPath);
         }
 
-        internal Task<CallResult<HitoBitResponse<T>>> QueryAsync<T>(string url, string method, Dictionary<string, object> parameters, bool authenticated = false, bool sign = false, int weight = 1)
+        internal Task<CallResult<UpdateSubscription>> SubscribeAsync<T>(string url, IEnumerable<string> topics, Action<DataEvent<T>> onData, CancellationToken ct)
+        {
+            var subscription = new HitoBitSubscription<T>(_logger, topics.ToList(), onData, false);
+            return base.SubscribeAsync(url.AppendPath("stream"), subscription, ct);
+        }
+
+        internal Task<CallResult<UpdateSubscription>> SubscribeInternalAsync(string url, Subscription subscription, CancellationToken ct)
+        {
+            return base.SubscribeAsync(url.AppendPath("stream"), subscription, ct);
+        }
+
+        internal async Task<CallResult<HitoBitResponse<T>>> QueryAsync<T>(string url, string method, Dictionary<string, object> parameters, bool authenticated = false, bool sign = false, int weight = 1, CancellationToken ct = default)
         {
             if (authenticated)
             {
@@ -88,7 +109,7 @@ namespace HitoBit.Net.Clients.SpotApi
                 }
                 else
                 {
-                    parameters.Add("apiKey", authProvider.GetApiKey());
+                    parameters.Add("apiKey", authProvider.ApiKey);
                 }
             }
 
@@ -99,155 +120,22 @@ namespace HitoBit.Net.Clients.SpotApi
                 Id = ExchangeHelpers.NextId()
             };
 
-            return QueryAsync<HitoBitResponse<T>>(url, request, false, weight);
-        }
-
-        internal CallResult<T> DeserializeInternal<T>(JToken obj, JsonSerializer? serializer = null, int? requestId = null)
-        {
-            return base.Deserialize<T>(obj, serializer, requestId);
-        }
-
-        /// <inheritdoc />
-        protected override bool HandleQueryResponse<T>(SocketConnection s, object request, JToken data, out CallResult<T> callResult)
-        {
-            callResult = null!;
-            var bRequest = (HitoBitSocketQuery)request;
-            if (bRequest.Id != data["id"]?.Value<int>())
-                return false;
-
-            var status = data["status"]?.Value<int>();
-            if (status != 200)
+            var query = new HitoBitSpotQuery<HitoBitResponse<T>>(request, false, weight);
+            var result = await QueryAsync(url, query, ct).ConfigureAwait(false);
+            if (!result.Success && result.Error is HitoBitRateLimitError rle)
             {
-                var error = data["error"]!;
-
-                if (status == 429 || status == 418)
+                if (rle.RetryAfter != null && RateLimiter != null && ClientOptions.RateLimiterEnabled)
                 {
-                    DateTime? retryAfter = null;
-                    var retryAfterVal = error["data"]?["retryAfter"]?.ToString();
-                    if (long.TryParse(retryAfterVal, out var retryAfterMs))
-                        retryAfter = DateTimeConverter.ConvertFromMilliseconds(retryAfterMs);
-
-                    callResult = new CallResult<T>(new ServerRateLimitError(error["msg"]!.Value<string>()!)
-                    {
-                        RetryAfter = retryAfter
-                    });
+                    _logger.LogWarning("Ratelimit error from server, pausing requests until {Until}", rle.RetryAfter.Value);
+                    await RateLimiter.SetRetryAfterGuardAsync(rle.RetryAfter.Value).ConfigureAwait(false);
                 }
-                else
-                    callResult = new CallResult<T>(new ServerError(error["code"]!.Value<int>(), error["msg"]!.Value<string>()!));
-                return true;
-            }
-            callResult = Deserialize<T>(data!);
-            return true;
-        }
-
-        /// <inheritdoc />
-        protected override bool HandleSubscriptionResponse(SocketConnection s, SocketSubscription subscription, object request, JToken message, out CallResult<object>? callResult)
-        {
-            callResult = null;
-            if (message.Type != JTokenType.Object)
-                return false;
-
-            var id = message["id"];
-            if (id == null)
-                return false;
-
-            var bRequest = (HitoBitSocketRequest)request;
-            if ((int)id != bRequest.Id)
-                return false;
-
-            var result = message["result"];
-            if (result != null && result.Type == JTokenType.Null)
-            {
-                _logger.Log(LogLevel.Trace, $"Socket {s.SocketId} Subscription completed");
-                callResult = new CallResult<object>(new object());
-                return true;
             }
 
-            var error = message["error"];
-            if (error == null)
-            {
-                callResult = new CallResult<object>(new ServerError("Unknown error: " + message));
-                return true;
-            }
-
-            callResult = new CallResult<object>(new ServerError(error["code"]!.Value<int>(), error["msg"]!.ToString()));
-            return true;
-        }
-
-        /// <inheritdoc />
-        protected override bool MessageMatchesHandler(SocketConnection socketConnection, JToken message, object request)
-        {
-            if (message.Type != JTokenType.Object)
-                return false;
-
-            var bRequest = (HitoBitSocketRequest)request;
-            var stream = message["stream"];
-            if (stream == null)
-                return false;
-
-            return bRequest.Params.Contains(stream.ToString());
-        }
-
-        /// <inheritdoc />
-        protected override bool MessageMatchesHandler(SocketConnection socketConnection, JToken message, string identifier)
-        {
-            return true;
-        }
-
-        /// <inheritdoc />
-        protected override Task<CallResult<bool>> AuthenticateSocketAsync(SocketConnection s)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        protected override async Task<bool> UnsubscribeAsync(SocketConnection connection, SocketSubscription subscription)
-        {
-            var topics = ((HitoBitSocketRequest)subscription.Request!).Params;
-            var topicsToUnsub = new List<string>();
-            foreach (var topic in topics)
-            {
-                if (connection.Subscriptions.Where(s => s != subscription).Any(s => ((HitoBitSocketRequest?)s.Request)?.Params.Contains(topic) == true))
-                    continue;
-
-                topicsToUnsub.Add(topic);
-            }
-
-            if (!topicsToUnsub.Any())
-            {
-                _logger.LogInformation("No topics need unsubscribing (still active on other subscriptions)");
-                return true;
-            }
-
-            var unsub = new HitoBitSocketRequest { Method = "UNSUBSCRIBE", Params = topicsToUnsub.ToArray(), Id = ExchangeHelpers.NextId() };
-            var result = false;
-
-            if (!connection.Connected)
-                return true;
-
-            await connection.SendAndWaitAsync(unsub, ClientOptions.RequestTimeout, null, 1, data =>
-            {
-                if (data.Type != JTokenType.Object)
-                    return false;
-
-                var id = data["id"];
-                if (id == null)
-                    return false;
-
-                if ((int)id != unsub.Id)
-                    return false;
-
-                var result = data["result"];
-                if (result?.Type == JTokenType.Null)
-                {
-                    result = true;
-                    return true;
-                }
-
-                return true;
-            }).ConfigureAwait(false);
             return result;
         }
+
+        /// <inheritdoc />
+        protected override Task<Query?> GetAuthenticationRequestAsync(SocketConnection connection) => Task.FromResult<Query?>(null);
 
         internal async Task<HitoBitTradeRuleResult> CheckTradeRules(string symbol, decimal? quantity, decimal? quoteQuantity, decimal? price, decimal? stopPrice, SpotOrderType? type)
         {
@@ -262,6 +150,5 @@ namespace HitoBit.Net.Clients.SpotApi
 
             return HitoBitHelpers.ValidateTradeRules(_logger, ApiOptions.TradeRulesBehaviour, _exchangeInfo, symbol, quantity, quoteQuantity, price, stopPrice, type);
         }
-
     }
 }

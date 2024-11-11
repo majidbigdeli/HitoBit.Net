@@ -1,0 +1,95 @@
+﻿using HitoBit.Net.Enums;
+
+namespace HitoBit.Net.Objects.Models.Futures
+{
+    /// <summary>
+    /// The history of order edits
+    /// </summary>
+    public record HitoBitFuturesOrderEditHistory
+    {
+        /// <summary>
+        /// The symbol the order is for
+        /// </summary>
+        [JsonPropertyName("symbol")]
+        public string Symbol { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Pair
+        /// </summary>
+        [JsonPropertyName("pair")]
+        public string? Pair { get; set; }
+
+        /// <summary>
+        /// The id of the amendment
+        /// </summary>
+        [JsonPropertyName("amendmentId")]
+        public long AmendmentId { get; set; }
+        /// <summary>
+        /// The order id as assigned by HitoBit
+        /// </summary>
+        [JsonPropertyName("orderId")]
+        public long Id { get; set; }
+        /// <summary>
+        /// The order id as assigned by the client
+        /// </summary>
+        [JsonPropertyName("clientOrderId")]
+        public string? ClientOrderId { get; set; }
+        /// <summary>
+        /// Edit time
+        /// </summary>
+        [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("time")]
+        public DateTime Timestamp { get; set; }
+        /// <summary>
+        /// Edit info
+        /// </summary>
+        [JsonPropertyName("amendment")]
+        public HitoBitFuturesOrderChanges EditInfo { get; set; } = null!;
+        /// <summary>
+        /// Price match
+        /// </summary>
+        [JsonPropertyName("priceMatch"), JsonConverter(typeof(EnumConverter))]
+        public PriceMatch PriceMatch { get; set; }
+
+    }
+
+    /// <summary>
+    /// Order changes
+    /// </summary>
+    public record HitoBitFuturesOrderChanges
+    {
+        /// <summary>
+        /// Price change
+        /// </summary>
+        [JsonPropertyName("price")]
+        public HitoBitFuturesOrderChange Price { get; set; } = null!;
+        /// <summary>
+        /// Quantity change
+        /// </summary>
+        [JsonPropertyName("origQty")]
+        public HitoBitFuturesOrderChange Quantity { get; set; } = null!;
+
+        /// <summary>
+        /// Amount of times changed
+        /// </summary>
+        [JsonPropertyName("count")]
+        public int EditCount { get; set; }
+    }
+    
+    /// <summary>
+    /// Change info
+    /// </summary>
+    public record HitoBitFuturesOrderChange
+    {
+        /// <summary>
+        /// Before edit
+        /// </summary>
+        [JsonPropertyName("before")]
+        public decimal Before { get; set; }
+        /// <summary>
+        /// After edit
+        /// </summary>
+        [JsonPropertyName("after")]
+        public decimal After { get; set; }
+    }
+}

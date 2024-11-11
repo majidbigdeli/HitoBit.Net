@@ -1,28 +1,26 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
+﻿namespace HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData
 {
     /// <summary>
     /// Sub Account
     /// </summary>
-    public class HitoBitBrokerageSubAccount : HitoBitBrokerageSubAccountCommission
+    public record HitoBitBrokerageSubAccount : HitoBitBrokerageSubAccountCommission
     {
         /// <summary>
         /// Email
         /// </summary>
+        [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Tag
         /// </summary>
+        [JsonPropertyName("tag")]
         public string Tag { get; set; } = string.Empty;
 
         /// <summary>
         /// Create Date
         /// </summary>
-        [JsonProperty("createTime"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("createTime"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime CreateDate { get; set; }
     }
 }

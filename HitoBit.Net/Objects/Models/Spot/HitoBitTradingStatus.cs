@@ -1,67 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using HitoBit.Net.Enums;
 
 namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// Trade status
     /// </summary>
-    public class HitoBitTradingStatus
+    public record HitoBitTradingStatus
     {
         /// <summary>
         /// Is locked
         /// </summary>
+        [JsonPropertyName("isLocked")]
         public bool IsLocked { get; set; }
         /// <summary>
         /// Planned time of recovery
         /// </summary>
+        [JsonPropertyName("plannedRecoverTime")]
         public int PlannedRecoverTime { get; set; }
 
         /// <summary>
         /// Conditions
         /// </summary>
-        [JsonProperty("triggerCondition")]
+        [JsonPropertyName("triggerCondition")]
         public Dictionary<string, int> TriggerConditions { get; set; } = new Dictionary<string, int>();
 
         /// <summary>
         /// Dictionary of indicator lists for symbols
         /// </summary>
+        [JsonPropertyName("indicators")]
         public Dictionary<string, IEnumerable<HitoBitIndicator>> Indicators { get; set; } = new Dictionary<string, IEnumerable<HitoBitIndicator>>();
         /// <summary>
         /// Last update time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("updateTime")]
         public DateTime UpdateTime { get; set; }
     }
 
     /// <summary>
     /// Indicator info
     /// </summary>
-    public class HitoBitIndicator
+    public record HitoBitIndicator
     {
         /// <summary>
         /// Indicator name
         /// </summary>
-        [JsonProperty("i")]
+        [JsonPropertyName("i")]
         public IndicatorType IndicatorType { get; set; }
 
         /// <summary>
         /// Count
         /// </summary>
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public int Count { get; set; }
         /// <summary>
         /// Current value
         /// </summary>
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public decimal CurrentValue { get; set; }
         /// <summary>
         /// Trigger value
         /// </summary>
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public decimal TriggerValue { get; set; }
     }
 }

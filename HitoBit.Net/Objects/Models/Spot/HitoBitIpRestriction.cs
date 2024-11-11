@@ -1,32 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot
+﻿namespace HitoBit.Net.Objects.Models.Spot
 {
     /// <summary>
     /// IP restriction info
     /// </summary>
-    public class HitoBitIpRestriction
+    public record HitoBitIpRestriction
     {
         /// <summary>
         /// Is currently restricted
         /// </summary>
-        [JsonProperty("ipRestrict")]
+        [JsonPropertyName("ipRestrict")]
         public bool IpRestricted { get; set; }
         /// <summary>
         /// Ip whitelist
         /// </summary>
+        [JsonPropertyName("ipList")]
         public IEnumerable<string> IpList { get; set; } = Array.Empty<string>();
         /// <summary>
         /// Update Time
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("updateTime")]
         public DateTime UpdateTime { get; set; }
         /// <summary>
         /// The API key
         /// </summary>
+        [JsonPropertyName("apiKey")]
         public string ApiKey { get; set; } = string.Empty;
     }
 }

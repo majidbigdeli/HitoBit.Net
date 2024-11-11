@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// Lending type
@@ -8,14 +10,17 @@
         /// <summary>
         /// Flexible
         /// </summary>
+        [Map("DAILY")]
         Daily,
         /// <summary>
         /// Activity
         /// </summary>
+        [Map("ACTIVITY")]
         Activity,
         /// <summary>
         /// Customized fixed
         /// </summary>
+        [Map("CUSTOMIZED_FIXED")]
         CustomizedFixed
     }
 }

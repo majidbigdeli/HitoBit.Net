@@ -1,36 +1,34 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Futures
+﻿namespace HitoBit.Net.Objects.Models.Futures
 {
     /// <summary>
     /// Long Short Ratio Info
     /// </summary>
-    public class HitoBitFuturesLongShortRatio
+    public record HitoBitFuturesLongShortRatio
     {
         /// <summary>
         /// The symbol or pair the information is about
         /// </summary>
-        [JsonProperty("symbol")]
+        [JsonPropertyName("symbol")]
         public string SymbolPair { get; set; } = string.Empty;
 
         /// <summary>
         /// Pair
         /// </summary>
+        [JsonPropertyName("pair")]
         public string? Pair { get; set; } = string.Empty;
 
         /// <summary>
         /// long/short ratio
         /// </summary>
+        [JsonPropertyName("longShortRatio")]
         public decimal LongShortRatio { get; set; }
 
         /// <summary>
         /// longs percentage (in decimal form)
         /// </summary>
-        [JsonProperty("longAccount")]
+        [JsonPropertyName("longAccount")]
         public decimal LongAccount { get; set; }
-        [JsonProperty("longPosition")]
+        [JsonPropertyName("longPosition")]
         private decimal LongPosition
         {
             set => LongAccount = value;
@@ -39,9 +37,9 @@ namespace HitoBit.Net.Objects.Models.Futures
         /// <summary>
         /// shorts percentage (in decimal form)
         /// </summary>
-        [JsonProperty("shortAccount")]
+        [JsonPropertyName("shortAccount")]
         public decimal ShortAccount { get; set; }
-        [JsonProperty("shortPosition")]
+        [JsonPropertyName("shortPosition")]
         private decimal ShortPosition
         {
             set => ShortAccount = value;
@@ -49,7 +47,7 @@ namespace HitoBit.Net.Objects.Models.Futures
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("timestamp"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("timestamp"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime? Timestamp { get; set; }
     }
 }

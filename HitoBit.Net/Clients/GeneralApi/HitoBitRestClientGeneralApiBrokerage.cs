@@ -1,54 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces.Clients.GeneralApi;
 using HitoBit.Net.Objects.Models.Spot.Brokerage.SubAccountData;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
-using HitoBit.Net.Converters;
-using HitoBit.Net.Enums;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Clients.GeneralApi
 {
     /// <inheritdoc />
-    public class HitoBitRestClientGeneralApiBrokerage : IHitoBitRestClientGeneralApiBrokerage
+    internal class HitoBitRestClientGeneralApiBrokerage : IHitoBitRestClientGeneralApiBrokerage
     {
-        private const string brokerageApi = "sapi";
-        private const string brokerageVersion = "1";
-
-        private const string subAccountEndpoint = "broker/subAccount";
-        private const string brokerAccountInfoEndpoint = "broker/info";
-        private const string enableMarginForSubAccountEndpoint = "broker/subAccount/margin";
-        private const string enableFuturesForSubAccountEndpoint = "broker/subAccount/futures";
-        private const string enableLeverageTokenForSubAccountEndpoint = "broker/subAccount/blvt";
-        private const string apiKeyEndpoint = "broker/subAccountApi";
-        private const string apiKeyPermissionEndpoint = "broker/subAccountApi/permission";
-        private const string apiKeyCommissionEndpoint = "broker/subAccountApi/commission";
-        private const string apiKeyCommissionFuturesEndpoint = "broker/subAccountApi/commission/futures";
-        private const string apiKeyCommissionCoinFuturesEndpoint = "broker/subAccountApi/commission/coinFutures";
-        private const string apiKeyIpRestrictionEndpoint = "broker/subAccountApi/ipRestriction";
-        private const string apiKeyIpRestrictionListEndpoint = "broker/subAccountApi/ipRestriction/ipList";
-        private const string transferEndpoint = "broker/transfer";
-        private const string transferUniversalEndpoint = "broker/universalTransfer";
-        private const string transferFuturesEndpoint = "broker/transfer/futures";
-        private const string rebatesRecentEndpoint = "broker/rebate/recentRecord";
-        private const string rebatesHistoryEndpoint = "broker/rebate/historicalRecord";
-        private const string rebatesFuturesHistoryEndpoint = "broker/rebate/futures/recentRecord";
-        private const string changeBnbBurnForSubAccountSpotAndMarginEndpoint = "broker/subAccount/bnbBurn/spot";
-        private const string changeBnbBurnForSubAccountMarginInterestEndpoint = "broker/subAccount/bnbBurn/marginInterest";
-        private const string bnbBurnForSubAccountStatusEndpoint = "broker/subAccount/bnbBurn/status";
-        private const string spotSummaryEndpoint = "broker/subAccount/spotSummary";
-        private const string marginSummaryEndpoint = "broker/subAccount/marginSummary";
-        private const string futuresSummaryEndpoint = "broker/subAccount/futuresSummary";
-        private const string depositHistoryEndpoint = "broker/subAccount/depositHist";
-
         private readonly HitoBitRestClientGeneralApi _baseClient;
 
         internal HitoBitRestClientGeneralApiBrokerage(HitoBitRestClientGeneralApi baseClient)
@@ -64,7 +23,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             var parameters = new Dictionary<string, object>();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountCreateResult>(_baseClient.GetUrl(subAccountEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountCreateResult>(_baseClient.GetUrl("broker/subAccount", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -76,7 +35,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("size", size?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccount>>(_baseClient.GetUrl(subAccountEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccount>>(_baseClient.GetUrl("broker/subAccount", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -95,7 +54,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageEnableMarginResult>(_baseClient.GetUrl(enableMarginForSubAccountEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageEnableMarginResult>(_baseClient.GetUrl("broker/subAccount/margin", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -109,7 +68,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageEnableFuturesResult>(_baseClient.GetUrl(enableFuturesForSubAccountEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageEnableFuturesResult>(_baseClient.GetUrl("broker/subAccount/futures", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -124,7 +83,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageEnableLeverageTokenResult>(_baseClient.GetUrl(enableLeverageTokenForSubAccountEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageEnableLeverageTokenResult>(_baseClient.GetUrl("broker/subAccount/blvt", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -146,11 +105,11 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("futuresTrade", isFuturesTradingEnabled.ToString().ToLower());
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageApiKeyCreateResult>(_baseClient.GetUrl(apiKeyEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageApiKeyCreateResult>(_baseClient.GetUrl("broker/subAccountApi", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
-        public async Task<object> DeleteSubAccountApiKeyAsync(string subAccountId, string apiKey, int? receiveWindow = null, CancellationToken ct = default)
+        public async Task<WebCallResult> DeleteSubAccountApiKeyAsync(string subAccountId, string apiKey, int? receiveWindow = null, CancellationToken ct = default)
         {
             subAccountId.ValidateNotNull(nameof(subAccountId));
             apiKey.ValidateNotNull(nameof(apiKey));
@@ -162,7 +121,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(apiKeyEndpoint, brokerageApi, brokerageVersion), HttpMethod.Delete, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal(_baseClient.GetUrl("broker/subAccountApi", "sapi", "1"), HttpMethod.Delete, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -179,7 +138,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("size", size);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountApiKey>(_baseClient.GetUrl(apiKeyEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountApiKey>(_baseClient.GetUrl("broker/subAccountApi", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -199,7 +158,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountApiKey>(_baseClient.GetUrl(apiKeyPermissionEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountApiKey>(_baseClient.GetUrl("broker/subAccountApi/permission", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -218,7 +177,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageAddIpRestrictionResult>(_baseClient.GetUrl(apiKeyIpRestrictionListEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageAddIpRestrictionResult>(_baseClient.GetUrl("broker/subAccountApi/ipRestriction/ipList", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -236,7 +195,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageIpRestriction>(_baseClient.GetUrl(apiKeyIpRestrictionEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageIpRestriction>(_baseClient.GetUrl("broker/subAccountApi/ipRestriction", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -253,7 +212,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageIpRestriction>(_baseClient.GetUrl(apiKeyIpRestrictionEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageIpRestriction>(_baseClient.GetUrl("broker/subAccountApi/ipRestriction", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -272,7 +231,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageIpRestrictionBase>(_baseClient.GetUrl(apiKeyIpRestrictionListEndpoint, brokerageApi, brokerageVersion), HttpMethod.Delete, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageIpRestrictionBase>(_baseClient.GetUrl("broker/subAccountApi/ipRestriction/ipList", "sapi", "1"), HttpMethod.Delete, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -296,7 +255,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("marginTakerCommission", marginTakerCommission?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountCommission>(_baseClient.GetUrl(apiKeyCommissionEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountCommission>(_baseClient.GetUrl("broker/subAccountApi/commission", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -315,7 +274,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountFuturesCommission>(_baseClient.GetUrl(apiKeyCommissionFuturesEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountFuturesCommission>(_baseClient.GetUrl("broker/subAccountApi/commission/futures", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -331,7 +290,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("symbol", symbol);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccountFuturesCommission>>(_baseClient.GetUrl(apiKeyCommissionFuturesEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccountFuturesCommission>>(_baseClient.GetUrl("broker/subAccountApi/commission/futures", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -350,7 +309,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountCoinFuturesCommission>(_baseClient.GetUrl(apiKeyCommissionCoinFuturesEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSubAccountCoinFuturesCommission>(_baseClient.GetUrl("broker/subAccountApi/commission/coinFutures", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -366,7 +325,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("pair", pair);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccountFuturesCommission>>(_baseClient.GetUrl(apiKeyCommissionCoinFuturesEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccountFuturesCommission>>(_baseClient.GetUrl("broker/subAccountApi/commission/coinFutures", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -383,7 +342,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("size", size?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageSpotAssetInfo>(_baseClient.GetUrl(spotSummaryEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageSpotAssetInfo>(_baseClient.GetUrl("broker/subAccount/spotSummary", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -396,23 +355,21 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("size", size?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageMarginAssetInfo>(_baseClient.GetUrl(marginSummaryEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageMarginAssetInfo>(_baseClient.GetUrl("broker/subAccount/marginSummary", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitBrokerageFuturesAssetInfo>> GetSubAccountFuturesAssetInfoAsync(HitoBitBrokerageFuturesType futuresType,
+        public async Task<WebCallResult<HitoBitBrokerageFuturesAssetInfo>> GetSubAccountFuturesAssetInfoAsync(FuturesAccountType futuresType,
             string? subAccountId = null, int? page = null, int? size = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
-                             {
-                                 {"futuresType", ((int)futuresType).ToString(CultureInfo.InvariantCulture)}
-                             };
+            var parameters = new ParameterCollection();
+            parameters.AddEnum("futuresType", futuresType);
             parameters.AddOptionalParameter("subAccountId", subAccountId);
             parameters.AddOptionalParameter("page", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("size", size?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageFuturesAssetInfo>(_baseClient.GetUrl(futuresSummaryEndpoint, brokerageApi, "2"), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageFuturesAssetInfo>(_baseClient.GetUrl("broker/subAccount/futuresSummary", "sapi", "2"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -432,7 +389,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageChangeBnbBurnSpotAndMarginResult>(_baseClient.GetUrl(changeBnbBurnForSubAccountSpotAndMarginEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageChangeBnbBurnSpotAndMarginResult>(_baseClient.GetUrl("broker/subAccount/bnbBurn/spot", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -448,7 +405,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageChangeBnbBurnMarginInterestResult>(_baseClient.GetUrl(changeBnbBurnForSubAccountMarginInterestEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageChangeBnbBurnMarginInterestResult>(_baseClient.GetUrl("broker/subAccount/bnbBurn/marginInterest", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -462,7 +419,7 @@ namespace HitoBit.Net.Clients.GeneralApi
                              };
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageBnbBurnStatus>(_baseClient.GetUrl(bnbBurnForSubAccountStatusEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageBnbBurnStatus>(_baseClient.GetUrl("broker/subAccount/bnbBurn/status", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -476,19 +433,19 @@ namespace HitoBit.Net.Clients.GeneralApi
         {
             asset.ValidateNotNull(nameof(asset));
 
-            var parameters = new Dictionary<string, object>
-                             {
-                                 {"asset", asset},
-                                 {"amount", quantity.ToString(CultureInfo.InvariantCulture)},
-                                 {"fromAccountType", JsonConvert.SerializeObject(fromAccountType, new BrokerageAccountTypeConverter(false))},
-                                 {"toAccountType", JsonConvert.SerializeObject(toAccountType, new BrokerageAccountTypeConverter(false))}
-                             };
+            var parameters = new ParameterCollection()
+            {
+                {"asset", asset},
+                {"amount", quantity.ToString(CultureInfo.InvariantCulture)}
+            };
+            parameters.AddEnum("fromAccountType", fromAccountType);
+            parameters.AddEnum("toAccountType", toAccountType);
             parameters.AddOptionalParameter("fromId", fromId);
             parameters.AddOptionalParameter("toId", toId);
             parameters.AddOptionalParameter("clientTranId", clientTransferId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferResult>(_baseClient.GetUrl(transferUniversalEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferResult>(_baseClient.GetUrl("broker/universalTransfer", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -509,7 +466,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageTransferTransactionUniversal>>(_baseClient.GetUrl(transferUniversalEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageTransferTransactionUniversal>>(_baseClient.GetUrl("broker/universalTransfer", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -528,27 +485,27 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("clientTranId", clientTransferId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferResult>(_baseClient.GetUrl(transferEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferResult>(_baseClient.GetUrl("broker/transfer", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
-        public async Task<WebCallResult<HitoBitBrokerageTransferFuturesResult>> TransferFuturesAsync(string asset, decimal quantity, HitoBitBrokerageFuturesType futuresType,
+        public async Task<WebCallResult<HitoBitBrokerageTransferFuturesResult>> TransferFuturesAsync(string asset, decimal quantity, FuturesAccountType futuresType,
             string? fromId, string? toId, string? clientTransferId = null, int? receiveWindow = null, CancellationToken ct = default)
         {
             asset.ValidateNotNull(nameof(asset));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
                              {
                                  {"asset", asset},
                                  {"amount", quantity.ToString(CultureInfo.InvariantCulture)},
-                                 {"futuresType", ((int)futuresType).ToString(CultureInfo.InvariantCulture)}
                              };
+            parameters.AddEnum("futuresType", futuresType);
             parameters.AddOptionalParameter("fromId", fromId);
             parameters.AddOptionalParameter("toId", toId);
             parameters.AddOptionalParameter("clientTranId", clientTransferId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferFuturesResult>(_baseClient.GetUrl(transferFuturesEndpoint, brokerageApi, brokerageVersion), HttpMethod.Post, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferFuturesResult>(_baseClient.GetUrl("broker/transfer/futures", "sapi", "1"), HttpMethod.Post, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -569,21 +526,21 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageTransferTransaction>>(_baseClient.GetUrl(transferEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageTransferTransaction>>(_baseClient.GetUrl("broker/transfer", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitBrokerageTransferFuturesTransactions>> GetTransferFuturesHistoryAsync(string subAccountId,
-            HitoBitBrokerageFuturesType futuresType, DateTime? startDate = null, DateTime? endDate = null,
+            FuturesAccountType futuresType, DateTime? startDate = null, DateTime? endDate = null,
             int? page = null, int? limit = null, string? clientTransferId = null, int? receiveWindow = null, CancellationToken ct = default)
         {
             subAccountId.ValidateNotNull(nameof(subAccountId));
 
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection()
                              {
-                                 {"subAccountId", subAccountId},
-                                 {"futuresType", ((int)futuresType).ToString(CultureInfo.InvariantCulture)}
+                                 {"subAccountId", subAccountId}
                              };
+            parameters.AddEnum("futuresType", futuresType);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startDate));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endDate));
             parameters.AddOptionalParameter("page", page?.ToString(CultureInfo.InvariantCulture));
@@ -591,25 +548,25 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("clientTranId", clientTransferId);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferFuturesTransactions>(_baseClient.GetUrl(transferFuturesEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageTransferFuturesTransactions>(_baseClient.GetUrl("broker/transfer/futures", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitBrokerageSubAccountDepositTransaction>>> GetSubAccountDepositHistoryAsync(string? subAccountId = null,
-            string? asset = null, HitoBitBrokerageSubAccountDepositStatus? status = null, DateTime? startDate = null, DateTime? endDate = null,
+            string? asset = null, SubAccountDepositStatus? status = null, DateTime? startDate = null, DateTime? endDate = null,
             int? limit = null, int? offset = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("subAccountId", subAccountId);
             parameters.AddOptionalParameter("coin", asset);
-            parameters.AddOptionalParameter("status", status.HasValue ? ((int)status).ToString(CultureInfo.InvariantCulture) : null);
+            parameters.AddOptionalEnum("status", status);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startDate));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endDate));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("offset", offset?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccountDepositTransaction>>(_baseClient.GetUrl(depositHistoryEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageSubAccountDepositTransaction>>(_baseClient.GetUrl("broker/subAccount/depositHist", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -622,7 +579,7 @@ namespace HitoBit.Net.Clients.GeneralApi
             var parameters = new Dictionary<string, object>();
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<HitoBitBrokerageAccountInfo>(_baseClient.GetUrl(brokerAccountInfoEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<HitoBitBrokerageAccountInfo>(_baseClient.GetUrl("broker/info", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion
@@ -645,24 +602,24 @@ namespace HitoBit.Net.Clients.GeneralApi
             parameters.AddOptionalParameter("size", size?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageRebate>>(_baseClient.GetUrl(rebatesRecentEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageRebate>>(_baseClient.GetUrl("broker/rebate/recentRecord", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
-        public async Task<WebCallResult<IEnumerable<HitoBitBrokerageFuturesRebate>>> GetBrokerFuturesCommissionRebatesHistoryAsync(HitoBitBrokerageFuturesType futuresType,
+        public async Task<WebCallResult<IEnumerable<HitoBitBrokerageFuturesRebate>>> GetBrokerFuturesCommissionRebatesHistoryAsync(FuturesAccountType futuresType,
             DateTime startDate, DateTime endDate, int? page = null, int? size = null, int? receiveWindow = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
                              {
-                                 {"futuresType", ((int)futuresType).ToString(CultureInfo.InvariantCulture)},
                                  {"startTime", DateTimeConverter.ConvertToMilliseconds(startDate)!},
                                  {"endTime",  DateTimeConverter.ConvertToMilliseconds(endDate)!}
                              };
+            parameters.AddEnum("futuresType", futuresType);
             parameters.AddOptionalParameter("page", page?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("size", size?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? _baseClient.ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageFuturesRebate>>(_baseClient.GetUrl(rebatesFuturesHistoryEndpoint, brokerageApi, brokerageVersion), HttpMethod.Get, ct, parameters, true).ConfigureAwait(false);
+            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitBrokerageFuturesRebate>>(_baseClient.GetUrl("broker/rebate/futures/recentRecord", "sapi", "1"), HttpMethod.Get, ct, parameters, true, weight: 0).ConfigureAwait(false);
         }
 
         #endregion

@@ -10,7 +10,7 @@
         /// </summary>
         ExternalTransfer,
         /// <summary>
-        /// Withdrawal from one HitoBit account to another one
+        /// Withdrawal from one hitobit account to another one
         /// </summary>
         InternalTransfer
     }

@@ -1,44 +1,46 @@
-﻿using System;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-
-namespace HitoBit.Net.Objects.Models.Spot.Blvt
+﻿namespace HitoBit.Net.Objects.Models.Spot.Blvt
 {
     /// <summary>
     /// Leveraged token subscription info
     /// </summary>
-    public class HitoBitBlvtSubscription
+    public record HitoBitBlvtSubscription
     {
         /// <summary>
         /// Id
         /// </summary>
+        [JsonPropertyName("id")]
         public long Id { get; set; }
 
         /// <summary>
         /// Token name
         /// </summary>
+        [JsonPropertyName("tokenName")]
         public string TokenName { get; set; } = string.Empty;
         /// <summary>
         /// Subscription quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
         /// <summary>
         /// NAV price of subscription
         /// </summary>
+        [JsonPropertyName("nav")]
         public decimal Nav { get; set; }
         /// <summary>
         /// Subscription fee in usdt
         /// </summary>
+        [JsonPropertyName("fee")]
         public decimal Fee { get; set; }
         /// <summary>
         /// Subscription cost in usdt
         /// </summary>
+        [JsonPropertyName("totalCharge")]
         public decimal TotalCharge { get; set; }
         /// <summary>
         /// Timestamp
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("timestamp")]
         public DateTime Timestamp { get; set; }
     }
 }

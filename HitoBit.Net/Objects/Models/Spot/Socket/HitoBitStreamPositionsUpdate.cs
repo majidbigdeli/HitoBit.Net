@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Interfaces;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
+﻿using HitoBit.Net.Interfaces;
 
 namespace HitoBit.Net.Objects.Models.Spot.Socket
 {
     /// <summary>
     /// Positions update
     /// </summary>
-    public class HitoBitStreamPositionsUpdate : HitoBitStreamEvent
+    public record HitoBitStreamPositionsUpdate : HitoBitStreamEvent
     {
         /// <summary>
         /// Time of last account update
         /// </summary>
-        [JsonProperty("u"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("u"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime Timestamp { get; set; }
         /// <summary>
         /// The listen key the update was for
@@ -23,29 +19,29 @@ namespace HitoBit.Net.Objects.Models.Spot.Socket
         /// <summary>
         /// Balances
         /// </summary>
-        [JsonProperty("B")]
+        [JsonPropertyName("B")]
         public IEnumerable<HitoBitStreamBalance> Balances { get; set; } = Array.Empty<HitoBitStreamBalance>();
     }
 
     /// <summary>
     /// Information about an asset balance
     /// </summary>
-    public class HitoBitStreamBalance: IHitoBitBalance
+    public record HitoBitStreamBalance: IHitoBitBalance
     {
         /// <summary>
         /// The asset this balance is for
         /// </summary>
-        [JsonProperty("a")]
+        [JsonPropertyName("a")]
         public string Asset { get; set; } = string.Empty;
         /// <summary>
         /// The quantity that isn't locked in a trade
         /// </summary>
-        [JsonProperty("f")]
+        [JsonPropertyName("f")]
         public decimal Available { get; set; }
         /// <summary>
         /// The quantity that is currently locked in a trade
         /// </summary>
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public decimal Locked { get; set; }
         /// <summary>
         /// The total balance of this asset (Free + Locked)

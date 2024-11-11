@@ -1,4 +1,6 @@
-﻿namespace HitoBit.Net.Enums
+﻿using CryptoExchange.Net.Attributes;
+
+namespace HitoBit.Net.Enums
 {
     /// <summary>
     /// Sub account margin transfer type
@@ -8,10 +10,12 @@
         /// <summary>
         /// Sub account spot to sub account margin
         /// </summary>
+        [Map("1")]
         FromSubAccountSpotToSubAccountMargin,
         /// <summary>
         /// From sub account margin to sub account spot
         /// </summary>
+        [Map("2")]
         FromSubAccountMarginToSubAccountSpot
     }
 }

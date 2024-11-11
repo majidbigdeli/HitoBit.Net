@@ -1,93 +1,90 @@
-using System;
 using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Futures.Socket
 {
     /// <summary>
     /// A event received by a HitoBit websocket
     /// </summary>
-    public class HitoBitFuturesStreamLiquidationData : HitoBitStreamEvent
+    public record HitoBitFuturesStreamLiquidationData : HitoBitStreamEvent
     {
         /// <summary>
         /// The data of the event
         /// </summary>
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public HitoBitFuturesStreamLiquidation Data { get; set; } = default!;
     }
 
     /// <summary>
     /// 
     /// </summary>
-    public class HitoBitFuturesStreamLiquidation : IHitoBitFuturesLiquidation
+    public record HitoBitFuturesStreamLiquidation : IHitoBitFuturesLiquidation
     {
         /// <summary>
         /// Symbol
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Symbol { get; set; } = string.Empty;
 
         /// <summary>
         /// Liquidation Sided
         /// </summary>
-        [JsonProperty("S"), JsonConverter(typeof(OrderSideConverter))]
+        [JsonPropertyName("S")]
         public OrderSide Side { get; set; }
         
         /// <summary>
         /// Liquidation order type
         /// </summary>
-        [JsonProperty("o"), JsonConverter(typeof(FuturesOrderTypeConverter))]
+        [JsonPropertyName("o")]
         public FuturesOrderType Type { get; set; }
         
         /// <summary>
         /// Liquidation Time in Force
         /// </summary>
-        [JsonProperty("f"), JsonConverter(typeof(TimeInForceConverter))]
+        [JsonPropertyName("f")]
         public TimeInForce TimeInForce { get; set; }
         
         /// <summary>
         /// Liquidation Original Quantity
         /// </summary>
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public decimal Quantity { get; set; }
         
         /// <summary>
         /// Liquidation order price
         /// </summary>
-        [JsonProperty("p")]
+        [JsonPropertyName("p")]
         public decimal Price { get; set; }
         
         /// <summary>
         /// Liquidation Average Price
         /// </summary>
-        [JsonProperty("ap")]
+        [JsonPropertyName("ap")]
         public decimal AveragePrice { get; set; }
         
         /// <summary>
         /// Liquidation Order Status
         /// </summary>
-        [JsonProperty("X"), JsonConverter(typeof(OrderStatusConverter))]
+        [JsonPropertyName("X")]
         public OrderStatus Status { get; set; }
         
         /// <summary>
         /// Liquidation Last Filled Quantity
         /// </summary>
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public decimal LastQuantityFilled { get; set; }
         
         /// <summary>
         /// Liquidation Accumulated fill quantity
         /// </summary>
-        [JsonProperty("z")]
+        [JsonPropertyName("z")]
         public decimal QuantityFilled { get; set; }
         
         /// <summary>
         /// Liquidation Trade Time
         /// </summary>
-        [JsonProperty("T"), JsonConverter(typeof(DateTimeConverter))]
+        [JsonPropertyName("T"), JsonConverter(typeof(DateTimeConverter))]
         public DateTime Timestamp { get; set; }
     }
 }

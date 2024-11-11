@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using HitoBit.Net.Converters;
+﻿using HitoBit.Net.Converters;
 using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
 {
-    internal class HitoBitSubAccountUniversalTransfersList
+    internal record HitoBitSubAccountUniversalTransfersList
     {
         /// <summary>
         /// Transactions
         /// </summary>
-        [JsonProperty("result")]
+        [JsonPropertyName("result")]
         public IEnumerable<HitoBitSubAccountUniversalTransferTransaction> Transactions { get; set; } =
             new List<HitoBitSubAccountUniversalTransferTransaction>();
 
@@ -21,57 +17,61 @@ namespace HitoBit.Net.Objects.Models.Spot.SubAccountData
     /// <summary>
     /// HitoBit sub account universal transaction
     /// </summary>
-    public class HitoBitSubAccountUniversalTransferTransaction
+    public record HitoBitSubAccountUniversalTransferTransaction
     {
         /// <summary>
         /// Transaction id
         /// </summary>
-        [JsonProperty("tranId")]
+        [JsonPropertyName("tranId")]
         public long TransactionId { get; set; }
 
         /// <summary>
         /// From email
         /// </summary>
-        public string FromEmail { get; set; } = "";
+        [JsonPropertyName("fromEmail")]
+        public string FromEmail { get; set; } = string.Empty;
 
         /// <summary>
         /// To email
         /// </summary>
-        public string ToEmail { get; set; } = "";
+        [JsonPropertyName("toEmail")]
+        public string ToEmail { get; set; } = string.Empty;
 
         /// <summary>
         /// From account type
         /// </summary>
-        [JsonConverter(typeof(BrokerageAccountTypeConverter))]
-        public BrokerageAccountType FromAccountType { get; set; }
+        [JsonPropertyName("fromAccountType")]
+        public TransferAccountType FromAccountType { get; set; }
 
         /// <summary>
         /// To account type
         /// </summary>
-        [JsonConverter(typeof(BrokerageAccountTypeConverter))]
-        public BrokerageAccountType ToAccountType { get; set; }
+        [JsonPropertyName("toAccountType")]
+        public TransferAccountType ToAccountType { get; set; }
 
         /// <summary>
         /// Status
         /// </summary>
-        public string Status { get; set; } = "";
+        [JsonPropertyName("status")]
+        public string Status { get; set; } = string.Empty;
 
         /// <summary>
         /// Asset
         /// </summary>
-        public string Asset { get; set; } = "";
+        [JsonPropertyName("asset")]
+        public string Asset { get; set; } = string.Empty;
 
         /// <summary>
         /// Quantity
         /// </summary>
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public decimal Quantity { get; set; }
 
         /// <summary>
         /// The time the universal transaction was created
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
-        [JsonProperty("createTimeStamp")]
+        [JsonPropertyName("createTimeStamp")]
         public DateTime CreateTime { get; set; }
     }
 }

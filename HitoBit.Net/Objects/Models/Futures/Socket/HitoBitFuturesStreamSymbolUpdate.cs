@@ -1,92 +1,92 @@
 ﻿using HitoBit.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace HitoBit.Net.Objects.Models.Futures.Socket
 {
     /// <summary>
     /// Futures stream symbol update
     /// </summary>
-    public class HitoBitFuturesStreamSymbolUpdate : HitoBitStreamEvent
+    public record HitoBitFuturesStreamSymbolUpdate : HitoBitStreamEvent
     {
         /// <summary>
         /// Symbol
         /// </summary>
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public string Symbol { get; set; } = string.Empty;
         /// <summary>
         /// Pair
         /// </summary>
-        [JsonProperty("ps")]
+        [JsonPropertyName("ps")]
         public string Pair { get; set; } = string.Empty;
         /// <summary>
         /// Contract type
         /// </summary>
-        [JsonProperty("ct")]
+        [JsonPropertyName("ct")]
         [JsonConverter(typeof(EnumConverter))]
         public ContractType ContractType { get; set; }
         /// <summary>
         /// Delivery date
         /// </summary>
-        [JsonProperty("dt")]
+        [JsonPropertyName("dt")]
         [JsonConverter(typeof(DateTimeConverter))]
         public DateTime? DeliveryDate { get; set; }
         /// <summary>
         /// Onboard date
         /// </summary>
-        [JsonProperty("ot")]
+        [JsonPropertyName("ot")]
         [JsonConverter(typeof(DateTimeConverter))]
         public DateTime? OnboardDate { get; set; }
         /// <summary>
         /// Symbol status
         /// </summary>
-        [JsonProperty("cs")]
+        [JsonPropertyName("cs")]
         [JsonConverter(typeof(EnumConverter))]
         public SymbolStatus Status { get; set; }
         /// <summary>
         /// Brackets
         /// </summary>
-        [JsonProperty("bks")]
+        [JsonPropertyName("bks")]
         public IEnumerable<HitoBitBracketUpdate>? Brackets { get; set; }
     }
 
     /// <summary>
     /// Bracket update
     /// </summary>
-    public class HitoBitBracketUpdate
+    public record HitoBitBracketUpdate
     {
         /// <summary>
         /// Notional bracket
         /// </summary>
-        [JsonProperty("bs")]
+        [JsonPropertyName("bs")]
         public int NotionalBracket { get; set; }
         /// <summary>
         /// Floor notional
         /// </summary>
-        [JsonProperty("bnf")]
+        [JsonPropertyName("bnf")]
         public decimal FloorNotional { get; set; }
         /// <summary>
         /// Max notional
         /// </summary>
-        [JsonProperty("bnc")]
+        [JsonPropertyName("bnc")]
         public decimal MaxNotional { get; set; }
         /// <summary>
         /// Maintenance ratio
         /// </summary>
-        [JsonProperty("mmr")]
+        [JsonPropertyName("mmr")]
         public decimal MaintenanceRatio { get; set; }
         /// <summary>
         /// Min leverage
         /// </summary>
-        [JsonProperty("mi")]
+        [JsonPropertyName("mi")]
         public decimal MinLeverage { get; set; }
         /// <summary>
         /// Max leverage
         /// </summary>
-        [JsonProperty("ma")]
+        [JsonPropertyName("ma")]
         public decimal MaxLeverage { get; set; }
+        /// <summary>
+        /// Auxiliary number for quick calculation
+        /// </summary>
+        [JsonPropertyName("cf")]
+        public decimal Auxiliary { get; set; }
     }
 }

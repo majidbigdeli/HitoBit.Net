@@ -1,61 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using HitoBit.Net.Converters;
-using HitoBit.Net.Enums;
+﻿using HitoBit.Net.Enums;
 using HitoBit.Net.Interfaces;
 using HitoBit.Net.Interfaces.Clients.UsdFuturesApi;
 using HitoBit.Net.Objects.Models.Futures;
 using HitoBit.Net.Objects.Models.Spot;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Converters;
-using CryptoExchange.Net.Objects;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using CryptoExchange.Net.RateLimiting.Guards;
+using System.Diagnostics;
 
 namespace HitoBit.Net.Clients.UsdFuturesApi
 {
     /// <inheritdoc />
-    public class HitoBitRestClientUsdFuturesApiExchangeData : IHitoBitRestClientUsdFuturesApiExchangeData
+    internal class HitoBitRestClientUsdFuturesApiExchangeData : IHitoBitRestClientUsdFuturesApiExchangeData
     {
-        private const string orderBookEndpoint = "depth";
-        private const string aggregatedTradesEndpoint = "aggTrades";
-        private const string markPriceKlinesEndpoint = "markPriceKlines";
-
-        private const string fundingRateHistoryEndpoint = "fundingRate";
-
-        private const string topLongShortAccountRatioEndpoint = "topLongShortAccountRatio";
-        private const string topLongShortPositionRatioEndpoint = "topLongShortPositionRatio";
-        private const string globalLongShortAccountRatioEndpoint = "globalLongShortAccountRatio";
-
-        private const string recentTradesEndpoint = "trades";
-        private const string historicalTradesEndpoint = "historicalTrades";
-        private const string markPriceEndpoint = "premiumIndex";
-        private const string price24HEndpoint = "ticker/24hr";
-        private const string allPricesEndpoint = "ticker/price";
-        private const string bookPricesEndpoint = "ticker/bookTicker";
-        private const string openInterestEndpoint = "openInterest";
-        private const string openInterestHistoryEndpoint = "openInterestHist";
-        private const string takerBuySellVolumeRatioEndpoint = "takerlongshortRatio";
-        private const string compositeIndexapi = "indexInfo";
-        private const string klinesEndpoint = "klines";
-        private const string continuousContractKlineEndpoint = "continuousKlines";
-        private const string indexPriceKlinesKlineEndpoint = "indexPriceKlines";
-        private const string assetIndexEndpoint = "assetIndex";
-
-        private const string pingEndpoint = "ping";
-        private const string checkTimeEndpoint = "time";
-        private const string exchangeInfoEndpoint = "exchangeInfo";
-
-        private const string api = "fapi";
-        private const string publicVersion = "1";
-        private const string tradingDataapi = "futures/data";
-
         private readonly ILogger _logger;
+        private static readonly RequestDefinitionCache _definitions = new();
 
         private readonly HitoBitRestClientUsdFuturesApi _baseClient;
 
@@ -71,7 +28,8 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<long>> PingAsync(CancellationToken ct = default)
         {
             var sw = Stopwatch.StartNew();
-            var result = await _baseClient.SendRequestInternal<object>(_baseClient.GetUrl(pingEndpoint, api, "1"), HttpMethod.Get, ct).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/ping", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            var result = await _baseClient.SendAsync<object>(request, null, ct).ConfigureAwait(false);
             sw.Stop();
             return result ? result.As(sw.ElapsedMilliseconds) : result.As<long>(default!);
         }
@@ -83,8 +41,8 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<DateTime>> GetServerTimeAsync(bool resetAutoTimestamp = false, CancellationToken ct = default)
         {
-            var url = _baseClient.GetUrl(checkTimeEndpoint, api, "1");
-            var result = await _baseClient.SendRequestInternal<HitoBitCheckTime>(url, HttpMethod.Get, ct, ignoreRateLimit: true).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/time", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            var result = await _baseClient.SendAsync<HitoBitCheckTime>(request, null, ct).ConfigureAwait(false);
             return result.As(result.Data?.ServerTime ?? default);
         }
 
@@ -95,7 +53,8 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitFuturesUsdtExchangeInfo>> GetExchangeInfoAsync(CancellationToken ct = default)
         {
-            var exchangeInfoResult = await _baseClient.SendRequestInternal<HitoBitFuturesUsdtExchangeInfo>(_baseClient.GetUrl(exchangeInfoEndpoint, api, "1"), HttpMethod.Get, ct).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/exchangeInfo", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            var exchangeInfoResult = await _baseClient.SendAsync<HitoBitFuturesUsdtExchangeInfo>(request, null, ct).ConfigureAwait(false);
             if (!exchangeInfoResult)
                 return exchangeInfoResult;
 
@@ -113,11 +72,12 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<HitoBitFuturesOrderBook>> GetOrderBookAsync(string symbol, int? limit = null, CancellationToken ct = default)
         {
             limit?.ValidateIntValues(nameof(limit), 5, 10, 20, 50, 100, 500, 1000);
-            var parameters = new Dictionary<string, object> { { "symbol", symbol } };
+            var parameters = new ParameterCollection { { "symbol", symbol } };
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
             var requestWeight = limit == null ? 10 : limit <= 50 ? 2 : limit == 100 ? 5 : limit == 500 ? 10 : 20;
-            var result = await _baseClient.SendRequestInternal<HitoBitFuturesOrderBook>(_baseClient.GetUrl(orderBookEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: requestWeight).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/depth", HitoBitExchange.RateLimiter.FuturesRest, requestWeight);
+            var result = await _baseClient.SendAsync<HitoBitFuturesOrderBook>(request, parameters, ct, requestWeight).ConfigureAwait(false);
             if (result && string.IsNullOrEmpty(result.Data.Symbol))
                 result.Data.Symbol = symbol;
             return result.As(result.Data);
@@ -132,13 +92,25 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1000);
 
-            var parameters = new Dictionary<string, object> { { "symbol", symbol } };
+            var parameters = new ParameterCollection { { "symbol", symbol } };
             parameters.AddOptionalParameter("fromId", fromId?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitAggregatedTrade>>(_baseClient.GetUrl(aggregatedTradesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: 20).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/aggTrades", HitoBitExchange.RateLimiter.FuturesRest, 20);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitAggregatedTrade>>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Funding Info
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitFuturesFundingInfo>>> GetFundingInfoAsync(CancellationToken ct = default)
+        {
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/fundingInfo", HitoBitExchange.RateLimiter.FuturesRest, 0);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesFundingInfo>>(request, null, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -149,14 +121,16 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<IEnumerable<HitoBitFuturesFundingRateHistory>>> GetFundingRatesAsync(string symbol, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1000);
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "symbol", symbol }
             };
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesFundingRateHistory>>(_baseClient.GetUrl(fundingRateHistoryEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/fundingRate", HitoBitExchange.RateLimiter.EndpointLimit, 1, false,
+                limitGuard: new SingleLimitGuard(500, TimeSpan.FromMinutes(5), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesFundingRateHistory>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -168,17 +142,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 500);
 
-            var url = _baseClient.GetUrl(topLongShortAccountRatioEndpoint, tradingDataapi);
-            var parameters = new Dictionary<string, object> {
-                { url.ToString().Contains("dapi") ? "pair": "symbol", symbolPair },
-                { "period", JsonConvert.SerializeObject(period, new PeriodIntervalConverter(false)) }
+            var parameters = new ParameterCollection {
+                { "symbol", symbolPair },
             };
 
+            parameters.AddEnum("period", period);
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesLongShortRatio>>(url, HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "futures/data/topLongShortAccountRatio", HitoBitExchange.RateLimiter.EndpointLimit, 1, false,
+                limitGuard: new SingleLimitGuard(1000, TimeSpan.FromMinutes(5), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesLongShortRatio>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -190,17 +165,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 500);
 
-            var url = _baseClient.GetUrl(topLongShortPositionRatioEndpoint, tradingDataapi);
-            var parameters = new Dictionary<string, object> {
-                { url.ToString().Contains("dapi") ? "pair": "symbol", symbolPair },
-                { "period", JsonConvert.SerializeObject(period, new PeriodIntervalConverter(false)) }
+            var parameters = new ParameterCollection {
+                { "symbol", symbolPair },
             };
 
+            parameters.AddEnum("period", period);
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesLongShortRatio>>(url, HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "futures/data/topLongShortPositionRatio", HitoBitExchange.RateLimiter.EndpointLimit, 1, false,
+                limitGuard: new SingleLimitGuard(1000, TimeSpan.FromMinutes(5), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesLongShortRatio>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -212,17 +188,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 500);
 
-            var url = _baseClient.GetUrl(globalLongShortAccountRatioEndpoint, tradingDataapi);
-            var parameters = new Dictionary<string, object> {
-                { url.ToString().Contains("dapi") ? "pair": "symbol", symbolPair },
-                { "period", JsonConvert.SerializeObject(period, new PeriodIntervalConverter(false)) }
+            var parameters = new ParameterCollection {
+                { "symbol", symbolPair },
             };
 
+            parameters.AddEnum("period", period);
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesLongShortRatio>>(url, HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "futures/data/globalLongShortAccountRatio", HitoBitExchange.RateLimiter.EndpointLimit, 1, false,
+                limitGuard: new SingleLimitGuard(1000, TimeSpan.FromMinutes(5), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesLongShortRatio>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -234,17 +211,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1500);
 
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "symbol", symbol },
-                { "interval", JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false)) }
             };
 
+            parameters.AddEnum("interval", interval);
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
             var requestWeight = limit == null ? 5 : limit <= 100 ? 1 : limit <= 500 ? 2 : limit <= 1000 ? 5 : 10;
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitMarkIndexKline>>(_baseClient.GetUrl(markPriceKlinesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: requestWeight).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/markPriceKlines", HitoBitExchange.RateLimiter.FuturesRest, requestWeight);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitMarkIndexKline>>(request, parameters, ct, requestWeight).ConfigureAwait(false);
         }
 
         #endregion
@@ -254,9 +232,11 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1000);
 
-            var parameters = new Dictionary<string, object> { { "symbol", symbol } };
+            var parameters = new ParameterCollection { { "symbol", symbol } };
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
-            var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBitRecentTradeQuote>>(_baseClient.GetUrl(recentTradesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: 5).ConfigureAwait(false);
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/trades", HitoBitExchange.RateLimiter.FuturesRest, 5);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitRecentTradeQuote>>(request, parameters, ct).ConfigureAwait(false);
             return result.As<IEnumerable<IHitoBitRecentTrade>>(result.Data);
         }
 
@@ -265,11 +245,12 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
             CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1000);
-            var parameters = new Dictionary<string, object> { { "symbol", symbol } };
+            var parameters = new ParameterCollection { { "symbol", symbol } };
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("fromId", fromId?.ToString(CultureInfo.InvariantCulture));
 
-            var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBitRecentTradeQuote>>(_baseClient.GetUrl(historicalTradesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: 20).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/historicalTrades", HitoBitExchange.RateLimiter.FuturesRest, 20);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitRecentTradeQuote>>(request, parameters, ct).ConfigureAwait(false);
             return result.As<IEnumerable<IHitoBitRecentTrade>>(result.Data);
         }
 
@@ -279,22 +260,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<HitoBitFuturesMarkPrice>> GetMarkPriceAsync(string symbol,
             CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("symbol", symbol);
 
-            return await _baseClient
-                .SendRequestInternal<HitoBitFuturesMarkPrice>(
-                    _baseClient.GetUrl(markPriceEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters)
-                .ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/premiumIndex", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            return await _baseClient.SendAsync<HitoBitFuturesMarkPrice>(request, parameters, ct).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitFuturesMarkPrice>>> GetMarkPricesAsync(CancellationToken ct = default)
         {
-            return await _baseClient
-                .SendRequestInternal<IEnumerable<HitoBitFuturesMarkPrice>>(
-                    _baseClient.GetUrl(markPriceEndpoint, api, publicVersion), HttpMethod.Get, ct)
-                .ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/premiumIndex", HitoBitExchange.RateLimiter.FuturesRest, 10);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesMarkPrice>>(request, null, ct).ConfigureAwait(false);
         }
         #endregion
 
@@ -302,21 +279,19 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<IHitoBit24HPrice>> GetTickerAsync(string symbol, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("symbol", symbol);
 
-            var result = await _baseClient
-                .SendRequestInternal<HitoBit24HPrice>(_baseClient.GetUrl(price24HEndpoint, api, publicVersion),
-                    HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/ticker/24hr", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            var result = await _baseClient.SendAsync<HitoBit24HPrice>(request, parameters, ct).ConfigureAwait(false);
             return result.As<IHitoBit24HPrice>(result.Data);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<IHitoBit24HPrice>>> GetTickersAsync(CancellationToken ct = default)
         {
-            var result = await _baseClient
-                .SendRequestInternal<IEnumerable<HitoBit24HPrice>>(_baseClient.GetUrl(price24HEndpoint, api, publicVersion),
-                    HttpMethod.Get, ct, weight: 40).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/ticker/24hr", HitoBitExchange.RateLimiter.FuturesRest, 40);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBit24HPrice>>(request, null, ct).ConfigureAwait(false);
             return result.As<IEnumerable<IHitoBit24HPrice>>(result.Data);
         }
         #endregion
@@ -327,17 +302,39 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<IEnumerable<IHitoBitKline>>> GetKlinesAsync(string symbol, KlineInterval interval, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1500);
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "symbol", symbol },
-                { "interval", JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false)) }
             };
+            parameters.AddEnum("interval", interval);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
             var requestWeight = limit == null ? 5 : limit <= 100 ? 1 : limit <= 500 ? 2 : limit <= 1000 ? 5 : 10;
-            var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesUsdtKline>>(_baseClient.GetUrl(klinesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: requestWeight).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/klines", HitoBitExchange.RateLimiter.FuturesRest, requestWeight);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitFuturesUsdtKline>>(request, parameters, ct, requestWeight).ConfigureAwait(false);
             return result.As<IEnumerable<IHitoBitKline>>(result.Data);
+        }
+
+        #endregion
+
+        #region Kline/Premium Index
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitMarkIndexKline>>> GetPremiumIndexKlinesAsync(string symbol, KlineInterval interval, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, CancellationToken ct = default)
+        {
+            limit?.ValidateIntBetween(nameof(limit), 1, 1500);
+            var parameters = new ParameterCollection {
+                { "symbol", symbol },
+            };
+            parameters.AddEnum("interval", interval);
+            parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
+            parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
+            parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
+
+            var requestWeight = limit == null ? 5 : limit <= 100 ? 1 : limit <= 500 ? 2 : limit <= 1000 ? 5 : 10;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/premiumIndexKlines", HitoBitExchange.RateLimiter.FuturesRest, requestWeight);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitMarkIndexKline>>(request, parameters, ct, requestWeight).ConfigureAwait(false);
         }
 
         #endregion
@@ -347,19 +344,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitBookPrice>> GetBookPriceAsync(string symbol, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("symbol", symbol);
 
-            return await _baseClient.SendRequestInternal<HitoBitBookPrice>(_baseClient.GetUrl(bookPricesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/ticker/bookTicker", HitoBitExchange.RateLimiter.FuturesRest, 2);
+            return await _baseClient.SendAsync<HitoBitBookPrice>(request, parameters, ct).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitBookPrice>>> GetBookPricesAsync(CancellationToken ct = default)
         {
-            return await _baseClient
-                .SendRequestInternal<IEnumerable<HitoBitBookPrice>>(
-                    _baseClient.GetUrl(bookPricesEndpoint, api, publicVersion), HttpMethod.Get, ct, weight: 2)
-                .ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/ticker/bookTicker", HitoBitExchange.RateLimiter.FuturesRest, 5);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitBookPrice>>(request, null, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -369,12 +365,13 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitFuturesOpenInterest>> GetOpenInterestAsync(string symbol, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "symbol", symbol }
             };
 
-            return await _baseClient.SendRequestInternal<HitoBitFuturesOpenInterest>(_baseClient.GetUrl(openInterestEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/openInterest", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            return await _baseClient.SendAsync<HitoBitFuturesOpenInterest>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -386,16 +383,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 500);
 
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "symbol", symbol },
-                { "period", JsonConvert.SerializeObject(period, new PeriodIntervalConverter(false)) }
             };
 
+            parameters.AddEnum("period", period);
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesOpenInterestHistory>>(_baseClient.GetUrl(openInterestHistoryEndpoint, tradingDataapi), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "futures/data/openInterestHist", HitoBitExchange.RateLimiter.EndpointLimit, 1, false,
+                limitGuard: new SingleLimitGuard(1000, TimeSpan.FromMinutes(5), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesOpenInterestHistory>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -407,16 +406,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 500);
 
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "symbol", symbol },
-                { "period", JsonConvert.SerializeObject(period, new PeriodIntervalConverter(false)) }
             };
 
+            parameters.AddEnum("period", period);
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
 
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesBuySellVolumeRatio>>(_baseClient.GetUrl(takerBuySellVolumeRatioEndpoint, tradingDataapi), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "futures/data/takerlongshortRatio", HitoBitExchange.RateLimiter.EndpointLimit, 1, false,
+                limitGuard: new SingleLimitGuard(1000, TimeSpan.FromMinutes(5), RateLimitWindowType.Sliding));
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesBuySellVolumeRatio>>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
@@ -426,9 +427,12 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitFuturesCompositeIndexInfo>>> GetCompositeIndexInfoAsync(string? symbol = null, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new ParameterCollection();
             parameters.AddOptionalParameter("symbol", symbol);
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesCompositeIndexInfo>>(_baseClient.GetUrl(compositeIndexapi, api, publicVersion), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+
+            var weight = symbol == null ? 10 : 1;
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/indexInfo", HitoBitExchange.RateLimiter.FuturesRest, weight);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesCompositeIndexInfo>>(request, parameters, ct, weight).ConfigureAwait(false);
         }
 
         #endregion
@@ -438,18 +442,20 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitPrice>> GetPriceAsync(string symbol, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>
+            var parameters = new ParameterCollection
             {
                 { "symbol", symbol }
             };
 
-            return await _baseClient.SendRequestInternal<HitoBitPrice>(_baseClient.GetUrl(allPricesEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v2/ticker/price", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            return await _baseClient.SendAsync<HitoBitPrice>(request, parameters, ct, 1).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitPrice>>> GetPricesAsync(CancellationToken ct = default)
         {
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitPrice>>(_baseClient.GetUrl(allPricesEndpoint, api, publicVersion), HttpMethod.Get, ct, weight: 2).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v2/ticker/price", HitoBitExchange.RateLimiter.FuturesRest, 2);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitPrice>>(request, null, ct, 2).ConfigureAwait(false);
         }
         #endregion
 
@@ -459,17 +465,18 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<IEnumerable<IHitoBitKline>>> GetContinuousContractKlinesAsync(string pair, ContractType contractType, KlineInterval interval, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1500);
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "pair", pair },
-                { "interval", JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false)) },
-                { "contractType", JsonConvert.SerializeObject(contractType, new ContractTypeConverter(false)) }
             };
+            parameters.AddEnum("interval", interval);
+            parameters.AddEnum("contractType", contractType);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
             var requestWeight = limit == null ? 5 : limit <= 100 ? 1 : limit <= 500 ? 2 : limit <= 1000 ? 5 : 10;
-            var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesUsdtKline>>(_baseClient.GetUrl(continuousContractKlineEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: requestWeight).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/continuousKlines", HitoBitExchange.RateLimiter.FuturesRest, requestWeight);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitFuturesUsdtKline>>(request, parameters, ct, requestWeight).ConfigureAwait(false);
             return result.As<IEnumerable<IHitoBitKline>>(result.Data);
         }
 
@@ -481,16 +488,17 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         public async Task<WebCallResult<IEnumerable<IHitoBitKline>>> GetIndexPriceKlinesAsync(string pair, KlineInterval interval, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, CancellationToken ct = default)
         {
             limit?.ValidateIntBetween(nameof(limit), 1, 1500);
-            var parameters = new Dictionary<string, object> {
+            var parameters = new ParameterCollection {
                 { "pair", pair },
-                { "interval", JsonConvert.SerializeObject(interval, new KlineIntervalConverter(false)) }
             };
+            parameters.AddEnum("interval", interval);
             parameters.AddOptionalParameter("startTime", DateTimeConverter.ConvertToMilliseconds(startTime));
             parameters.AddOptionalParameter("endTime", DateTimeConverter.ConvertToMilliseconds(endTime));
             parameters.AddOptionalParameter("limit", limit?.ToString(CultureInfo.InvariantCulture));
 
             var requestWeight = limit == null ? 5 : limit <= 100 ? 1 : limit <= 500 ? 2 : limit <= 1000 ? 5 : 10;
-            var result = await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesUsdtKline>>(_baseClient.GetUrl(indexPriceKlinesKlineEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: requestWeight).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/indexPriceKlines", HitoBitExchange.RateLimiter.FuturesRest, requestWeight);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitFuturesUsdtKline>>(request, parameters, ct, requestWeight).ConfigureAwait(false);
             return result.As<IEnumerable<IHitoBitKline>>(result.Data);
         }
 
@@ -501,20 +509,59 @@ namespace HitoBit.Net.Clients.UsdFuturesApi
         /// <inheritdoc />
         public async Task<WebCallResult<IEnumerable<HitoBitFuturesAssetIndex>>> GetAssetIndexesAsync(CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>();
-            return await _baseClient.SendRequestInternal<IEnumerable<HitoBitFuturesAssetIndex>>(_baseClient.GetUrl(assetIndexEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters, weight: 10).ConfigureAwait(false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/assetIndex", HitoBitExchange.RateLimiter.FuturesRest, 10);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesAssetIndex>>(request, null, ct).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WebCallResult<HitoBitFuturesAssetIndex>> GetAssetIndexAsync(string symbol, CancellationToken ct = default)
         {
-            var parameters = new Dictionary<string, object>()
+            var parameters = new ParameterCollection()
             {
                 { "symbol", symbol }
             };
-            return await _baseClient.SendRequestInternal<HitoBitFuturesAssetIndex>(_baseClient.GetUrl(assetIndexEndpoint, api, publicVersion), HttpMethod.Get, ct, parameters).ConfigureAwait(false);
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "fapi/v1/assetIndex", HitoBitExchange.RateLimiter.FuturesRest, 1);
+            return await _baseClient.SendAsync<HitoBitFuturesAssetIndex>(request, parameters, ct).ConfigureAwait(false);
         }
 
         #endregion
+
+        #region Get Basis
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitFuturesBasis>>> GetBasisAsync(string symbol, ContractType contractType, PeriodInterval period, int? limit = null, DateTime? startTime = null, DateTime? endTime = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection()
+            {
+                { "pair", symbol }
+            };
+            parameters.AddEnum("contractType", contractType);
+            parameters.AddEnum("period", period);
+            parameters.AddOptional("limit", limit ?? 30);
+            parameters.AddOptionalMilliseconds("startTime", startTime);
+            parameters.AddOptionalMilliseconds("endTime", endTime);
+
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "futures/data/basis", HitoBitExchange.RateLimiter.FuturesRest, 0);
+            return await _baseClient.SendAsync<IEnumerable<HitoBitFuturesBasis>>(request, parameters, ct).ConfigureAwait(false);
+        }
+
+        #endregion
+
+        #region Get Convert Symbols
+
+        /// <inheritdoc />
+        public async Task<WebCallResult<IEnumerable<HitoBitFuturesConvertSymbol>>> GetConvertSymbolsAsync(string? fromAsset = null, string? toAsset = null, CancellationToken ct = default)
+        {
+            var parameters = new ParameterCollection();
+            parameters.AddOptional("fromAsset", fromAsset);
+            parameters.AddOptional("toAsset", toAsset);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "/fapi/v1/convert/exchangeInfo", HitoBitExchange.RateLimiter.FuturesRest, 20, false);
+            var result = await _baseClient.SendAsync<IEnumerable<HitoBitFuturesConvertSymbol>>(request, parameters, ct).ConfigureAwait(false);
+            return result;
+        }
+
+        #endregion
+
     }
 }
