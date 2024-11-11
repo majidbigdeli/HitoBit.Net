@@ -101,7 +101,7 @@ namespace HitoBit.Net.Converters
                     case SymbolFilterType.MaxPosition:
                         result = new HitoBitSymbolMaxPositionFilter
                         {
-                            MaxPosition = obj.TryGetProperty("maxPosition", out var el) ? decimal.Parse(el.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture) : 0
+                            MaxPosition = obj.TryGetProperty("maxPosition", out var el) ? el.GetDecimal(): 0
                         };
                         break;
                     case SymbolFilterType.PercentagePriceBySide:
